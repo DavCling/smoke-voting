@@ -30,7 +30,7 @@
 \section{Introduction}
 %----------------------------------------------------------------------
 
-Wildfires are among the most visible and rapidly growing consequences of climate change in the United States. Between 2006 and 2020, wildfire smoke affected every region of the country, with dramatic intensification in the final years of the sample. Unlike ambient air pollution, wildfire smoke events are visible, sudden, and directly attributable to a specific cause---making them potentially more salient as signals of climate change. A growing literature investigates whether environmental shocks alter political behavior: \citet{hazlett2020wildfire} find that proximity to California wildfires increases pro-environment voting, but only in already-Democratic areas; \citet{bellani2024air} show that overall PM\textsubscript{10} pollution on election day shifts German voters against the incumbent; and \citet{gomez2007weather} demonstrate that rain suppresses voter turnout.
+Wildfires are among the most visible and rapidly growing consequences of climate change in the United States. Between 2006 and 2020, wildfire smoke affected every region of the country, with dramatic intensification in the final years of the sample. Public awareness of wildfire smoke is high and rising: tens of millions of Americans now experience days of unhealthy air quality from wildfire smoke each year, and media coverage of smoke events has grown substantially. Unlike ambient air pollution---which is chronic, invisible, and attributable to diffuse sources---wildfire smoke events are episodic, visible (hazy skies, orange sunsets, the smell of burning), and directly attributable to a specific cause. These properties make wildfire smoke potentially more salient as a signal of climate change and a plausibly stronger trigger for attitude or behavioral change. A growing literature investigates whether environmental shocks alter political behavior: \citet{hazlett2020wildfire} find that proximity to California wildfires increases pro-environment voting, but only in already-Democratic areas; \citet{bellani2024air} show that overall PM\textsubscript{10} pollution on election day shifts German voters against the incumbent; and \citet{gomez2007weather} demonstrate that rain suppresses voter turnout.
 
 This paper bridges these strands by using \textit{wildfire-specific} smoke PM\textsubscript{2.5} as a treatment variable across the entire continental United States. Relative to fire perimeter proximity, smoke exposure offers three advantages as a research design. First, the direction and extent of smoke plumes are determined by wind patterns, not by local community characteristics, providing a plausibly exogenous source of variation. Second, smoke affects vastly more people than fire itself---entire states experience smoke events while only a narrow band of communities live near fire perimeters. Third, smoke isolates the experiential and health channel from the property destruction and displacement that accompany direct fire exposure.
 
@@ -61,7 +61,9 @@ where $Y_{ct}$ is the outcome in county $c$ in election year $t$, $\alpha_c$ are
 
 \paragraph{Threats to identification.} Two potential concerns merit discussion. First, spatially correlated shocks such as drought could affect both fire activity and local economic conditions. This is mitigated by the fact that smoke travels hundreds of miles from fire origins, so downwind counties experience smoke without experiencing the local conditions that generated the fires. Second, secular trends in fire-prone versus non-fire-prone regions could confound the estimates; county fixed effects absorb level differences, and year fixed effects absorb national trends, but region-specific trends remain a potential concern.
 
-\paragraph{Continuous treatment and TWFE.} Recent work by \citet{callaway2024continuous} shows that TWFE regressions with a continuous treatment variable can produce coefficients with ambiguous causal interpretation due to heterogeneous weighting across dose levels. In our setting, several features mitigate these concerns: treatment is atmospherically assigned (limiting selection into dose levels), and we estimate a linear slope corresponding to the average causal response (ACRT) decomposition in which weights are non-negative. As a robustness check, I verify that results are qualitatively similar when the treatment is dichotomized or discretized into dose bins.
+\paragraph{Continuous treatment and TWFE.} Recent work by \citet{callaway2024continuous} shows that TWFE regressions with a continuous treatment variable can produce coefficients that lack a clear causal interpretation when the dose--response function is heterogeneous across units. Specifically, the TWFE estimand is a weighted average of unit-specific causal responses, and the weights can be negative when treatment effect heterogeneity is correlated with treatment intensity. Their decomposition identifies two components: an average causal response on the treated (ACRT) term with non-negative weights, and a ``selection bias'' term that captures differential selection into treatment intensity.
+
+In our setting, several features limit these concerns. First, treatment intensity (smoke PM\textsubscript{2.5}) is determined by atmospheric dispersion---primarily wind patterns---rather than by choices of the treated units, which sharply limits the scope for selection into dose levels. Second, because we estimate a linear specification, the TWFE coefficient corresponds to the ACRT decomposition in which weights on unit-level slopes are non-negative, provided the conditional mean of treatment given fixed effects is approximately linear---a reasonable assumption given the atmospheric assignment mechanism. Third, as a direct robustness check, I verify that results are qualitatively similar when the continuous treatment is replaced with a binary indicator (above/below median smoke) or discretized into dose quintiles, reducing sensitivity to functional form assumptions about the dose--response relationship.
 
 %----------------------------------------------------------------------
 \section{Results}
@@ -175,6 +177,38 @@ Elections & 2016--2020 & 2008--2020 \\
 
 As a further robustness check, I also estimate the House specifications at the congressional district level using Census county-to-district crosswalks (Appendix Table~\ref{tab:district_house}). The district-level estimates are noisier due to the measurement error introduced by the crosswalk, but the anti-incumbent effect remains statistically significant.
 
+\subsection{Robustness to Excluding 2020}
+
+The 2020 election coincided with historically extreme wildfire smoke across the Western United States, raising the question of whether the main results are driven by this single year. Table~\ref{tab:drop2020} presents presidential estimates with and without 2020. The pro-Democratic effect on vote share is not robust to excluding 2020: the coefficient flips sign and becomes statistically insignificant ($\beta = -0.00041$, $p = 0.103$). This indicates that the 2020 Western fire season---which produced extreme smoke exposure in Oregon, Washington, and California---provides much of the identifying variation for the Democratic vote share result.
+
+By contrast, the anti-incumbent effect is robust and substantially \textit{larger} when 2020 is excluded ($\beta = -0.01446$, $p < 0.001$, compared to $-0.00399$ in the full sample). The turnout effect attenuates but remains statistically significant ($\beta = 0.00108$, $p < 0.001$). These patterns suggest that incumbent punishment is the most robust electoral consequence of wildfire smoke, while the pro-Democratic shift requires further investigation with additional election cycles.
+
+\begin{table}[htbp]
+\centering
+\caption{Robustness: Presidential Estimates Excluding 2020}
+\label{tab:drop2020}
+\small
+\begin{tabular}{lcc}
+\toprule
+& (1) Full Sample & (2) Excluding 2020 \\
+\midrule
+\multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00087*** & $-$0.00041 \\
+& (0.00009) & (0.00025) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00399*** & $-$0.01446*** \\
+& (0.00044) & (0.00173) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00242*** & 0.00108*** \\
+& (0.00018) & (0.00028) \\[3pt]
+\midrule
+Observations & 12,429 & 9,321 \\
+Elections & 2008--2020 & 2008--2016 \\
+\bottomrule
+\multicolumn{3}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. County and year FE. SEs clustered by county.} \\
+\end{tabular}
+\end{table}
+
 %----------------------------------------------------------------------
 \section{Discussion}
 %----------------------------------------------------------------------
@@ -183,13 +217,15 @@ Three mechanisms could drive these results. First, a \textit{salience} channel: 
 
 The data are more consistent with the first two mechanisms than the third. The pro-Democratic shift points toward salience, while the larger anti-incumbent effect points toward negative affect. The positive turnout coefficient (Column 3 of Table~\ref{tab:main}) is surprising and may reflect confounding from 2020's historically high turnout; this result should be interpreted cautiously.
 
-\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections and three House elections. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
+The robustness analysis in Table~\ref{tab:drop2020} sharpens the interpretation. The pro-Democratic effect is not robust to excluding 2020, suggesting the salience channel may require extreme smoke exposure to generate measurable partisan shifts. The anti-incumbent effect, by contrast, is robust and strengthens without 2020, suggesting that negative affect---punishing the party in power for experienced discomfort---operates even at moderate smoke levels and does not depend on a single extreme year.
+
+\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections and three House elections, and as the robustness analysis demonstrates, the pro-Democratic finding is leveraged by the 2020 fire season. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
 
 %----------------------------------------------------------------------
 \section{Conclusion}
 %----------------------------------------------------------------------
 
-Wildfire smoke exposure shifts votes toward the Democratic Party and against the incumbent in both presidential and House elections, with effects that are statistically significant, present across the partisan spectrum, and strongest in the weeks immediately preceding the election. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a compelling research design for studying how environmental experience shapes political behavior.
+Wildfire smoke exposure punishes the incumbent party in both presidential and House elections, with effects that are statistically significant, robust to excluding 2020, present across the partisan spectrum, and strongest in the weeks immediately preceding the election. Smoke also shifts votes toward the Democratic Party, though this effect is driven by the extreme 2020 Western fire season and requires confirmation with additional election cycles. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a compelling research design for studying how environmental experience shapes political behavior.
 
 \bibliography{references}
 
