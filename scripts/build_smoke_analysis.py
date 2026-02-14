@@ -47,8 +47,10 @@ EPA_UNHEALTHY = 55.5       # "Unhealthy"
 def load_smoke_data():
     """Load and standardize smoke PM2.5 data."""
     print("Loading smoke data...")
-    # File is tab-delimited: GEOID (county FIPS), date (YYYYMMDD), smokePM_pred
-    df = pd.read_csv(SMOKE_FILE, sep="\t", dtype={"GEOID": str})
+    # v1.0 is tab-delimited; v2.0 is comma-delimited. Auto-detect.
+    with open(SMOKE_FILE) as f:
+        sep = "\t" if "\t" in f.readline() else ","
+    df = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
     df = df.rename(columns={"GEOID": "fips", "smokePM_pred": "smoke_pm25"})
     df["fips"] = df["fips"].str.zfill(5)
     df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
