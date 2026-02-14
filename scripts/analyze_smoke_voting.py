@@ -417,7 +417,7 @@ def plot_binscatter(df):
     """Create binscatter of smoke PM2.5 vs. DEM vote share (residualized)."""
     os.makedirs(FIG_DIR, exist_ok=True)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
     dep_var = "dem_vote_share"
 
     df_clean = df[[smoke_var, dep_var]].dropna()
@@ -455,7 +455,7 @@ def plot_binscatter(df):
 
     ax.axhline(0, color="gray", linestyle=":", alpha=0.5)
     ax.axvline(0, color="gray", linestyle=":", alpha=0.5)
-    ax.set_xlabel("Smoke PM2.5, 60-day mean (residualized)")
+    ax.set_xlabel("Smoke PM2.5, 30-day mean (residualized)")
     ax.set_ylabel("DEM Two-Party Vote Share (residualized)")
     ax.set_title("Binscatter: Wildfire Smoke and Democratic Vote Share\n(County and Year FE Residualized)")
     plt.tight_layout()

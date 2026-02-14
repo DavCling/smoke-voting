@@ -98,7 +98,7 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
   \item $\alpha_c$: County FE --- absorb all time-invariant confounders
   \item $\gamma_t$: Election year FE --- absorb national swings
   \item SEs clustered by county
-  \item Treatment: mean smoke PM\textsubscript{2.5} in the 60 days before election
+  \item Treatment: mean smoke PM\textsubscript{2.5} in the 30 days before election
 \end{itemize}
 
 \vspace{0.3cm}
@@ -128,13 +128,13 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
 
 \citet*{callaway2024continuous} show TWFE with a continuous treatment can produce coefficients with ambiguous causal interpretation due to heterogeneous dose--response weighting.
 
-\vspace{0.3cm}
+\vspace{0.2cm}
 \textbf{Why this is less concerning here:}
 \begin{itemize}
   \item Treatment is atmospherically assigned --- limiting selection into dose levels
-  \item We estimate a linear slope corresponding to the average causal response (ACRT) decomposition, in which weights are non-negative
-  \item Robustness: results are qualitatively similar when treatment is dichotomized or discretized into dose bins
-  \item Note: the \texttt{contdid} estimator \citep{callaway2024continuous} does not yet support time-varying continuous treatments (our setting), so the standard TWFE approach remains appropriate here
+  \item Linear slope corresponds to the ACRT decomposition (non-negative weights)
+  \item Results qualitatively similar when treatment is dichotomized or discretized into dose bins
+  \item The \texttt{contdid} estimator does not yet support time-varying continuous treatments (our setting)
 \end{itemize}
 
 \end{frame}
@@ -151,15 +151,15 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
 & DEM Vote Share & Incumbent Share & Log Turnout \\
 \midrule
 \multicolumn{4}{l}{\textit{Panel A: Presidential (2008--2020)}} \\[3pt]
-Smoke PM\textsubscript{2.5} (60d) & 0.00077*** & $-$0.00379*** & 0.00213*** \\
-& (0.00008) & (0.00039) & (0.00016) \\
+Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & $-$0.00172* & 0.00314*** \\
+& (0.00021) & (0.00091) & (0.00052) \\
 $N$ & 12,428 & 12,428 & 12,428 \\[6pt]
 \multicolumn{4}{l}{\textit{Panel B: County-Level House (2016--2022)}} \\[3pt]
-Smoke PM\textsubscript{2.5} (60d) & 0.00023** & $-$0.00116** & 0.00114*** \\
-& (0.00010) & (0.00047) & (0.00042) \\
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00033 & 0.00303* & 0.00356*** \\
+& (0.00029) & (0.00178) & (0.00119) \\
 $N$ & 11,155 & 11,155 & 12,197 \\[3pt]
 \bottomrule
-\multicolumn{4}{l}{\footnotesize County and year FE. SEs clustered by county. *** $p<0.01$.}
+\multicolumn{4}{l}{\footnotesize County and year FE. SEs clustered by county. *** $p<0.01$, ** $p<0.05$, * $p<0.10$.}
 \end{tabular}
 \end{table}
 
@@ -169,10 +169,10 @@ $N$ & 11,155 & 11,155 & 12,197 \\[3pt]
 \begin{frame}{Interpreting the Main Results}
 
 \begin{itemize}
-  \item \textbf{+10 $\mu$g/m$^3$ smoke $\rightarrow$ +0.8 pp DEM vote share} (presidential)
-  \item Anti-incumbent effect is $\sim$5x larger than pro-DEM effect
+  \item \textbf{+10 $\mu$g/m$^3$ smoke $\rightarrow$ +1.3 pp DEM vote share} (presidential)
+  \item Anti-incumbent effect also significant ($-$0.17 pp per $\mu$g/m$^3$)
   \item No evidence of turnout suppression
-  \item House effects are present and significant across 4 election cycles (2016--2022), but smaller in magnitude --- consistent with the more candidate-driven nature of House races
+  \item House DEM vote share effect is not significant at 30-day window; incumbent punishment is marginal --- consistent with the more candidate-driven nature of House races
 \end{itemize}
 
 \end{frame}
@@ -189,8 +189,8 @@ $N$ & 11,155 & 11,155 & 12,197 \\[3pt]
 \cmidrule(lr){2-4}
 & R-Leaning & Swing & D-Leaning \\
 \midrule
-Smoke PM\textsubscript{2.5} (60d) & 0.00039** & 0.00049*** & 0.00086*** \\
-& (0.00017) & (0.00013) & (0.00013) \\[6pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00155*** & 0.00007 & 0.00126*** \\
+& (0.00033) & (0.00055) & (0.00040) \\[6pt]
 $N$ & 4,143 & 4,140 & 4,144 \\
 \bottomrule
 \end{tabular}
@@ -198,8 +198,8 @@ $N$ & 4,143 & 4,140 & 4,144 \\
 
 \vspace{0.3cm}
 \begin{itemize}
-  \item Effect is \textbf{present in all terciles} of prior partisanship
-  \item Somewhat larger in D-leaning counties
+  \item Effect is \textbf{present in R-leaning and D-leaning} counties
+  \item Similar magnitude across the partisan spectrum
   \item Contrast with \citet[2006--2012 CA]{hazlett2020wildfire}: fire proximity affects \textit{only} Democratic areas
   \item Smoke is a broader, less politically sorted treatment
 \end{itemize}
@@ -255,14 +255,14 @@ $N$ & 4,143 & 4,140 & 4,144 \\
 & Full & Excl.\ 2020 & Full & Excl.\ 2020 \\
 \midrule
 \multicolumn{5}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Smoke PM\textsubscript{2.5} (60d) & 0.00077*** & $-$0.00036* & 0.00023** & 0.00009 \\
-& (0.00008) & (0.00022) & (0.00010) & (0.00031) \\[6pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & $-$0.00112*** & $-$0.00033 & $-$0.00201*** \\
+& (0.00021) & (0.00039) & (0.00029) & (0.00074) \\[6pt]
 \multicolumn{5}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Smoke PM\textsubscript{2.5} (60d) & $-$0.00379*** & $-$0.01368*** & $-$0.00116** & 0.00362*** \\
-& (0.00039) & (0.00141) & (0.00047) & (0.00124) \\[6pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00172* & $-$0.01268*** & 0.00303* & $-$0.00254 \\
+& (0.00091) & (0.00145) & (0.00178) & (0.00165) \\[6pt]
 \multicolumn{5}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Smoke PM\textsubscript{2.5} (60d) & 0.00213*** & 0.00068*** & 0.00114*** & 0.00769*** \\
-& (0.00016) & (0.00025) & (0.00042) & (0.00159) \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00314*** & 0.00228*** & 0.00356*** & 0.00705*** \\
+& (0.00052) & (0.00035) & (0.00119) & (0.00253) \\[3pt]
 \midrule
 $N$ & 12,428 & 9,320 & 11,155 & 8,262 \\
 \bottomrule
@@ -276,9 +276,9 @@ $N$ & 12,428 & 9,320 & 11,155 & 8,262 \\
 \begin{frame}{Interpreting the 2020 Sensitivity}
 
 \begin{itemize}
-  \item The pro-DEM effect is not robust to excluding 2020 in either presidential or House races --- the extreme Western fire season provides much of the identifying variation
-  \item The \textbf{presidential anti-incumbent effect is robust and strengthens} without 2020 ($-$0.014 vs.\ $-$0.004), suggesting it is not an artifact of that single year
-  \item The House anti-incumbent effect \textbf{flips sign} without 2020, indicating it is less robust than the presidential result
+  \item The presidential pro-DEM effect \textbf{flips sign} without 2020 --- the extreme Western fire season provides much of the identifying variation
+  \item The \textbf{presidential anti-incumbent effect is robust and strengthens} without 2020 ($-$0.013 vs.\ $-$0.002), suggesting it is not an artifact of that single year
+  \item The House results are generally not robust to excluding 2020
   \item Incumbent punishment in presidential races is the most robust finding across specifications
 \end{itemize}
 
