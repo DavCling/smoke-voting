@@ -103,6 +103,7 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             smoke_days_gt1=lambda x: (x > 1).sum(),
             smoke_days_gt5=lambda x: (x > 5).sum(),
             smoke_days_gt12=lambda x: (x > 12).sum(),
+            smoke_frac_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum() / len(x),
         ).rename(columns={
             "smoke_days": f"smoke_days_{label}",
             "smoke_mean": f"smoke_pm25_mean_{label}",
@@ -112,6 +113,7 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             "smoke_days_gt1": f"smoke_days_gt1_{label}",
             "smoke_days_gt5": f"smoke_days_gt5_{label}",
             "smoke_days_gt12": f"smoke_days_gt12_{label}",
+            "smoke_frac_unhealthy": f"smoke_frac_unhealthy_{label}",
         })
 
         result_df = result_df.merge(agg, on="fips", how="left")
@@ -300,6 +302,16 @@ def main():
     print(f"  Matched: {len(merged):,} county-year observations")
     print(f"  Unmatched election rows: "
           f"{len(election_df[election_df['year'].isin(eligible_elections)]) - len(merged):,}")
+
+    # Merge controls panel (if available)
+    controls_file = os.path.join(BASE_DIR, "output", "controls_panel.parquet")
+    if os.path.exists(controls_file):
+        controls = pd.read_parquet(controls_file)
+        merged = merged.merge(controls, on=["fips", "year"], how="left")
+        n_matched = merged["unemployment_rate"].notna().sum()
+        print(f"  Controls: {n_matched:,}/{len(merged):,} matched")
+    else:
+        print("  Controls panel not found — skipping")
 
     # Add derived variables
     merged["state_fips"] = merged["fips"].str[:2]

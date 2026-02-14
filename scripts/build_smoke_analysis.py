@@ -168,12 +168,14 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             smoke_max=lambda x: x.max(),
             smoke_severe=lambda x: (x > EPA_USG_THRESHOLD).sum(),
             smoke_cumul=lambda x: x.sum(),
+            smoke_frac_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum() / len(x),
         ).rename(columns={
             "smoke_days": f"smoke_days_{label}",
             "smoke_mean": f"smoke_pm25_mean_{label}",
             "smoke_max": f"smoke_pm25_max_{label}",
             "smoke_severe": f"smoke_days_severe_{label}",
             "smoke_cumul": f"smoke_pm25_cumul_{label}",
+            "smoke_frac_unhealthy": f"smoke_frac_unhealthy_{label}",
         })
 
         result_df = result_df.merge(agg, on="fips", how="left")
@@ -222,8 +224,19 @@ def main():
     print(f"  Matched: {len(merged):,} county-year observations")
     print(f"  Unmatched election rows: {len(election_df[election_df['year'].isin(eligible_elections)]) - len(merged):,}")
 
+    # Merge controls panel (if available)
+    controls_file = os.path.join(BASE_DIR, "output", "controls_panel.parquet")
+    if os.path.exists(controls_file):
+        controls = pd.read_parquet(controls_file)
+        merged = merged.merge(controls, on=["fips", "year"], how="left")
+        n_matched = merged["unemployment_rate"].notna().sum()
+        print(f"  Controls: {n_matched:,}/{len(merged):,} matched")
+    else:
+        print("  Controls panel not found — skipping")
+
     # Add state FIPS for fixed effects
     merged["state_fips"] = merged["fips"].str[:2]
+    merged["state_year"] = merged["state_fips"] + "_" + merged["year"].astype(str)
 
     # Add log population proxy (total votes as proxy — imperfect but available)
     merged["log_total_votes"] = np.log1p(merged["total_votes"])

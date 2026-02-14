@@ -1,0 +1,425 @@
+======================================================================
+Phase 4: Wildfire Smoke and Voting Behavior — Analysis
+======================================================================
+Loading analysis dataset...
+  12,432 observations, 3,108 counties, 4 elections
+
+--- Descriptive Figures ---
+
+  Saved figure: /Users/David/GitHub/smoke-voting/output/figures/smoke_distribution_by_year.png
+
+======================================================================
+SPECIFICATION A: Smoke Exposure → Democratic Vote Share
+  (Tests salience/pro-environment mechanism)
+======================================================================
+
+  Mean smoke PM2.5 (60 days)
+    β = 0.000774 ***  (SE = 0.000084)
+    95% CI: [0.000609, 0.000939]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0025
+
+  Smoke days (60 days)
+    β = -0.000150   (SE = 0.000100)
+    95% CI: [-0.000346, 0.000046]
+    p-value = 0.1336
+    N = 12,432
+    R² (within) = 0.0189
+
+  Severe smoke days (60 days)
+    β = 0.002767 ***  (SE = 0.000291)
+    95% CI: [0.002197, 0.003338]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0059
+
+  Mean smoke PM2.5 (7 days)
+    β = 0.000553 **  (SE = 0.000280)
+    95% CI: [0.000004, 0.001102]
+    p-value = 0.0482
+    N = 12,432
+    R² (within) = -0.0016
+
+  Mean smoke PM2.5 (fire season)
+    β = 0.000861 ***  (SE = 0.000157)
+    95% CI: [0.000554, 0.001169]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = 0.0069
+
+  --- With lagged DEM vote share control ---
+
+  Mean PM2.5 (60d) + lag control
+    β = 0.000409 ***  (SE = 0.000054)
+    95% CI: [0.000304, 0.000513]
+    p-value = 0.0000
+    N = 12,431
+    R² (within) = 0.2842
+
+======================================================================
+SPECIFICATION B: Smoke Exposure → Incumbent Party Vote Share
+  (Tests negative emotion / incumbent punishment mechanism)
+======================================================================
+
+  Mean smoke PM2.5 (60 days)
+    β = -0.003788 ***  (SE = 0.000391)
+    95% CI: [-0.004555, -0.003021]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0262
+
+  Smoke days (60 days)
+    β = 0.002545 ***  (SE = 0.000504)
+    95% CI: [0.001557, 0.003532]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = 0.0974
+
+  Severe smoke days (60 days)
+    β = -0.010499 ***  (SE = 0.001485)
+    95% CI: [-0.013410, -0.007588]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0085
+
+  Mean smoke PM2.5 (7 days)
+    β = -0.009944 ***  (SE = 0.001023)
+    95% CI: [-0.011949, -0.007939]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0001
+
+======================================================================
+SPECIFICATION C: Smoke Exposure → Voter Turnout
+  (Tests disruption / suppression mechanism)
+======================================================================
+
+  Mean smoke PM2.5 (60 days)
+    β = 0.002128 ***  (SE = 0.000164)
+    95% CI: [0.001806, 0.002450]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = 0.0638
+
+  Smoke days (60 days)
+    β = -0.000381 *  (SE = 0.000210)
+    95% CI: [-0.000793, 0.000030]
+    p-value = 0.0694
+    N = 12,432
+    R² (within) = -0.0669
+
+  Mean smoke PM2.5 (7 days)
+    β = 0.004689 ***  (SE = 0.000449)
+    95% CI: [0.003809, 0.005569]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = 0.0180
+
+  Severe smoke days (60 days)
+    β = 0.007046 ***  (SE = 0.000978)
+    95% CI: [0.005128, 0.008963]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = 0.0414
+
+======================================================================
+SUMMARY RESULTS TABLE
+======================================================================
+
+  Treatment: Mean smoke PM2.5, 30-day pre-election window
+  Fixed effects: County + Year
+  Standard errors: Clustered by county
+
+               Specification   Dependent Variable           β         SE p-value      N R² (within)
+     Spec A: Pro-environment       DEM vote share 0.001346*** (0.000212)  0.0000 12,432     -0.0303
+Spec B: Incumbent punishment Incumbent vote share  -0.001722* (0.000906)  0.0574 12,432     -0.0115
+             Spec C: Turnout      Log total votes 0.003137*** (0.000518)  0.0000 12,432      0.0853
+
+======================================================================
+HETEROGENEITY TESTS
+======================================================================
+
+  --- By Prior Partisanship (lagged DEM vote share tercile) ---
+
+  R-leaning counties
+    β = 0.001544 ***  (SE = 0.000327)
+    95% CI: [0.000902, 0.002185]
+    p-value = 0.0000
+    N = 4,144
+    R² (within) = -0.0701
+
+  Swing counties
+    β = 0.000073   (SE = 0.000549)
+    95% CI: [-0.001003, 0.001148]
+    p-value = 0.8947
+    N = 4,143
+    R² (within) = -0.0014
+
+  D-leaning counties
+    β = 0.001257 ***  (SE = 0.000395)
+    95% CI: [0.000482, 0.002032]
+    p-value = 0.0015
+    N = 4,144
+    R² (within) = -0.0098
+
+  --- By Urban/Rural ---
+
+  Urban counties
+    β = 0.002013 ***  (SE = 0.000337)
+    95% CI: [0.001352, 0.002674]
+    p-value = 0.0000
+    N = 6,215
+    R² (within) = -0.0262
+
+  Rural counties
+    β = 0.001870 ***  (SE = 0.000304)
+    95% CI: [0.001274, 0.002466]
+    p-value = 0.0000
+    N = 6,217
+    R² (within) = -0.0547
+
+======================================================================
+DOSE-RESPONSE ANALYSIS
+======================================================================
+
+  Smoke PM2.5 (30d) quintile boundaries:
+    Q1: [0.000, 0.000] µg/m³  (n=4,973)
+    Q2: [0.000, 0.800] µg/m³  (n=2,486)
+    Q3: [0.801, 2.845] µg/m³  (n=2,486)
+    Q4: [2.847, 97.345] µg/m³  (n=2,487)
+    Q5: [nan, nan] µg/m³  (n=0)
+  ERROR: 
+The model cannot be estimated. The included effects have fully absorbed
+one or more of the variables. This occurs when one or more of the dependent
+variable is perfectly explained using the effects included in the model.
+
+The following variables or variable combinations have been fully absorbed
+or have become perfectly collinear after effects are removed:
+
+          smoke_q5
+
+Set drop_absorbed=True to automatically drop absorbed variables.
+
+
+======================================================================
+EVENT STUDY: Effect by Pre-Election Window Length
+======================================================================
+  7 days         : β=0.000553 ** (SE=0.000280)
+  30 days        : β=0.001346 *** (SE=0.000212)
+  60 days        : β=0.000774 *** (SE=0.000084)
+  90 days        : β=0.001345 *** (SE=0.000128)
+  Fire season    : β=0.000861 *** (SE=0.000157)
+
+  Saved figure: /Users/David/GitHub/smoke-voting/output/figures/event_study_windows.png
+
+======================================================================
+TEMPORAL DYNAMICS: 7-Day Non-Overlapping Windows
+======================================================================
+  Loading raw daily smoke data...
+  Merged panel: 12,182 obs
+
+  --- DEM Vote Share ---
+    Exclusive windows (N=12,182):
+      Bin 0 (0-6d): β=-0.000714 *** (SE=0.000257)
+      Bin 1 (7-13d): β=-0.000346  (SE=0.000624)
+      Bin 2 (14-20d): β=0.001224 ** (SE=0.000573)
+      Bin 3 (21-27d): β=0.000565 ** (SE=0.000264)
+      Bin 4 (28-34d): β=0.001581 *** (SE=0.000341)
+      Bin 5 (35-41d): β=-0.001989 *** (SE=0.000204)
+      Bin 6 (42-48d): β=0.000240 * (SE=0.000144)
+      Bin 7 (49-55d): β=-0.000044  (SE=0.000058)
+      Bin 8 (56-62d): β=0.000497  (SE=0.000350)
+      Bin 9 (63-69d): β=0.002059 *** (SE=0.000277)
+      Bin 10 (70-76d): β=-0.000586 ** (SE=0.000230)
+      Bin 11 (77-83d): β=-0.000004  (SE=0.000314)
+      Bin 12 (84-90d): β=-0.001852 *** (SE=0.000353)
+    Cumulative windows:
+      0-7d: β=0.000547 ** (SE=0.000262)
+      0-14d: β=0.001634 *** (SE=0.000343)
+      0-21d: β=0.002218 *** (SE=0.000658)
+      0-28d: β=0.002607 *** (SE=0.000897)
+      0-35d: β=0.003476 *** (SE=0.000926)
+      0-42d: β=0.002510 *** (SE=0.000584)
+      0-49d: β=0.002087 *** (SE=0.000447)
+      0-56d: β=0.001432 *** (SE=0.000160)
+      0-63d: β=0.001574 *** (SE=0.000172)
+      0-70d: β=0.001856 *** (SE=0.000200)
+      0-77d: β=0.001933 *** (SE=0.000188)
+      0-84d: β=0.002090 *** (SE=0.000203)
+      0-91d: β=0.002217 *** (SE=0.000215)
+
+  --- Incumbent Vote Share ---
+    Exclusive windows (N=12,182):
+      Bin 0 (0-6d): β=-0.007097 *** (SE=0.001057)
+      Bin 1 (7-13d): β=-0.004289 * (SE=0.002291)
+      Bin 2 (14-20d): β=-0.008727 *** (SE=0.002223)
+      Bin 3 (21-27d): β=0.013046 *** (SE=0.002337)
+      Bin 4 (28-34d): β=-0.002982 ** (SE=0.001200)
+      Bin 5 (35-41d): β=-0.001489  (SE=0.000973)
+      Bin 6 (42-48d): β=0.000688  (SE=0.000820)
+      Bin 7 (49-55d): β=-0.001685 *** (SE=0.000350)
+      Bin 8 (56-62d): β=0.004051 *** (SE=0.001455)
+      Bin 9 (63-69d): β=0.002575 *** (SE=0.000905)
+      Bin 10 (70-76d): β=-0.002255 *** (SE=0.000784)
+      Bin 11 (77-83d): β=-0.002006  (SE=0.001372)
+      Bin 12 (84-90d): β=-0.012560 *** (SE=0.001534)
+    Cumulative windows:
+      0-7d: β=-0.009502 *** (SE=0.000987)
+      0-14d: β=-0.014051 *** (SE=0.002705)
+      0-21d: β=-0.013857 ** (SE=0.005558)
+      0-28d: β=-0.004142 *** (SE=0.001312)
+      0-35d: β=-0.005417 *** (SE=0.001460)
+      0-42d: β=-0.003746 *** (SE=0.001319)
+      0-49d: β=-0.003722 *** (SE=0.000916)
+      0-56d: β=-0.004009 *** (SE=0.000678)
+      0-63d: β=-0.004011 *** (SE=0.000692)
+      0-70d: β=-0.004100 *** (SE=0.000718)
+      0-77d: β=-0.004012 *** (SE=0.000716)
+      0-84d: β=-0.004587 *** (SE=0.000785)
+      0-91d: β=-0.005384 *** (SE=0.000855)
+
+  --- Log Total Votes ---
+    Exclusive windows (N=12,182):
+      Bin 0 (0-6d): β=0.002504 *** (SE=0.000395)
+      Bin 1 (7-13d): β=-0.002950 ** (SE=0.001243)
+      Bin 2 (14-20d): β=0.004711 *** (SE=0.001179)
+      Bin 3 (21-27d): β=-0.000774  (SE=0.000525)
+      Bin 4 (28-34d): β=0.000959 * (SE=0.000536)
+      Bin 5 (35-41d): β=-0.000834 ** (SE=0.000352)
+      Bin 6 (42-48d): β=-0.000499 ** (SE=0.000233)
+      Bin 7 (49-55d): β=0.000865 *** (SE=0.000114)
+      Bin 8 (56-62d): β=-0.001096 * (SE=0.000574)
+      Bin 9 (63-69d): β=0.000575 * (SE=0.000335)
+      Bin 10 (70-76d): β=0.000698 * (SE=0.000362)
+      Bin 11 (77-83d): β=0.000995 ** (SE=0.000500)
+      Bin 12 (84-90d): β=-0.001940 *** (SE=0.000606)
+    Cumulative windows:
+      0-7d: β=0.004430 *** (SE=0.000452)
+      0-14d: β=0.005596 *** (SE=0.001209)
+      0-21d: β=0.005568 ** (SE=0.002434)
+      0-28d: β=0.004590 ** (SE=0.001972)
+      0-35d: β=0.005461 *** (SE=0.001701)
+      0-42d: β=0.004338 *** (SE=0.001306)
+      0-49d: β=0.003848 *** (SE=0.001066)
+      0-56d: β=0.003486 *** (SE=0.000501)
+      0-63d: β=0.003562 *** (SE=0.000503)
+      0-70d: β=0.003802 *** (SE=0.000518)
+      0-77d: β=0.003804 *** (SE=0.000477)
+      0-84d: β=0.004102 *** (SE=0.000512)
+      0-91d: β=0.004361 *** (SE=0.000544)
+
+  Saved figure: /Users/David/GitHub/smoke-voting/output/figures/event_study_7day_windows.png
+
+======================================================================
+ALTERNATIVE TREATMENT: Fraction Unhealthy Days (Presidential)
+  (Fraction of days with smoke PM2.5 > 55.5 µg/m³)
+======================================================================
+  Distribution: mean=0.0002, median=0.0000, max=0.6452, >0: 19/12,432
+
+  Frac unhealthy: DEM vote share
+    β = 0.199092 ***  (SE = 0.054694)
+    95% CI: [0.091892, 0.306293]
+    p-value = 0.0003
+    N = 12,432
+    R² (within) = -0.0002
+
+  Frac unhealthy: Incumbent vote share
+    β = -0.658589 ***  (SE = 0.106557)
+    95% CI: [-0.867441, -0.449737]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0004
+
+  Frac unhealthy: Log total votes
+    β = 0.199237 ***  (SE = 0.063672)
+    95% CI: [0.074440, 0.324034]
+    p-value = 0.0018
+    N = 12,432
+    R² (within) = 0.0012
+
+======================================================================
+ROBUSTNESS: State×Year Fixed Effects (Presidential)
+  (Absorbs state-level time-varying shocks)
+======================================================================
+
+  State×Year FE: DEM vote share
+    β = 0.000014   (SE = 0.000251)
+    95% CI: [-0.000477, 0.000505]
+    p-value = 0.9562
+    N = 12,432
+    R² (within) = -0.0003
+
+  State×Year FE: Incumbent vote share
+    β = -0.000788   (SE = 0.000857)
+    95% CI: [-0.002468, 0.000891]
+    p-value = 0.3577
+    N = 12,432
+    R² (within) = -0.0052
+
+  State×Year FE: Log total votes
+    β = 0.000232   (SE = 0.000301)
+    95% CI: [-0.000357, 0.000822]
+    p-value = 0.4402
+    N = 12,432
+    R² (within) = 0.0069
+
+======================================================================
+ROBUSTNESS: Time-Varying County Controls (Presidential)
+======================================================================
+  Controls: ['unemployment_rate', 'log_median_income', 'log_population', 'october_tmean', 'october_ppt']
+  Observations with all controls: 12,400/12,432
+
+  Outcome                     Baseline β   + Controls β   Baseline p   + Controls p   N base   N ctrl
+  -----------------------------------------------------------------------------------------------
+  DEM vote share                0.001346       0.001186       0.0000         0.0000   12,432   12,400
+  Incumbent vote share         -0.001722       0.000729       0.0574         0.4403   12,432   12,400
+  Log total votes               0.003137       0.002277       0.0000         0.0000   12,432   12,400
+
+  --- Full results with controls ---
+
+  +Controls: DEM vote share
+    β = 0.001186 ***  (SE = 0.000216)
+    95% CI: [0.000762, 0.001610]
+    p-value = 0.0000
+    N = 12,400
+    R² (within) = 0.0826
+
+  +Controls: Incumbent vote share
+    β = 0.000729   (SE = 0.000944)
+    95% CI: [-0.001122, 0.002579]
+    p-value = 0.4403
+    N = 12,400
+    R² (within) = -0.0245
+
+  +Controls: Log total votes
+    β = 0.002277 ***  (SE = 0.000436)
+    95% CI: [0.001423, 0.003131]
+    p-value = 0.0000
+    N = 12,400
+    R² (within) = 0.3122
+
+======================================================================
+PLACEBO TEST: Winter Smoke (should find null)
+======================================================================
+
+  7-day window (near election day)
+    β = 0.000553 **  (SE = 0.000280)
+    95% CI: [0.000004, 0.001102]
+    p-value = 0.0482
+    N = 12,432
+    R² (within) = -0.0016
+
+  60-day window (incl. fire season)
+    β = 0.000774 ***  (SE = 0.000084)
+    95% CI: [0.000609, 0.000939]
+    p-value = 0.0000
+    N = 12,432
+    R² (within) = -0.0025
+
+--- Binscatter ---
+  Saved figure: /Users/David/GitHub/smoke-voting/output/figures/binscatter_smoke_dem_share.png
+
+======================================================================
+Phase 4 complete. Figures saved to: /Users/David/GitHub/smoke-voting/output/figures
+======================================================================

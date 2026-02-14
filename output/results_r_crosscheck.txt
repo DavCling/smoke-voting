@@ -1,0 +1,205 @@
+Warning message:
+package ‘arrow’ was built under R version 4.4.3 
+======================================================================
+R Cross-Check: TWFE Regressions (fixest)
+======================================================================
+
+Loading House data: ./output/smoke_voting_house_analysis.parquet 
+  3881 observations, 453 districts, 9 years
+  Years: 2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022
+  Uncontested: 475
+
+--- House Regressions: 30d Base Spec (R / fixest) ---
+
+Spec A: DEM vote share ~ smoke_pm25_mean_30d | district_id + year
+NOTE: 8/0 fixed-effect singletons were removed (8 observations).
+
+  β = -0.000808  (SE = 0.000803)  p = 0.3146  N = 3398
+
+Spec B: incumbent_vote_share ~ smoke_pm25_mean_30d | district_id + year
+NOTE: 8/0 fixed-effect singletons were removed (8 observations).
+
+  β = -0.001616  (SE = 0.001510)  p = 0.2850  N = 3398
+
+Spec C: log_total_votes ~ smoke_pm25_mean_30d | district_id + year
+NOTES: 2 observations removed because of NA values (LHS: 2).
+       9/0 fixed-effect singletons were removed (9 observations).
+
+  β = -0.010215  (SE = 0.005316)  p = 0.0553  N = 3870
+
+--- House: State×Year FE ---
+
+State×Year FE A: dem_vote_share ~ smoke_pm25_mean_30d | district_id + state_fips_2^year
+NOTE: 8/47 fixed-effect singletons were removed (55 observations).
+
+  β = -0.002890  (SE = 0.001138)  p = 0.0115  N = 3351
+
+State×Year FE B: incumbent_vote_share ~ smoke_pm25_mean_30d | district_id + state_fips_2^year
+NOTE: 8/47 fixed-effect singletons were removed (55 observations).
+
+  β = 0.004221  (SE = 0.001612)  p = 0.0091  N = 3351
+
+State×Year FE C: log_total_votes ~ smoke_pm25_mean_30d | district_id + state_fips_2^year
+NOTES: 2 observations removed because of NA values (LHS: 2).
+       9/54 fixed-effect singletons were removed (62 observations).
+
+  β = -0.008736  (SE = 0.008664)  p = 0.3139  N = 3817
+
+--- House: Fraction Unhealthy ---
+
+Frac Unhealthy A: dem_vote_share ~ smoke_frac_unhealthy_30d | district_id + year
+NOTE: 8/0 fixed-effect singletons were removed (8 observations).
+
+  β = -0.336475  (SE = 0.243805)  p = 0.1683  N = 3398
+
+Frac Unhealthy C: log_total_votes ~ smoke_frac_unhealthy_30d | district_id + year
+NOTES: 2 observations removed because of NA values (LHS: 2).
+       9/0 fixed-effect singletons were removed (9 observations).
+
+  β = -0.343476  (SE = 0.210189)  p = 0.1029  N = 3870
+
+
+======================================================================
+--- Presidential Regressions (R / fixest) ---
+
+  12432 observations, 3108 counties, 4 years
+  Years: 2008, 2012, 2016, 2020
+
+Pres A: dem_vote_share ~ smoke_pm25_mean_30d | fips + year
+
+  β = 0.001346  (SE = 0.000184)  p = 0.0000  N = 12432
+
+Pres B: incumbent_vote_share ~ smoke_pm25_mean_30d | fips + year
+
+  β = -0.001722  (SE = 0.000785)  p = 0.0283  N = 12432
+
+Pres C: log_total_votes ~ smoke_pm25_mean_30d | fips + year
+
+  β = 0.003137  (SE = 0.000448)  p = 0.0000  N = 12432
+
+--- Presidential: State×Year FE ---
+
+Pres State×Year A: dem_vote_share ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTE: 0/4 fixed-effect singletons were removed (4 observations).
+
+  β = 0.000014  (SE = 0.000216)  p = 0.9493  N = 12428
+
+Pres State×Year B: incumbent_vote_share ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTE: 0/4 fixed-effect singletons were removed (4 observations).
+
+  β = -0.000788  (SE = 0.000740)  p = 0.2870  N = 12428
+
+Pres State×Year C: log_total_votes ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTE: 0/4 fixed-effect singletons were removed (4 observations).
+
+  β = 0.000232  (SE = 0.000260)  p = 0.3716  N = 12428
+
+--- Presidential: Fraction Unhealthy ---
+
+Pres Frac Unhealthy A: dem_vote_share ~ smoke_frac_unhealthy_30d | fips + year
+
+  β = 0.199092  (SE = 0.047372)  p = 0.0000  N = 12432
+
+Pres Frac Unhealthy C: log_total_votes ~ smoke_frac_unhealthy_30d | fips + year
+
+  β = 0.199237  (SE = 0.055147)  p = 0.0003  N = 12432
+
+--- Presidential: With Time-Varying Controls ---
+
+NOTE: 32 observations removed because of NA values (RHS: 32).
+Pres +Controls A: DEM vote share
+  β = 0.001186  (SE = 0.000187)  p = 0.0000  N = 12400
+
+NOTE: 32 observations removed because of NA values (RHS: 32).
+Pres +Controls B: Incumbent vote share
+  β = 0.000729  (SE = 0.000818)  p = 0.3730  N = 12400
+
+NOTE: 32 observations removed because of NA values (RHS: 32).
+Pres +Controls C: Log total votes
+  β = 0.002277  (SE = 0.000377)  p = 0.0000  N = 12400
+
+
+======================================================================
+COMPARISON TABLE: House vs. Presidential — 30d (R / fixest)
+======================================================================
+
+  Outcome                       House β    House p  House N        Pres β     Pres p   Pres N
+  ------------------------------------------------------------------------------------------
+  DEM vote share               -0.000808     0.3146     3398       0.001346     0.0000    12432
+  Incumbent vote share         -0.001616     0.2850     3398      -0.001722     0.0283    12432
+  Log total votes              -0.010215     0.0553     3870       0.003137     0.0000    12432
+
+======================================================================
+--- County-Level House Regressions (R / fixest) ---
+
+  12206 observations, 3107 counties, 4 years
+  Years: 2016, 2018, 2020, 2022
+
+County House A: dem_vote_share ~ smoke_pm25_mean_30d | fips + year
+NOTE: 15/0 fixed-effect singletons were removed (15 observations).
+
+  β = -0.000329  (SE = 0.000243)  p = 0.1759  N = 11140
+
+County House B: incumbent_vote_share ~ smoke_pm25_mean_30d | fips + year
+NOTE: 15/0 fixed-effect singletons were removed (15 observations).
+
+  β = 0.003035  (SE = 0.001513)  p = 0.0449  N = 11140
+
+County House C: log_total_votes ~ smoke_pm25_mean_30d | fips + year
+NOTES: 9 observations removed because of NA values (LHS: 9).
+       1/0 fixed-effect singleton was removed (1 observation).
+
+  β = 0.003560  (SE = 0.001031)  p = 0.0006  N = 12196
+
+--- County House: State×Year FE ---
+
+County House State×Year A: dem_vote_share ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTE: 15/0 fixed-effect singletons were removed (15 observations).
+
+  β = 0.000107  (SE = 0.000213)  p = 0.6148  N = 11140
+
+County House State×Year B: incumbent_vote_share ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTE: 15/0 fixed-effect singletons were removed (15 observations).
+
+  β = 0.002143  (SE = 0.001188)  p = 0.0714  N = 11140
+
+County House State×Year C: log_total_votes ~ smoke_pm25_mean_30d | fips + state_fips^year
+NOTES: 9 observations removed because of NA values (LHS: 9).
+       1/3 fixed-effect singletons were removed (4 observations).
+
+  β = 0.001605  (SE = 0.001162)  p = 0.1673  N = 12193
+
+--- County House: Fraction Unhealthy ---
+
+County House Frac Unhealthy A: dem_vote_share ~ smoke_frac_unhealthy_30d | fips + year
+NOTE: 15/0 fixed-effect singletons were removed (15 observations).
+
+  β = 0.143267  (SE = 0.045068)  p = 0.0015  N = 11140
+
+County House Frac Unhealthy C: log_total_votes ~ smoke_frac_unhealthy_30d | fips + year
+NOTES: 9 observations removed because of NA values (LHS: 9).
+       1/0 fixed-effect singleton was removed (1 observation).
+
+  β = 0.959766  (SE = 0.502784)  p = 0.0564  N = 12196
+
+--- County House: With Time-Varying Controls ---
+
+NOTES: 32 observations removed because of NA values (RHS: 32).
+       15/0 fixed-effect singletons were removed (15 observations).
+County House +Controls A: DEM vote share
+  β = -0.000425  (SE = 0.000237)  p = 0.0737  N = 11108
+
+NOTES: 32 observations removed because of NA values (RHS: 32).
+       15/0 fixed-effect singletons were removed (15 observations).
+County House +Controls B: Incumbent vote share
+  β = 0.003747  (SE = 0.001279)  p = 0.0034  N = 11108
+
+NOTES: 41 observations removed because of NA values (LHS: 9, RHS: 32).
+       1/0 fixed-effect singleton was removed (1 observation).
+County House +Controls C: Log total votes
+  β = 0.003230  (SE = 0.000986)  p = 0.0011  N = 12164
+
+
+======================================================================
+R cross-check complete.
+======================================================================

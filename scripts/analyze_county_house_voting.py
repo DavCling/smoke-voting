@@ -41,7 +41,8 @@ def load_data():
     return df
 
 
-def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_time=True, label=""):
+def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_time=True,
+             state_year_fe=False, label=""):
     """Run a two-way fixed effects regression using linearmodels PanelOLS."""
     cols = [dep_var, smoke_var]
     if controls:
@@ -59,12 +60,21 @@ def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_t
     x = sm.add_constant(subset[x_cols])
 
     try:
-        mod = PanelOLS(
-            y, x,
-            entity_effects=absorb_entity,
-            time_effects=absorb_time,
-            check_rank=False,
-        )
+        if state_year_fe:
+            state_year_cat = pd.Categorical(
+                subset.index.get_level_values("fips").astype(str).str[:2] + "_" +
+                subset.index.get_level_values("year").astype(str)
+            )
+            other_ef = pd.DataFrame(state_year_cat, index=subset.index, columns=["state_year"])
+            mod = PanelOLS(y, x, entity_effects=True, time_effects=False,
+                           other_effects=other_ef, check_rank=False)
+        else:
+            mod = PanelOLS(
+                y, x,
+                entity_effects=absorb_entity,
+                time_effects=absorb_time,
+                check_rank=False,
+            )
         res = mod.fit(cov_type="clustered", cluster_entity=True)
         return res
     except Exception as e:
@@ -200,7 +210,7 @@ def create_summary_table(df):
     print("COUNTY-LEVEL HOUSE SUMMARY RESULTS TABLE")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     df_cont = df[~df["uncontested"]].copy()
 
@@ -230,12 +240,64 @@ def create_summary_table(df):
 
     if rows:
         tbl = pd.DataFrame(rows)
-        print(f"\n  Treatment: Mean smoke PM2.5, 60-day pre-election window")
+        print(f"\n  Treatment: Mean smoke PM2.5, 30-day pre-election window")
         print(f"  Fixed effects: County + Year")
         print(f"  Standard errors: Clustered by county")
         print(f"\n{tbl.to_string(index=False)}")
 
     return rows
+
+
+def frac_unhealthy_regressions(df):
+    """Alternative treatment: fraction of days exceeding EPA unhealthy threshold."""
+    print("\n" + "=" * 70)
+    print("ALTERNATIVE TREATMENT: Fraction Unhealthy Days (County-Level House)")
+    print("  (Fraction of days with smoke PM2.5 > 55.5 µg/m³)")
+    print("=" * 70)
+
+    smoke_var = "smoke_frac_unhealthy_30d"
+    if smoke_var not in df.columns:
+        print(f"  WARNING: {smoke_var} not found in dataset")
+        return
+
+    vals = df[smoke_var].dropna()
+    print(f"  Distribution: mean={vals.mean():.4f}, median={vals.median():.4f}, "
+          f"max={vals.max():.4f}, >0: {(vals > 0).sum():,}/{len(vals):,}")
+
+    df_cont = df[~df["uncontested"]].copy()
+
+    specs = [
+        (df_cont, "dem_vote_share", "DEM vote share"),
+        (df_cont, "incumbent_vote_share", "Incumbent vote share"),
+        (df, "log_total_votes", "Log total votes"),
+    ]
+
+    for data, dep_var, dep_label in specs:
+        res = run_twfe(data, dep_var, smoke_var,
+                       label=f"Frac unhealthy: {dep_label}")
+        print_result(res, f"Frac unhealthy: {dep_label}", smoke_var)
+
+
+def state_year_fe_regressions(df):
+    """Robustness check: State×Year FE instead of Year FE."""
+    print("\n" + "=" * 70)
+    print("ROBUSTNESS: State×Year Fixed Effects (County-Level House)")
+    print("  (Absorbs state-level time-varying shocks)")
+    print("=" * 70)
+
+    smoke_var = "smoke_pm25_mean_30d"
+    df_cont = df[~df["uncontested"]].copy()
+
+    specs = [
+        (df_cont, "dem_vote_share", "DEM vote share"),
+        (df_cont, "incumbent_vote_share", "Incumbent vote share"),
+        (df, "log_total_votes", "Log total votes"),
+    ]
+
+    for data, dep_var, dep_label in specs:
+        res = run_twfe(data, dep_var, smoke_var, state_year_fe=True,
+                       label=f"State×Year FE: {dep_label}")
+        print_result(res, f"State×Year FE: {dep_label}", smoke_var)
 
 
 def comparison_three_way(df):
@@ -244,7 +306,7 @@ def comparison_three_way(df):
     print("THREE-WAY COMPARISON: County House vs. District House vs. Presidential")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     # --- County-level House ---
     df_cont = df[~df["uncontested"]].copy()
@@ -340,7 +402,7 @@ def robustness_drop_uncontested(df):
     print("ROBUSTNESS: Including vs. Excluding Uncontested Counties")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     df_all = df.copy()
     df_cont = df[~df["uncontested"]].copy()
@@ -372,6 +434,60 @@ def robustness_drop_uncontested(df):
         print(f"  {dep_label:<25s} {coef_a:>10.6f}{stars_a:<2s} {pval_a:>10.4f} {coef_c:>12.6f}{stars_c:<2s} {pval_c:>12.4f}")
 
 
+def robustness_controls(df):
+    """Robustness check: add time-varying county controls."""
+    print("\n" + "=" * 70)
+    print("ROBUSTNESS: Time-Varying County Controls (County House)")
+    print("=" * 70)
+
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+
+    if not available:
+        print("  No control variables found in dataset. Skipping.")
+        return
+
+    print(f"  Controls: {available}")
+    n_with_controls = df[available].dropna().shape[0]
+    print(f"  Observations with all controls: {n_with_controls:,}/{len(df):,}")
+
+    smoke_var = "smoke_pm25_mean_30d"
+    # Use contested-only for vote share outcomes (consistent with summary table)
+    df_cont = df[~df["uncontested"]].copy()
+    specs = [
+        ("dem_vote_share", "DEM vote share", df_cont),
+        ("incumbent_vote_share", "Incumbent vote share", df_cont),
+        ("log_total_votes", "Log total votes", df),
+    ]
+
+    print(f"\n  {'Outcome':<25} {'Baseline β':>12} {'+ Controls β':>14} "
+          f"{'Baseline p':>12} {'+ Controls p':>14} {'N base':>8} {'N ctrl':>8}")
+    print("  " + "-" * 95)
+
+    for dep_var, dep_label, data in specs:
+        res_base = run_twfe(data, dep_var, smoke_var, label=f"Base: {dep_label}")
+        res_ctrl = run_twfe(data, dep_var, smoke_var, controls=available,
+                            label=f"+Controls: {dep_label}")
+
+        b_coef = res_base.params.get(smoke_var, np.nan) if res_base else np.nan
+        b_pval = res_base.pvalues.get(smoke_var, np.nan) if res_base else np.nan
+        b_n = res_base.nobs if res_base else 0
+        c_coef = res_ctrl.params.get(smoke_var, np.nan) if res_ctrl else np.nan
+        c_pval = res_ctrl.pvalues.get(smoke_var, np.nan) if res_ctrl else np.nan
+        c_n = res_ctrl.nobs if res_ctrl else 0
+
+        print(f"  {dep_label:<25} {b_coef:>12.6f} {c_coef:>14.6f} "
+              f"{b_pval:>12.4f} {c_pval:>14.4f} {b_n:>8,} {c_n:>8,}")
+
+    # Full results for with-controls regressions
+    print("\n  --- Full results with controls ---")
+    for dep_var, dep_label, data in specs:
+        res = run_twfe(data, dep_var, smoke_var, controls=available,
+                       label=f"+Controls: {dep_label}")
+        print_result(res, f"+Controls: {dep_label}", smoke_var)
+
+
 def main():
     print("=" * 70)
     print("County-Level House Election Analysis: Wildfire Smoke and Voting")
@@ -387,6 +503,12 @@ def main():
     # Summary table
     create_summary_table(df)
 
+    # Fraction unhealthy
+    frac_unhealthy_regressions(df)
+
+    # State×Year FE robustness
+    state_year_fe_regressions(df)
+
     # Three-way comparison
     comparison_three_way(df)
 
@@ -394,6 +516,7 @@ def main():
     print("\n\n" + "#" * 70)
     print("# ROBUSTNESS CHECKS")
     print("#" * 70)
+    robustness_controls(df)
     robustness_drop_uncontested(df)
 
     print("\n" + "=" * 70)
