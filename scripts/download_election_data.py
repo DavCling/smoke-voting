@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Phase 2: Download MEDSL county-level presidential election returns.
+Phase 2: Download MEDSL election returns.
 
-Source: MIT Election Data + Science Lab, Harvard Dataverse doi:10.7910/DVN/VOQCHQ
-File: countypres_2000-2024.csv — county-level presidential returns
+Sources:
+  - County presidential returns: Harvard Dataverse doi:10.7910/DVN/VOQCHQ
+  - Precinct-level House returns: Harvard Dataverse doi:10.7910/DVN/LYWX3D (2016, 2018, 2020)
 """
 
 import os
@@ -17,6 +18,14 @@ OUT_FILE = os.path.join(OUT_DIR, "county_presidential.csv")
 
 # Harvard Dataverse file ID for county presidential returns (original CSV format)
 DATAVERSE_URL = "https://dataverse.harvard.edu/api/access/datafile/13454740?format=original"
+
+# MEDSL precinct-level House returns (Harvard Dataverse file IDs)
+PRECINCT_HOUSE_FILES = {
+    2016: {"file_id": "6412765", "dest": "house_precinct_2016.csv"},
+    2018: {"file_id": "6692624", "dest": "house_precinct_2018.csv"},
+    2020: {"file_id": "6970347", "dest": "house_precinct_2020.csv"},
+}
+DATAVERSE_BASE = "https://dataverse.harvard.edu/api/access/datafile/{}?format=original"
 
 
 def download_file(url, dest, chunk_size=1024 * 1024):
@@ -84,13 +93,60 @@ def verify_election_data(path):
     return True
 
 
+def download_precinct_house():
+    """Download MEDSL precinct-level House returns for 2016, 2018, 2020."""
+    print("\n" + "=" * 60)
+    print("Downloading Precinct-Level House Returns")
+    print("=" * 60)
+
+    for year, info in sorted(PRECINCT_HOUSE_FILES.items()):
+        dest = os.path.join(OUT_DIR, info["dest"])
+        url = DATAVERSE_BASE.format(info["file_id"])
+        print(f"\n  {year} precinct House returns...")
+        downloaded = download_file(url, dest)
+        if downloaded:
+            print(f"  Saved to {dest}")
+
+
+def verify_precinct_house():
+    """Verify precinct-level House downloads."""
+    print("\nVerifying precinct House data...")
+    for year, info in sorted(PRECINCT_HOUSE_FILES.items()):
+        path = os.path.join(OUT_DIR, info["dest"])
+        if not os.path.exists(path):
+            print(f"  WARNING: Missing {path}")
+            continue
+
+        df = pd.read_csv(path, dtype={"county_fips": str}, low_memory=False)
+        df.columns = df.columns.str.lower().str.strip()
+
+        # Identify party column
+        party_col = "party_detailed" if "party_detailed" in df.columns else "party"
+        vote_col = "votes" if "votes" in df.columns else "candidatevotes"
+
+        n_rows = len(df)
+        n_counties = df["county_fips"].dropna().nunique()
+        years_found = df["year"].unique() if "year" in df.columns else ["N/A"]
+
+        print(f"  {year}: {n_rows:,} rows, {n_counties:,} counties, "
+              f"years={list(years_found)}, party_col={party_col}, vote_col={vote_col}")
+
+        # Check that US HOUSE rows exist
+        if "office" in df.columns:
+            house_rows = df[df["office"].str.upper() == "US HOUSE"]
+            print(f"    US HOUSE rows: {len(house_rows):,}")
+
+    print("  Precinct House verification complete.")
+
+
 def main():
     print("=" * 60)
-    print("Phase 2: Download MEDSL County Presidential Returns")
+    print("Phase 2: Download MEDSL Election Returns")
     print("=" * 60)
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
+    # County presidential returns
     print(f"\nDownloading county presidential returns (2000-2024)...")
     downloaded = download_file(DATAVERSE_URL, OUT_FILE)
 
@@ -99,7 +155,14 @@ def main():
 
     verify_election_data(OUT_FILE)
 
-    print(f"\nPhase 2 complete. Output: {OUT_FILE}")
+    # Precinct-level House returns
+    download_precinct_house()
+    verify_precinct_house()
+
+    print(f"\nPhase 2 complete.")
+    print(f"  Presidential: {OUT_FILE}")
+    for year, info in sorted(PRECINCT_HOUSE_FILES.items()):
+        print(f"  House precinct {year}: {os.path.join(OUT_DIR, info['dest'])}")
 
 
 if __name__ == "__main__":

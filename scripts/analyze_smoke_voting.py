@@ -433,8 +433,8 @@ def plot_binscatter(df):
         grand_mean = df_reset[var].mean()
         df_reset[f"{var}_resid"] = df_reset[var] - county_mean - year_mean + grand_mean
 
-    # Bin into 20 equal-sized bins of residualized smoke
-    df_reset["smoke_bin"] = pd.qcut(df_reset[f"{smoke_var}_resid"], 20, duplicates="drop")
+    # Bin into 50 equal-sized bins of residualized smoke
+    df_reset["smoke_bin"] = pd.qcut(df_reset[f"{smoke_var}_resid"], 50, duplicates="drop")
     binned = df_reset.groupby("smoke_bin", observed=True).agg({
         f"{smoke_var}_resid": "mean",
         f"{dep_var}_resid": "mean",

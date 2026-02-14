@@ -20,10 +20,12 @@ python scripts/download_election_data.py
 # 3. Build analysis datasets (merge smoke + elections → output/*.parquet)
 python scripts/build_smoke_analysis.py        # Presidential (county-level)
 python scripts/build_house_analysis.py         # House (district-level)
+python scripts/build_county_house_analysis.py  # House (county-level, from precinct data)
 
 # 4. Run analysis and generate figures (output/figures/)
 python scripts/analyze_smoke_voting.py         # Main presidential analysis
-python scripts/analyze_house_voting.py         # House analysis
+python scripts/analyze_house_voting.py         # House analysis (district-level)
+python scripts/analyze_county_house_voting.py  # House analysis (county-level)
 
 # 5. Cross-validate TWFE results in R
 Rscript scripts/analyze_house_voting_check.R
@@ -48,6 +50,7 @@ There is no Makefile, test suite, or linter configured.
 **Analysis datasets:**
 - `output/smoke_voting_analysis.parquet` — 12,429 county-election obs (2008–2020 presidential)
 - `output/smoke_voting_house_analysis.parquet` — 3,452 district-election obs (2006–2020 House)
+- `output/smoke_voting_county_house_analysis.parquet` — ~9,000 county-election obs (2016–2020 House, from precinct data)
 
 ## Key Dependencies
 

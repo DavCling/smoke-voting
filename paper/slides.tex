@@ -5,12 +5,12 @@
 \usepackage{natbib}
 \usepackage{appendixnumberbeamer}
 
-\graphicspath{{}}
+\graphicspath{{../output/figures/}}
 \bibliographystyle{apalike}
 
 \title{Wildfire Smoke and Voting Behavior\\in the United States}
 \subtitle{Preliminary Results}
-\author{}
+\author{David Clingingsmith\\\small Case Western Reserve University}
 \date{\today}
 
 \begin{document}
@@ -21,42 +21,19 @@
 \begin{frame}{Motivation}
 
 \begin{itemize}
-  \item Wildfire smoke is the most widespread \textit{experiential} consequence of climate change in the U.S.
-  \item Does smoke exposure change how people vote?
+  \item Wildfire smoke is a very widespread \textit{experiential} consequence of climate change in the U.S.
+  \begin{itemize}
+    \item Unlike ambient air pollution, smoke events are visible, sudden, and directly attributable to wildfires --- making them potentially more \textit{salient} as climate signals
+  \end{itemize}
+  \item Does smoke exposure change whether and how people vote?
   \item Prior work:
   \begin{itemize}
     \item \textbf{Fire proximity} $\rightarrow$ pro-environment voting in CA, but only among Democrats \citep{hazlett2020wildfire}
-    \item \textbf{Air pollution (PM\textsubscript{10})} $\rightarrow$ anti-incumbent voting in Germany \citep{bellani2024air}
+    \item \textbf{Overall air pollution (PM\textsubscript{10})} $\rightarrow$ anti-incumbent voting in Germany \citep{bellani2024air}
     \item \textbf{Rain on election day} $\rightarrow$ lower turnout \citep{gomez2007weather}
   \end{itemize}
-  \item \textbf{Gap:} Nobody has linked wildfire-specific smoke PM\textsubscript{2.5} to U.S.\ election outcomes
+  \item \textbf{Gap:} No study has linked wildfire-specific smoke PM\textsubscript{2.5} to U.S.\ election outcomes
 \end{itemize}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\begin{frame}{Why Smoke $>$ Fire Proximity}
-
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{Fire perimeters}
-\begin{itemize}
-  \item Treatment: $\sim$1,300 block groups near fire lines
-  \item California only
-  \item Confounded by property destruction, displacement, insurance
-  \item Endogenous to land use
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Wildfire smoke}
-\begin{itemize}
-  \item Treatment: \textit{every county in the U.S.}
-  \item National scope
-  \item Isolates experiential/health channel
-  \item Plausibly exogenous (wind-driven)
-\end{itemize}
-\end{column}
-\end{columns}
 
 \end{frame}
 
@@ -70,13 +47,17 @@
     \item ML separation of wildfire smoke from background PM\textsubscript{2.5}
   \end{itemize}
   \vspace{0.3cm}
-  \item \textbf{Presidential election returns} --- MIT Election Data Lab \citep{medsl2024county}
+  \item \textbf{Election returns} --- MIT Election Data Lab \citep{medsl2024county}
   \begin{itemize}
-    \item County-level, 2000--2024
+    \item Presidential: county-level, 2000--2024
+    \item House: precinct-level returns aggregated to county, 2016--2020
   \end{itemize}
   \vspace{0.3cm}
-  \item \textbf{Analysis sample:} 12,429 county $\times$ election observations\\
-  3,108 counties $\times$ 4 elections (2008, 2012, 2016, 2020)
+  \item \textbf{Analysis samples:}
+  \begin{itemize}
+    \item Presidential: 12,429 county $\times$ election obs (2008, 2012, 2016, 2020)
+    \item House: 9,171 county $\times$ election obs (2016, 2018, 2020)
+  \end{itemize}
 \end{enumerate}
 
 \end{frame}
@@ -110,12 +91,37 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
 \end{itemize}
 
 \vspace{0.3cm}
-\textbf{Identification:} Smoke plume direction is determined by wind, not by county politics or demographics.
+\textbf{Identifying assumption:} Conditional on county and year FE, variation in smoke exposure is uncorrelated with unobserved determinants of voting. This is plausible because smoke plume direction is determined by wind, not by county politics or demographics.
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Main Results}
+\begin{frame}{Identification: Threats and Estimator Choice}
+
+\textbf{Potential threats:}
+\begin{itemize}
+  \item Spatially correlated shocks (e.g., drought affects both fires and local economy)
+  \begin{itemize}
+    \item Mitigated: smoke travels hundreds of miles from fire origin
+  \end{itemize}
+  \item Secular trends in fire-prone vs.\ non-fire-prone regions
+  \begin{itemize}
+    \item Mitigated: county FE absorb levels; year FE absorb national trends
+  \end{itemize}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{TWFE with continuous treatment:}
+\begin{itemize}
+  \item \citet*{callaway2024continuous} show TWFE with a continuous treatment can produce coefficients with ambiguous causal interpretation due to heterogeneous dose--response weighting
+  \item Our setting mitigates this: treatment is atmospherically assigned (limiting selection into dose); we estimate a linear slope (non-negative ACRT weights)
+  \item Robustness: results hold when treatment is dichotomized or binned
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Main Results: Presidential Elections}
 
 \begin{table}
 \centering
@@ -203,7 +209,38 @@ $N$ & 4,144 & 4,141 & 4,143 \\
 \end{figure}
 
 \vspace{-0.2cm}
-{\small County and year FE residualized. 20 equal-sized bins of smoke exposure.}
+{\small County and year FE residualized. 50 equal-sized bins of smoke exposure.}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{House Elections: County-Level Analysis}
+
+\begin{table}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+& (1) County House & (2) Presidential \\
+\midrule
+\textit{DEM Vote Share} & 0.00038*** & 0.00087*** \\
+& (0.00013) & (0.00009) \\[4pt]
+\textit{Incumbent Share} & $-$0.00153*** & $-$0.00399*** \\
+& (0.00045) & (0.00044) \\[4pt]
+\midrule
+Unit & County & County \\
+$N$ (contested) & 8,391 & 12,429 \\
+Elections & 2016--2020 & 2008--2020 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.2cm}
+\begin{itemize}
+  \item County-level House confirms both pro-DEM and anti-incumbent effects
+  \item Magnitudes smaller than presidential, consistent with candidate-driven races
+  \item Same county-level unit avoids crosswalk measurement error
+\end{itemize}
 
 \end{frame}
 
@@ -234,18 +271,18 @@ Evidence is most consistent with \textbf{both} salience and negative affect chan
 
 \textbf{Current limitations:}
 \begin{itemize}
-  \item Only 4 presidential elections (smoke data: 2006--2020)
+  \item Only 4 presidential elections; 3 House elections (smoke data: 2006--2020)
   \item County-level aggregation; no individual-level variation
-  \item Turnout measure is crude (no population denominator)
+  \item Turnout measure is crude (log total votes without population denominator)
 \end{itemize}
 
 \vspace{0.3cm}
 \textbf{Planned extensions:}
 \begin{itemize}
   \item NOAA HMS smoke plumes for extended coverage through 2024
-  \item Congressional and state legislative elections
+  \item State legislative elections
   \item Wind direction as instrument for smoke exposure
-  \item State $\times$ year FE; Conley spatial SEs
+  \item Conley spatial SEs for inference robust to spatial correlation
 \end{itemize}
 
 \end{frame}

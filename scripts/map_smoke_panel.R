@@ -7,15 +7,26 @@ library(RColorBrewer)
 
 options(tigris_use_cache = TRUE)
 
-base_dir <- "/Users/David/Dropbox/Active Projects/early-ideas"
+# Resolve base directory (works with both Rscript and source())
+base_dir <- tryCatch({
+  normalizePath(file.path(dirname(sys.frame(1)$ofile), ".."))
+}, error = function(e) {
+  args <- commandArgs(trailingOnly = FALSE)
+  script_path <- sub("--file=", "", args[grep("--file=", args)])
+  normalizePath(file.path(dirname(script_path), ".."))
+})
 
-# --- Load analysis dataset ---
-df <- read_parquet(file.path(base_dir, "output", "smoke_voting_analysis.parquet"))
+# --- Load analysis datasets (presidential + county house for 2018 coverage) ---
+pres_df <- read_parquet(file.path(base_dir, "output", "smoke_voting_analysis.parquet"))
+house_df <- read_parquet(file.path(base_dir, "output", "smoke_voting_county_house_analysis.parquet"))
 
-# Keep one row per county-year with 30-day smoke measure
-panel <- df |>
-  select(fips, year, smoke_pm25_mean_30d) |>
-  mutate(fips = sprintf("%05s", fips))
+# Combine and keep unique fips-year with 30-day smoke measure
+panel <- bind_rows(
+  pres_df |> select(fips, year, smoke_pm25_mean_30d),
+  house_df |> select(fips, year, smoke_pm25_mean_30d)
+) |>
+  mutate(fips = sprintf("%05s", fips)) |>
+  distinct(fips, year, .keep_all = TRUE)
 
 # --- Get county shapefile (lower 48 + DC) ---
 counties_sf <- counties(cb = TRUE, resolution = "20m", year = 2019) |>
@@ -69,5 +80,5 @@ p <- ggplot(map_data) +
   )
 
 out_path <- file.path(base_dir, "output", "figures", "smoke_exposure_map_panel.png")
-ggsave(out_path, p, width = 12, height = 7, dpi = 200, bg = "white")
+ggsave(out_path, p, width = 14, height = 10, dpi = 200, bg = "white")
 cat("Saved:", out_path, "\n")
