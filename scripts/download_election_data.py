@@ -4,7 +4,7 @@ Phase 2: Download MEDSL election returns.
 
 Sources:
   - County presidential returns: Harvard Dataverse doi:10.7910/DVN/VOQCHQ
-  - Precinct-level House returns: Harvard Dataverse doi:10.7910/DVN/LYWX3D (2016, 2018, 2020)
+  - Precinct-level House returns: Harvard Dataverse doi:10.7910/DVN/LYWX3D (2016, 2018, 2020, 2022)
 """
 
 import os
@@ -24,6 +24,7 @@ PRECINCT_HOUSE_FILES = {
     2016: {"file_id": "6412765", "dest": "house_precinct_2016.csv"},
     2018: {"file_id": "6692624", "dest": "house_precinct_2018.csv"},
     2020: {"file_id": "6970347", "dest": "house_precinct_2020.csv"},
+    2022: {"file_id": "10855124", "dest": "house_precinct_2022.csv"},
 }
 DATAVERSE_BASE = "https://dataverse.harvard.edu/api/access/datafile/{}?format=original"
 
@@ -94,7 +95,7 @@ def verify_election_data(path):
 
 
 def download_precinct_house():
-    """Download MEDSL precinct-level House returns for 2016, 2018, 2020."""
+    """Download MEDSL precinct-level House returns for 2016, 2018, 2020, 2022."""
     print("\n" + "=" * 60)
     print("Downloading Precinct-Level House Returns")
     print("=" * 60)

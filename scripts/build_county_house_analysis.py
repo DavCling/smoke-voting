@@ -2,7 +2,7 @@
 """
 Build county-level House analysis dataset from MEDSL precinct returns.
 
-Aggregates precinct-level House election data (2016, 2018, 2020) to county level,
+Aggregates precinct-level House election data (2016, 2018, 2020, 2022) to county level,
 merges with daily smoke PM2.5 exposure, and outputs the analysis panel.
 
 Counties that span multiple House districts will have votes from all races summed.
@@ -25,12 +25,14 @@ PRECINCT_FILES = {
     2016: os.path.join(PRECINCT_DIR, "house_precinct_2016.csv"),
     2018: os.path.join(PRECINCT_DIR, "house_precinct_2018.csv"),
     2020: os.path.join(PRECINCT_DIR, "house_precinct_2020.csv"),
+    2022: os.path.join(PRECINCT_DIR, "house_precinct_2022.csv"),
 }
 
 ELECTION_DATES = {
     2016: "2016-11-08",
     2018: "2018-11-06",
     2020: "2020-11-03",
+    2022: "2022-11-08",
 }
 
 # Incumbent party (president's party)
@@ -38,6 +40,7 @@ INCUMBENT_PARTY = {
     2016: "DEMOCRAT",     # Obama admin
     2018: "REPUBLICAN",   # Trump admin
     2020: "REPUBLICAN",   # Trump admin
+    2022: "DEMOCRAT",     # Biden admin
 }
 
 # EPA thresholds for smoke PM2.5 (µg/m³)
@@ -246,7 +249,7 @@ def load_all_precinct_data():
     combined = pd.concat(all_years, ignore_index=True)
 
     # Compute lagged vote share (shift by 1 election within county)
-    # Elections are every 2 years: 2016 → 2018 → 2020
+    # Elections are every 2 years: 2016 → 2018 → 2020 → 2022
     combined = combined.sort_values(["fips", "year"])
     combined["dem_vote_share_lag"] = combined.groupby("fips")["dem_vote_share"].shift(1)
 

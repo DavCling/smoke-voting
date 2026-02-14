@@ -29,6 +29,7 @@ ELECTION_DATES = {
     2016: "2016-11-08",
     2018: "2018-11-06",
     2020: "2020-11-03",
+    2022: "2022-11-08",
 }
 
 # Incumbent party (president's party — midterm referendum framing)
@@ -41,11 +42,15 @@ INCUMBENT_PARTY = {
     2016: "DEMOCRAT",      # Obama admin
     2018: "REPUBLICAN",    # Trump admin
     2020: "REPUBLICAN",    # Trump admin
+    2022: "DEMOCRAT",      # Biden admin
 }
 
-# Redistricting cutoff: elections before this year use 2000 Census districts,
-# elections from this year onward use 2010 Census districts
-REDISTRICTING_CUTOFF = 2012
+# Redistricting cutoffs:
+# Before 2012: 2000 Census districts (108th Congress crosswalk)
+# 2012-2020: 2010 Census districts (113th Congress crosswalk)
+# 2022+: 2020 Census districts (118th Congress crosswalk)
+REDISTRICTING_CUTOFF_2010 = 2012
+REDISTRICTING_CUTOFF_2020 = 2022
 
 # EPA thresholds for smoke PM2.5 (µg/m³)
 EPA_USG_THRESHOLD = 35.5
@@ -134,12 +139,15 @@ def load_crosswalk(year, all_county_fips=None):
     If all_county_fips is provided, counties not found in the crosswalk are
     assigned to their state's at-large district (CD 00).
     """
-    if year < REDISTRICTING_CUTOFF:
+    if year < REDISTRICTING_CUTOFF_2010:
         path = os.path.join(CROSSWALK_DIR, "county_cd108.csv")
         label = "108th Congress (2000 Census)"
-    else:
+    elif year < REDISTRICTING_CUTOFF_2020:
         path = os.path.join(CROSSWALK_DIR, "county_cd113.csv")
         label = "113th Congress (2010 Census)"
+    else:
+        path = os.path.join(CROSSWALK_DIR, "county_cd118.csv")
+        label = "118th Congress (2020 Census)"
 
     if not os.path.exists(path):
         print(f"  WARNING: Crosswalk not found for {label}: {path}")
@@ -328,9 +336,10 @@ def load_house_data():
     pivot = pivot.sort_values(["district_id", "year"])
     pivot["dem_vote_share_lag"] = pivot.groupby("district_id")["dem_vote_share"].shift(1)
 
-    # Null out lagged vote share at redistricting boundary
-    # Districts changed definition at REDISTRICTING_CUTOFF, so lag is invalid
-    pivot.loc[pivot["year"] == REDISTRICTING_CUTOFF, "dem_vote_share_lag"] = np.nan
+    # Null out lagged vote share at redistricting boundaries
+    # Districts changed definition at each redistricting, so lag is invalid
+    pivot.loc[pivot["year"].isin([REDISTRICTING_CUTOFF_2010, REDISTRICTING_CUTOFF_2020]),
+              "dem_vote_share_lag"] = np.nan
 
     print(f"  {len(pivot):,} district-year observations")
     print(f"  Years: {sorted(pivot['year'].unique())}")

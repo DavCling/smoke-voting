@@ -20,7 +20,7 @@
 \maketitle
 
 \begin{abstract}
-\noindent Does wildfire smoke exposure shift political behavior? I exploit the quasi-random spatial dispersion of wildfire smoke plumes---driven by wind patterns rather than local conditions---to estimate the effect of smoke-derived PM\textsubscript{2.5} on county-level presidential and House election voting. Using daily county-level wildfire smoke PM\textsubscript{2.5} estimates \citep{childs2022daily} merged with election returns across multiple cycles (2008--2020 for presidential, 2016--2020 for House), I find that higher pre-election smoke exposure increases the Democratic two-party vote share and decreases the incumbent party's vote share. A 10~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 60 days before the election is associated with a 0.8 percentage point increase in the Democratic vote share in presidential races. The incumbent punishment effect is roughly five times larger. Effects are present across the partisan spectrum but somewhat stronger in Democratic-leaning counties. These results extend findings on fire proximity \citep{hazlett2020wildfire} and general air pollution \citep{bellani2024air} to a nationally representative setting where treatment assignment is plausibly exogenous.
+\noindent Does wildfire smoke exposure shift political behavior? I exploit the quasi-random spatial dispersion of wildfire smoke plumes---driven by wind patterns rather than local conditions---to estimate the effect of smoke-derived PM\textsubscript{2.5} on county-level presidential and House election voting. Using daily county-level wildfire smoke PM\textsubscript{2.5} estimates \citep{childs2022daily} merged with election returns across multiple cycles (2008--2020 for presidential, 2016--2022 for House), I find that higher pre-election smoke exposure increases the Democratic two-party vote share and decreases the incumbent party's vote share. A 10~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 60 days before the election is associated with a 0.8 percentage point increase in the Democratic vote share in presidential races. The incumbent punishment effect is roughly five times larger. Effects are present across the partisan spectrum but somewhat stronger in Democratic-leaning counties. These results extend findings on fire proximity \citep{hazlett2020wildfire} and general air pollution \citep{bellani2024air} to a nationally representative setting where treatment assignment is plausibly exogenous.
 
 \medskip
 \noindent \textit{JEL:} D72, Q54 \quad \textit{Keywords:} Wildfire smoke, voting behavior, air pollution, climate salience
@@ -40,9 +40,9 @@ This paper bridges these strands by using \textit{wildfire-specific} smoke PM\te
 
 \paragraph{Wildfire smoke PM\textsubscript{2.5}.} I use daily county-level estimates of wildfire-attributed PM\textsubscript{2.5} from \citet{childs2022daily}, covering all U.S.\ counties from January 2006 through December 2023 (v2.0 of the dataset). These estimates use NOAA Hazard Mapping System satellite smoke plume classifications combined with machine learning to separate wildfire-derived PM\textsubscript{2.5} from background pollution.
 
-\paragraph{Election returns.} County-level presidential election returns for 2000--2024 come from the MIT Election Data + Science Lab \citep{medsl2024county}. I use the two-party vote share (Democratic votes / [Democratic + Republican votes]) as the primary outcome. For House elections, I use precinct-level returns with county identifiers (2016, 2018, 2020) from the same source, aggregating precinct votes to the county level to enable analysis at the same geographic unit as the presidential regressions.
+\paragraph{Election returns.} County-level presidential election returns for 2000--2024 come from the MIT Election Data + Science Lab \citep{medsl2024county}. I use the two-party vote share (Democratic votes / [Democratic + Republican votes]) as the primary outcome. For House elections, I use precinct-level returns with county identifiers (2016, 2018, 2020, 2022) from the same source, aggregating precinct votes to the county level to enable analysis at the same geographic unit as the presidential regressions.
 
-\paragraph{Analysis samples.} The overlap of smoke data (2006--2020) and presidential elections yields four election cycles: 2008, 2012, 2016, and 2020. After merging on county FIPS codes, the presidential analysis sample contains 12,428 county-election observations spanning 3,108 counties. The county-level House sample covers three election cycles (2016, 2018, 2020) with 9,171 county-election observations.
+\paragraph{Analysis samples.} The overlap of smoke data (2006--2020) and presidential elections yields four election cycles: 2008, 2012, 2016, and 2020. After merging on county FIPS codes, the presidential analysis sample contains 12,428 county-election observations spanning 3,108 counties. The county-level House sample covers four election cycles (2016, 2018, 2020, 2022) with 12,206 county-election observations.
 
 \paragraph{Smoke exposure measures.} For each county and election, I aggregate daily smoke PM\textsubscript{2.5} over pre-election windows: 7, 30, 60, and 90 days before election day, plus the full fire season (June 1 to election day). The primary treatment variable is the mean daily smoke PM\textsubscript{2.5} in the 60 days before the election.
 
@@ -130,7 +130,7 @@ Figure~\ref{fig:windows} plots the estimated effect of mean smoke PM\textsubscri
 
 \subsection{Geographic Variation in Smoke Exposure}
 
-Figure~\ref{fig:maps} displays county-level mean smoke PM\textsubscript{2.5} in the 30 days before each election. The maps illustrate both the geographic scope and temporal variation that identify the main estimates: 2016 saw minimal pre-election smoke nationwide, while 2020 produced extreme exposure across the Western states following the historic August--September fire season.
+Figure~\ref{fig:maps} displays county-level mean smoke PM\textsubscript{2.5} in the 30 days before each election. The maps illustrate both the geographic scope and temporal variation that identify the main estimates: 2016 saw minimal pre-election smoke nationwide, while 2020 produced extreme exposure across the Western states following the historic August--September fire season. The 2022 midterm also shows substantial smoke exposure.
 
 \begin{figure}[htbp]
 \centering
@@ -141,9 +141,9 @@ Figure~\ref{fig:maps} displays county-level mean smoke PM\textsubscript{2.5} in 
 
 \subsection{House Elections}
 
-To test whether the effects extend beyond presidential races, I aggregate MEDSL precinct-level House returns (which include county FIPS identifiers) directly to the county level for 2016--2020, avoiding the measurement error that would be introduced by a county-to-congressional-district crosswalk.
+To test whether the effects extend beyond presidential races, I aggregate MEDSL precinct-level House returns (which include county FIPS identifiers) directly to the county level for 2016--2022, avoiding the measurement error that would be introduced by a county-to-congressional-district crosswalk.
 
-Table~\ref{tab:house} presents the county-level House results alongside the presidential estimates, all using the 60-day mean smoke PM\textsubscript{2.5} treatment. The county-level House analysis covers approximately 3,000 counties per election across three cycles (2016, 2018, 2020). Multi-district counties have votes from all House races aggregated, measuring overall House candidate performance in each county rather than individual district outcomes. The pro-Democratic and anti-incumbent effects are both statistically significant, though smaller in magnitude than the presidential estimates, consistent with the more candidate-driven nature of House races.
+Table~\ref{tab:house} presents the county-level House results alongside the presidential estimates, all using the 60-day mean smoke PM\textsubscript{2.5} treatment. The county-level House analysis covers approximately 3,000 counties per election across four cycles (2016, 2018, 2020, 2022). Multi-district counties have votes from all House races aggregated, measuring overall House candidate performance in each county rather than individual district outcomes. The pro-Democratic and anti-incumbent effects are both statistically significant, though smaller in magnitude than the presidential estimates, consistent with the more candidate-driven nature of House races.
 
 \begin{table}[htbp]
 \centering
@@ -156,19 +156,19 @@ Table~\ref{tab:house} presents the county-level House results alongside the pres
 & County House & Presidential \\
 \midrule
 \multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & 0.00040*** & 0.00077*** \\
-& (0.00012) & (0.00008) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00023** & 0.00077*** \\
+& (0.00010) & (0.00008) \\[6pt]
 \multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00113*** & $-$0.00379*** \\
-& (0.00042) & (0.00039) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00116** & $-$0.00379*** \\
+& (0.00047) & (0.00039) \\[6pt]
 \multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & 0.00151*** & 0.00213*** \\
-& (0.00058) & (0.00016) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00114*** & 0.00213*** \\
+& (0.00042) & (0.00016) \\[6pt]
 \midrule
 Unit & County & County \\
 FE & County + Year & County + Year \\
-Observations & 8,391 / 9,165 & 12,428 \\
-Elections & 2016--2020 & 2008--2020 \\
+Observations & 11,155 / 12,197 & 12,428 \\
+Elections & 2016--2022 & 2008--2020 \\
 \bottomrule
 \multicolumn{3}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. SEs clustered by county.} \\
 \multicolumn{3}{l}{\footnotesize Panels A--B use contested races only; Panel C includes all.} \\
@@ -179,33 +179,36 @@ As a further robustness check, I also estimate the House specifications at the c
 
 \subsection{Robustness to Excluding 2020}
 
-The 2020 election coincided with historically extreme wildfire smoke across the Western United States, raising the question of whether the main results are driven by this single year. Table~\ref{tab:drop2020} presents presidential estimates with and without 2020. The pro-Democratic effect on vote share is not robust to excluding 2020: the coefficient flips sign and is only marginally significant ($\beta = -0.00036$, $p = 0.097$). This indicates that the 2020 Western fire season---which produced extreme smoke exposure in Oregon, Washington, and California---provides much of the identifying variation for the Democratic vote share result.
+The 2020 election coincided with historically extreme wildfire smoke across the Western United States, raising the question of whether the main results are driven by this single year. Table~\ref{tab:drop2020} presents both presidential and House estimates with and without 2020. The pro-Democratic effect on vote share is not robust to excluding 2020 in either presidential or House races: the presidential coefficient flips sign and is only marginally significant ($\beta = -0.00036$, $p = 0.097$), while the House coefficient becomes statistically insignificant. This indicates that the 2020 Western fire season---which produced extreme smoke exposure in Oregon, Washington, and California---provides much of the identifying variation for the Democratic vote share result.
 
-By contrast, the anti-incumbent effect is robust and substantially \textit{larger} when 2020 is excluded ($\beta = -0.01368$, $p < 0.001$, compared to $-0.00379$ in the full sample). The turnout effect attenuates but remains statistically significant ($\beta = 0.00068$, $p = 0.006$). These patterns suggest that incumbent punishment is the most robust electoral consequence of wildfire smoke, while the pro-Democratic shift requires further investigation with additional election cycles.
+By contrast, the presidential anti-incumbent effect is robust and substantially \textit{larger} when 2020 is excluded ($\beta = -0.01368$, $p < 0.001$, compared to $-0.00379$ in the full sample). The House anti-incumbent effect, however, flips sign when 2020 is excluded, suggesting that the House incumbent punishment result is less robust. These patterns suggest that incumbent punishment in presidential races is the most robust electoral consequence of wildfire smoke, while the pro-Democratic shift and House-level effects require further investigation with additional election cycles.
 
 \begin{table}[htbp]
 \centering
-\caption{Robustness: Presidential Estimates Excluding 2020}
+\caption{Robustness: Estimates Excluding 2020}
 \label{tab:drop2020}
 \small
-\begin{tabular}{lcc}
+\begin{tabular}{lcccc}
 \toprule
-& (1) Full Sample & (2) Excluding 2020 \\
+& \multicolumn{2}{c}{Presidential} & \multicolumn{2}{c}{County House} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& Full Sample & Excl.\ 2020 & Full Sample & Excl.\ 2020 \\
 \midrule
-\multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & 0.00077*** & $-$0.00036* \\
-& (0.00008) & (0.00022) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00379*** & $-$0.01368*** \\
-& (0.00039) & (0.00141) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & 0.00213*** & 0.00068*** \\
-& (0.00016) & (0.00025) \\[3pt]
+\multicolumn{5}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00077*** & $-$0.00036* & 0.00023** & 0.00009 \\
+& (0.00008) & (0.00022) & (0.00010) & (0.00031) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00379*** & $-$0.01368*** & $-$0.00116** & 0.00362*** \\
+& (0.00039) & (0.00141) & (0.00047) & (0.00124) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00213*** & 0.00068*** & 0.00114*** & 0.00769*** \\
+& (0.00016) & (0.00025) & (0.00042) & (0.00159) \\[3pt]
 \midrule
-Observations & 12,428 & 9,320 \\
-Elections & 2008--2020 & 2008--2016 \\
+Observations & 12,428 & 9,320 & 11,155 & 8,262 \\
+Elections & 2008--2020 & 2008--2016 & 2016--2022 & 2016--2022 \\
 \bottomrule
-\multicolumn{3}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. County and year FE. SEs clustered by county.} \\
+\multicolumn{5}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. County and year FE. SEs clustered by county.} \\
+\multicolumn{5}{l}{\footnotesize Panels A--B use contested races only; Panel C includes all.} \\
 \end{tabular}
 \end{table}
 
@@ -217,15 +220,15 @@ Three mechanisms could drive these results. First, a \textit{salience} channel: 
 
 The data are more consistent with the first two mechanisms than the third. The pro-Democratic shift points toward salience, while the larger anti-incumbent effect points toward negative affect. The positive turnout coefficient (Column 3 of Table~\ref{tab:main}) is surprising and may reflect confounding from 2020's historically high turnout; this result should be interpreted cautiously.
 
-The robustness analysis in Table~\ref{tab:drop2020} sharpens the interpretation. The pro-Democratic effect is not robust to excluding 2020, suggesting the salience channel may require extreme smoke exposure to generate measurable partisan shifts. The anti-incumbent effect, by contrast, is robust and strengthens without 2020, suggesting that negative affect---punishing the party in power for experienced discomfort---operates even at moderate smoke levels and does not depend on a single extreme year.
+The robustness analysis in Table~\ref{tab:drop2020} sharpens the interpretation. The pro-Democratic effect is not robust to excluding 2020 in either presidential or House races, suggesting the salience channel may require extreme smoke exposure to generate measurable partisan shifts. The presidential anti-incumbent effect, by contrast, is robust and strengthens without 2020, suggesting that negative affect---punishing the party in power for experienced discomfort---operates even at moderate smoke levels and does not depend on a single extreme year. The House anti-incumbent effect is less robust, flipping sign when 2020 is excluded.
 
-\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections and three House elections, and as the robustness analysis demonstrates, the pro-Democratic finding is leveraged by the 2020 fire season. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
+\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections and four House elections, and as the robustness analysis demonstrates, the pro-Democratic finding is leveraged by the 2020 fire season. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
 
 %----------------------------------------------------------------------
 \section{Conclusion}
 %----------------------------------------------------------------------
 
-Wildfire smoke exposure punishes the incumbent party in both presidential and House elections, with effects that are statistically significant, robust to excluding 2020, present across the partisan spectrum, and strongest in the weeks immediately preceding the election. Smoke also shifts votes toward the Democratic Party, though this effect is driven by the extreme 2020 Western fire season and requires confirmation with additional election cycles. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a compelling research design for studying how environmental experience shapes political behavior.
+Wildfire smoke exposure punishes the incumbent party in presidential elections, with effects that are statistically significant, robust to excluding 2020, present across the partisan spectrum, and strongest in the weeks immediately preceding the election. House elections show similar patterns, though the effects are smaller and less robust to excluding 2020. Smoke also shifts votes toward the Democratic Party, though this effect is driven by the extreme 2020 Western fire season and requires confirmation with additional election cycles. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a compelling research design for studying how environmental experience shapes political behavior.
 
 \bibliography{references}
 
@@ -246,19 +249,19 @@ Wildfire smoke exposure punishes the incumbent party in both presidential and Ho
 & District House & County House \\
 \midrule
 \multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00016 & 0.00040*** \\
-& (0.00042) & (0.00012) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00027 & 0.00023** \\
+& (0.00042) & (0.00010) \\[6pt]
 \multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00190** & $-$0.00113*** \\
-& (0.00081) & (0.00042) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00220*** & $-$0.00116** \\
+& (0.00077) & (0.00047) \\[6pt]
 \multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00099 & 0.00151*** \\
-& (0.00143) & (0.00058) \\[6pt]
+Mean Smoke PM\textsubscript{2.5} (60d) & $-$0.00061 & 0.00114*** \\
+& (0.00143) & (0.00042) \\[6pt]
 \midrule
 Unit & District & County \\
 FE & District + Year & County + Year \\
-Observations & 3,013 / 3,447 & 8,391 / 9,165 \\
-Elections & 2006--2020 & 2016--2020 \\
+Observations & 3,406 / 3,879 & 11,155 / 12,197 \\
+Elections & 2006--2022 & 2016--2022 \\
 \bottomrule
 \multicolumn{3}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. SEs clustered by unit.} \\
 \multicolumn{3}{l}{\footnotesize District-level uses Census crosswalk to map county smoke to districts.} \\
