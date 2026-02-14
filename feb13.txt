@@ -1,0 +1,36 @@
+Project Idea 1: Wildfire Exposure and Voting Behavior
+Question: Does proximity to major wildfires affect people's political participation and voting behavior?
+Approach:
+
+Use precinct-level data from California
+Source wildfire data from Cal Fire
+Focus on precincts on wildfire boundaries (surrounding areas, not directly burned)
+Conduct before and after snapshots of treated precincts
+Define treated precincts using GIS boundary analysis
+Use synthetic control matching of comparison precincts based on characteristics from census tracts and block-level data
+
+
+Project Idea 2: Facebook Rollout and Political Participation
+Question: How does access to social networks (via Facebook) affect political participation in college towns?
+Approach:
+
+Use California precinct-level data with shape files
+Match to Facebook rollout data (colleges with dates and coordinates)
+Define spatial radius around colleges (e.g., one mile)
+Identify precincts within radius for elections before and after Facebook introduction
+Analyze whether social network access increases political participation
+Use college characteristics fromIPEDS as control variables
+Focus on having Claude write and debug spatial matching code to create rectangular datasets for econometric analysis
+
+
+Project Idea 3: Wind Turbine Installation and Voting Behavior
+Question: How does establishment of wind turbines affect voting behavior in nearby precincts?
+Approach:
+
+Use California precinct-level data
+Source wind turbine location and installation dates from federal government
+Examine effects on nearby voters, contrasting service workers in surrounding towns with those living on proximate land
+Analyze impact on political participation
+Identify potential instrumental variables from California and federal legislation
+Use prevailing wind maps to assess land suitability for turbines
+Explore policy shocks as instruments: policy changes interacted with prevailing winds to identify exogenous variation in turbine location

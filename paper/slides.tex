@@ -1,0 +1,272 @@
+\documentclass[aspectratio=169,12pt]{beamer}
+\usetheme{metropolis}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{appendixnumberbeamer}
+
+\graphicspath{{}}
+\bibliographystyle{apalike}
+
+\title{Wildfire Smoke and Voting Behavior\\in the United States}
+\subtitle{Preliminary Results}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+%----------------------------------------------------------------------
+\begin{frame}{Motivation}
+
+\begin{itemize}
+  \item Wildfire smoke is the most widespread \textit{experiential} consequence of climate change in the U.S.
+  \item Does smoke exposure change how people vote?
+  \item Prior work:
+  \begin{itemize}
+    \item \textbf{Fire proximity} $\rightarrow$ pro-environment voting in CA, but only among Democrats \citep{hazlett2020wildfire}
+    \item \textbf{Air pollution (PM\textsubscript{10})} $\rightarrow$ anti-incumbent voting in Germany \citep{bellani2024air}
+    \item \textbf{Rain on election day} $\rightarrow$ lower turnout \citep{gomez2007weather}
+  \end{itemize}
+  \item \textbf{Gap:} Nobody has linked wildfire-specific smoke PM\textsubscript{2.5} to U.S.\ election outcomes
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Why Smoke $>$ Fire Proximity}
+
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Fire perimeters}
+\begin{itemize}
+  \item Treatment: $\sim$1,300 block groups near fire lines
+  \item California only
+  \item Confounded by property destruction, displacement, insurance
+  \item Endogenous to land use
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Wildfire smoke}
+\begin{itemize}
+  \item Treatment: \textit{every county in the U.S.}
+  \item National scope
+  \item Isolates experiential/health channel
+  \item Plausibly exogenous (wind-driven)
+\end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Data}
+
+\begin{enumerate}
+  \item \textbf{Wildfire smoke PM\textsubscript{2.5}} --- Stanford Echo Lab \citep{childs2022daily}
+  \begin{itemize}
+    \item Daily, county-level, 2006--2020
+    \item ML separation of wildfire smoke from background PM\textsubscript{2.5}
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Presidential election returns} --- MIT Election Data Lab \citep{medsl2024county}
+  \begin{itemize}
+    \item County-level, 2000--2024
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Analysis sample:} 12,429 county $\times$ election observations\\
+  3,108 counties $\times$ 4 elections (2008, 2012, 2016, 2020)
+\end{enumerate}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Smoke Exposure Varies Dramatically Across Elections}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{smoke_exposure_map_panel.png}
+\end{figure}
+
+\vspace{-0.3cm}
+{\small Mean wildfire smoke PM\textsubscript{2.5} ($\mu$g/m$^3$) in the 30 days before election day.}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Empirical Strategy}
+
+Two-way fixed effects:
+\begin{equation*}
+Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct}
+\end{equation*}
+
+\begin{itemize}
+  \item $\alpha_c$: County FE --- absorb all time-invariant confounders
+  \item $\gamma_t$: Election year FE --- absorb national swings
+  \item SEs clustered by county
+  \item Treatment: mean smoke PM\textsubscript{2.5} in the 60 days before election
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Identification:} Smoke plume direction is determined by wind, not by county politics or demographics.
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Main Results}
+
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+& (1) & (2) & (3) \\
+& DEM Vote Share & Incumbent Share & Log Turnout \\
+\midrule
+Smoke PM\textsubscript{2.5} (60d) & 0.00087*** & $-$0.00399*** & 0.00242*** \\
+& (0.00009) & (0.00044) & (0.00018) \\[6pt]
+\midrule
+County FE & Yes & Yes & Yes \\
+Year FE & Yes & Yes & Yes \\
+$N$ & 12,429 & 12,429 & 12,429 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\begin{itemize}
+  \item \textbf{+10 $\mu$g/m$^3$ smoke $\rightarrow$ +0.9 pp DEM vote share}
+  \item Anti-incumbent effect is $\sim$4x larger than pro-DEM effect
+  \item No evidence of turnout suppression
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Effect Across the Partisan Spectrum}
+
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+& R-Leaning & Swing & D-Leaning \\
+\midrule
+Smoke PM\textsubscript{2.5} (60d) & 0.00066*** & 0.00049*** & 0.00082*** \\
+& (0.00021) & (0.00014) & (0.00013) \\[6pt]
+$N$ & 4,144 & 4,141 & 4,143 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\begin{itemize}
+  \item Effect is \textbf{present in all terciles} of prior partisanship
+  \item Somewhat larger in D-leaning counties
+  \item Contrast with \citet{hazlett2020wildfire}: fire proximity affects \textit{only} Democratic areas
+  \item Smoke is a broader, less politically sorted treatment
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Temporal Dynamics}
+
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{event_study_windows.png}
+\end{figure}
+\end{column}
+\begin{column}{0.42\textwidth}
+\vspace{1cm}
+\begin{itemize}
+  \item Effect significant at all windows
+  \item Strongest at 30 days
+  \item Consistent with recency / salience mechanism
+  \item Not just election-day disruption
+\end{itemize}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Binscatter: Smoke and Democratic Vote Share}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.65\textwidth]{binscatter_smoke_dem_share.png}
+\end{figure}
+
+\vspace{-0.2cm}
+{\small County and year FE residualized. 20 equal-sized bins of smoke exposure.}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{What Mechanism?}
+
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Mechanism & Turnout? & Partisan pattern & Our evidence \\
+\midrule
+\textbf{Salience} & No & Pro-environment & $\checkmark$ DEM shift \\
+\textbf{Negative affect} & No & Anti-incumbent & $\checkmark$ Large anti-incumb. \\
+\textbf{Disruption} & Suppression & Differential & $\times$ No suppression \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+Evidence is most consistent with \textbf{both} salience and negative affect channels operating simultaneously.
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Limitations and Next Steps}
+
+\textbf{Current limitations:}
+\begin{itemize}
+  \item Only 4 presidential elections (smoke data: 2006--2020)
+  \item County-level aggregation; no individual-level variation
+  \item Turnout measure is crude (no population denominator)
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Planned extensions:}
+\begin{itemize}
+  \item NOAA HMS smoke plumes for extended coverage through 2024
+  \item Congressional and state legislative elections
+  \item Wind direction as instrument for smoke exposure
+  \item State $\times$ year FE; Conley spatial SEs
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Summary}
+
+\begin{enumerate}
+  \item Wildfire smoke \textbf{increases Democratic vote share} and \textbf{punishes incumbents}
+  \item Effects are \textbf{nationally representative} and \textbf{cross the partisan spectrum}
+  \item Smoke is \textbf{plausibly exogenous} (wind-driven) and affects \textbf{far more people} than fire proximity
+  \item Consistent with both climate salience and negative affect mechanisms
+\end{enumerate}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\appendix
+\begin{frame}[allowframebreaks]{References}
+\small
+\bibliography{references}
+\end{frame}
+
+\end{document}

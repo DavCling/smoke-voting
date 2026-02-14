@@ -1,0 +1,154 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{setspace}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{}}
+
+\bibliographystyle{apalike}
+\onehalfspacing
+
+\title{Wildfire Smoke and Voting Behavior in the United States\thanks{Preliminary draft. Please do not cite or circulate without permission.}}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent Does wildfire smoke exposure shift political behavior? I exploit the quasi-random spatial dispersion of wildfire smoke plumes---driven by wind patterns rather than local conditions---to estimate the effect of smoke-derived PM\textsubscript{2.5} on county-level presidential voting. Using daily county-level wildfire smoke PM\textsubscript{2.5} estimates \citep{childs2022daily} merged with presidential election returns across four election cycles (2008--2020), I find that higher pre-election smoke exposure increases the Democratic two-party vote share and decreases the incumbent party's vote share. A 10~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 60 days before the election is associated with a 0.9 percentage point increase in the Democratic vote share. The incumbent punishment effect is roughly four times larger. Effects are present across the partisan spectrum but somewhat stronger in Democratic-leaning counties. These results extend findings on fire proximity \citep{hazlett2020wildfire} and general air pollution \citep{bellani2024air} to a nationally representative setting where treatment assignment is plausibly exogenous.
+
+\medskip
+\noindent \textit{JEL:} D72, Q54 \quad \textit{Keywords:} Wildfire smoke, voting behavior, air pollution, climate salience
+\end{abstract}
+
+%----------------------------------------------------------------------
+\section{Introduction}
+%----------------------------------------------------------------------
+
+Wildfires are among the most visible and rapidly growing consequences of climate change in the United States. Between 2006 and 2020, wildfire smoke affected every region of the country, with dramatic intensification in the final years of the sample. A growing literature investigates whether environmental shocks alter political behavior: \citet{hazlett2020wildfire} find that proximity to California wildfires increases pro-environment voting, but only in already-Democratic areas; \citet{bellani2024air} show that PM\textsubscript{10} pollution on election day shifts German voters against the incumbent; and \citet{gomez2007weather} demonstrate that rain suppresses voter turnout.
+
+This paper bridges these strands by using \textit{wildfire-specific} smoke PM\textsubscript{2.5} as a treatment variable across the entire continental United States. Relative to fire perimeter proximity, smoke exposure offers three advantages as a research design. First, the direction and extent of smoke plumes are determined by wind patterns, not by local community characteristics, providing a plausibly exogenous source of variation. Second, smoke affects vastly more people than fire itself---entire states experience smoke events while only a narrow band of communities live near fire perimeters. Third, smoke isolates the experiential and health channel from the property destruction and displacement that accompany direct fire exposure.
+
+%----------------------------------------------------------------------
+\section{Data}
+%----------------------------------------------------------------------
+
+\paragraph{Wildfire smoke PM\textsubscript{2.5}.} I use daily county-level estimates of wildfire-attributed PM\textsubscript{2.5} from \citet{childs2022daily}, covering all U.S.\ counties from January 2006 through December 2020. These estimates use NOAA Hazard Mapping System satellite smoke plume classifications combined with machine learning to separate wildfire-derived PM\textsubscript{2.5} from background pollution. The data are available at Harvard Dataverse (doi:10.7910/DVN/DJVMTV).
+
+\paragraph{Election returns.} County-level presidential election returns for 2000--2024 come from the MIT Election Data + Science Lab \citep{medsl2024county}. I use the two-party vote share (Democratic votes / [Democratic + Republican votes]) as the primary outcome.
+
+\paragraph{Analysis sample.} The overlap of smoke data (2006--2020) and presidential elections yields four election cycles: 2008, 2012, 2016, and 2020. After merging on county FIPS codes, the analysis sample contains 12,429 county-election observations spanning 3,108 counties.
+
+\paragraph{Smoke exposure measures.} For each county and election, I aggregate daily smoke PM\textsubscript{2.5} over pre-election windows: 7, 30, 60, and 90 days before election day, plus the full fire season (June 1 to election day). The primary treatment variable is the mean daily smoke PM\textsubscript{2.5} in the 60 days before the election.
+
+%----------------------------------------------------------------------
+\section{Empirical Strategy}
+%----------------------------------------------------------------------
+
+I estimate two-way fixed effects models of the form:
+\begin{equation}
+Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct}
+\label{eq:twfe}
+\end{equation}
+where $Y_{ct}$ is the outcome in county $c$ in election year $t$, $\alpha_c$ are county fixed effects absorbing all time-invariant county characteristics, $\gamma_t$ are election-year fixed effects absorbing national swings, and $\text{SmokePM}_{ct}$ is the mean wildfire smoke PM\textsubscript{2.5} in the pre-election window. Standard errors are clustered by county.
+
+The identifying assumption is that, conditional on county and year fixed effects, variation in wildfire smoke exposure is uncorrelated with unobserved determinants of voting. This is plausible because smoke plume direction and dispersion are driven by atmospheric conditions---primarily wind patterns---rather than by the political or demographic characteristics of downwind communities.
+
+%----------------------------------------------------------------------
+\section{Results}
+%----------------------------------------------------------------------
+
+\subsection{Main Results}
+
+Table~\ref{tab:main} presents the main estimates. Column (1) shows that a 1~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 60 days before the election increases the Democratic two-party vote share by 0.087 percentage points ($p < 0.001$). At the sample mean of 2.7~$\mu$g/m$^3$, this implies that moving from zero smoke to mean exposure shifts the Democratic vote share by roughly 0.24 percentage points. A county experiencing the 2020 Western fire season levels of smoke ($\sim$40~$\mu$g/m$^3$) would see a shift of approximately 3.5 percentage points.
+
+Column (2) shows that the incumbent punishment effect is substantially larger: a 1~$\mu$g/m$^3$ increase reduces the incumbent party's vote share by 0.40 percentage points. This is consistent with the negative-affect mechanism identified by \citet{bellani2024air} in the German context---smoke makes voters feel worse, and they punish the party in power regardless of its partisan identity.
+
+\begin{table}[htbp]
+\centering
+\caption{Effect of Wildfire Smoke on Voting Outcomes}
+\label{tab:main}
+\small
+\begin{tabular}{lccc}
+\toprule
+& (1) & (2) & (3) \\
+& DEM Vote Share & Incumbent Vote Share & Log Total Votes \\
+\midrule
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00087*** & $-$0.00399*** & 0.00242*** \\
+& (0.00009) & (0.00044) & (0.00018) \\[6pt]
+County FE & Yes & Yes & Yes \\
+Year FE & Yes & Yes & Yes \\
+Observations & 12,429 & 12,429 & 12,429 \\
+$R^2$ (within) & $-$0.007 & $-$0.024 & 0.070 \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. Standard errors clustered by county.} \\
+\end{tabular}
+\end{table}
+
+\subsection{Heterogeneity by Prior Partisanship}
+
+Table~\ref{tab:hetero} splits the sample by terciles of lagged Democratic vote share. The pro-Democratic shift from smoke is present in all three groups, with a somewhat larger effect in D-leaning counties (0.082 pp) than in R-leaning counties (0.066 pp). Unlike \citet{hazlett2020wildfire}, who find effects \textit{only} in Democratic areas for fire proximity, I find that smoke exposure moves all county types toward the Democrats, though the effect is modestly larger where pro-environment attitudes are presumably more prevalent.
+
+\begin{table}[htbp]
+\centering
+\caption{Heterogeneity by Prior Partisanship}
+\label{tab:hetero}
+\small
+\begin{tabular}{lccc}
+\toprule
+& R-Leaning & Swing & D-Leaning \\
+\midrule
+Mean Smoke PM\textsubscript{2.5} (60d) & 0.00066*** & 0.00049*** & 0.00082*** \\
+& (0.00021) & (0.00014) & (0.00013) \\[6pt]
+Observations & 4,144 & 4,141 & 4,143 \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize *** $p<0.01$. County and year FE. SEs clustered by county.} \\
+\end{tabular}
+\end{table}
+
+\subsection{Temporal Dynamics}
+
+Figure~\ref{fig:windows} plots the estimated effect of mean smoke PM\textsubscript{2.5} on Democratic vote share across different pre-election windows. The effect is statistically significant at all windows, with the largest point estimate at the 30-day window. This suggests that smoke exposure in the weeks most proximate to the election has the greatest electoral impact, consistent with a salience or recency mechanism.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{event_study_windows.png}
+\caption{Effect of smoke PM\textsubscript{2.5} on Democratic vote share by pre-election window length. Points are coefficient estimates from separate TWFE regressions; bars are 95\% confidence intervals.}
+\label{fig:windows}
+\end{figure}
+
+\subsection{Geographic Variation in Smoke Exposure}
+
+Figure~\ref{fig:maps} displays county-level mean smoke PM\textsubscript{2.5} in the 30 days before each election. The maps illustrate both the geographic scope and temporal variation that identify the main estimates: 2016 saw minimal pre-election smoke nationwide, while 2020 produced extreme exposure across the Western states following the historic August--September fire season.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{smoke_exposure_map_panel.png}
+\caption{Pre-election wildfire smoke exposure by county, 30-day window before election day.}
+\label{fig:maps}
+\end{figure}
+
+%----------------------------------------------------------------------
+\section{Discussion}
+%----------------------------------------------------------------------
+
+Three mechanisms could drive these results. First, a \textit{salience} channel: smoke makes climate change tangible, increasing the weight voters place on environmental issues and benefiting the party perceived as more pro-environment \citep{hazlett2020wildfire, kahn2007voting}. Second, a \textit{negative affect} channel: smoke degrades well-being and mood, and voters punish incumbents for experienced discomfort regardless of policy responsibility \citep{bellani2024air, healy2010myopic}. Third, a \textit{disruption} channel: smoke could differentially suppress turnout among certain voter groups \citep{gomez2007weather, burke2021exposures}.
+
+The data are more consistent with the first two mechanisms than the third. The pro-Democratic shift points toward salience, while the larger anti-incumbent effect points toward negative affect. The positive turnout coefficient (Column 3 of Table~\ref{tab:main}) is surprising and may reflect confounding from 2020's historically high turnout; this result should be interpreted cautiously.
+
+\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
+
+%----------------------------------------------------------------------
+\section{Conclusion}
+%----------------------------------------------------------------------
+
+Wildfire smoke exposure shifts votes toward the Democratic Party and against the incumbent, with effects that are statistically significant, present across the partisan spectrum, and strongest in the weeks immediately preceding the election. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a compelling research design for studying how environmental experience shapes political behavior.
+
+\bibliography{references}
+
+\end{document}
