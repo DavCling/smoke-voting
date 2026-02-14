@@ -67,18 +67,20 @@ p <- ggplot(map_data) +
   ) +
   theme_void(base_size = 13) +
   theme(
-    plot.title = element_text(face = "bold", hjust = 0.5, size = 16),
-    plot.subtitle = element_text(hjust = 0.5, color = "gray30", size = 11,
-                                 margin = margin(b = 10)),
-    strip.text = element_text(face = "bold", size = 14, margin = margin(b = 5)),
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14,
+                              margin = margin(t = 2, b = 2)),
+    plot.subtitle = element_text(hjust = 0.5, color = "gray30", size = 10,
+                                 margin = margin(b = 4)),
+    strip.text = element_text(face = "bold", size = 13, margin = margin(t = 2, b = 2)),
     legend.position = "bottom",
     legend.key.width = unit(2.5, "cm"),
     legend.key.height = unit(0.4, "cm"),
     legend.title = element_text(size = 10),
     legend.text = element_text(size = 9),
-    plot.margin = margin(10, 10, 10, 10)
+    legend.margin = margin(t = 0),
+    plot.margin = margin(2, 5, 5, 5)
   )
 
 out_path <- file.path(base_dir, "output", "figures", "smoke_exposure_map_panel.png")
-ggsave(out_path, p, width = 14, height = 10, dpi = 200, bg = "white")
+ggsave(out_path, p, width = 14, height = 8, dpi = 200, bg = "white")
 cat("Saved:", out_path, "\n")
