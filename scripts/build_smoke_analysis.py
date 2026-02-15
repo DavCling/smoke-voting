@@ -40,6 +40,7 @@ INCUMBENT_PARTY = {
 }
 
 # EPA thresholds for smoke PM2.5 (µg/m³)
+HAZE_THRESHOLD = 20.0      # Visible haze onset (Burke et al. 2021; O'Neill et al. 2013)
 EPA_USG_THRESHOLD = 35.5   # "Unhealthy for Sensitive Groups"
 EPA_UNHEALTHY = 55.5       # "Unhealthy"
 
@@ -168,6 +169,8 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             smoke_max=lambda x: x.max(),
             smoke_severe=lambda x: (x > EPA_USG_THRESHOLD).sum(),
             smoke_cumul=lambda x: x.sum(),
+            smoke_frac_haze=lambda x: (x > HAZE_THRESHOLD).sum() / len(x),
+            smoke_frac_usg=lambda x: (x > EPA_USG_THRESHOLD).sum() / len(x),
             smoke_frac_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum() / len(x),
         ).rename(columns={
             "smoke_days": f"smoke_days_{label}",
@@ -175,6 +178,8 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             "smoke_max": f"smoke_pm25_max_{label}",
             "smoke_severe": f"smoke_days_severe_{label}",
             "smoke_cumul": f"smoke_pm25_cumul_{label}",
+            "smoke_frac_haze": f"smoke_frac_haze_{label}",
+            "smoke_frac_usg": f"smoke_frac_usg_{label}",
             "smoke_frac_unhealthy": f"smoke_frac_unhealthy_{label}",
         })
 

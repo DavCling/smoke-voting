@@ -53,7 +53,7 @@ def load_data():
 
 
 def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_time=True,
-             state_year_fe=False, label=""):
+             state_year_fe=False, drop_absorbed=False, label=""):
     """Run a two-way fixed effects regression using linearmodels PanelOLS."""
     # Drop rows with missing dependent or independent variable
     cols = [dep_var, smoke_var]
@@ -79,13 +79,15 @@ def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_t
             )
             other_ef = pd.DataFrame(state_year_cat, index=subset.index, columns=["state_year"])
             mod = PanelOLS(y, x, entity_effects=True, time_effects=False,
-                           other_effects=other_ef, check_rank=False)
+                           other_effects=other_ef, check_rank=False,
+                           drop_absorbed=drop_absorbed)
         else:
             mod = PanelOLS(
                 y, x,
                 entity_effects=absorb_entity,
                 time_effects=absorb_time,
                 check_rank=False,
+                drop_absorbed=drop_absorbed,
             )
         res = mod.fit(cov_type="clustered", cluster_entity=True)
         return res
@@ -214,33 +216,64 @@ def spec_c_turnout(df):
     return results
 
 
-def frac_unhealthy_regressions(df):
-    """Alternative treatment: fraction of days exceeding EPA unhealthy threshold."""
+def threshold_comparison(df):
+    """Compare fraction-above-threshold treatment at 20, 35.5, and 55.5 µg/m³."""
     print("\n" + "=" * 70)
-    print("ALTERNATIVE TREATMENT: Fraction Unhealthy Days (Presidential)")
-    print("  (Fraction of days with smoke PM2.5 > 55.5 µg/m³)")
+    print("THRESHOLD COMPARISON: Fraction of Days Above Threshold (30d)")
+    print("  Haze (>20), USG (>35.5), Unhealthy (>55.5)")
     print("=" * 70)
 
-    smoke_var = "smoke_frac_unhealthy_30d"
-    if smoke_var not in df.columns:
-        print(f"  WARNING: {smoke_var} not found in dataset")
-        return
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
 
-    # Distribution check
-    vals = df[smoke_var].dropna()
-    print(f"  Distribution: mean={vals.mean():.4f}, median={vals.median():.4f}, "
-          f"max={vals.max():.4f}, >0: {(vals > 0).sum():,}/{len(vals):,}")
+    thresholds = [
+        ("smoke_frac_haze_30d", "Haze (>20 µg/m³)"),
+        ("smoke_frac_usg_30d", "USG (>35.5 µg/m³)"),
+        ("smoke_frac_unhealthy_30d", "Unhealthy (>55.5 µg/m³)"),
+    ]
 
-    specs = [
+    outcomes = [
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
     ]
 
-    for dep_var, dep_label in specs:
-        res = run_twfe(df, dep_var, smoke_var,
-                       label=f"Frac unhealthy: {dep_label}")
-        print_result(res, f"Frac unhealthy: {dep_label}", smoke_var)
+    for smoke_var, thresh_label in thresholds:
+        if smoke_var not in df.columns:
+            print(f"  WARNING: {smoke_var} not found in dataset")
+            continue
+
+        vals = df[smoke_var].dropna()
+        nonzero = (vals > 0).sum()
+        print(f"\n  {thresh_label}: {nonzero:,}/{len(vals):,} nonzero ({100*nonzero/len(vals):.1f}%)")
+        print(f"    mean={vals.mean():.4f}, max={vals.max():.4f}")
+
+        for dep_var, dep_label in outcomes:
+            # Spec 2: TWFE only
+            res2 = run_twfe(df, dep_var, smoke_var,
+                            label=f"{thresh_label} TWFE: {dep_label}")
+            if res2 is not None:
+                coef2 = res2.params.get(smoke_var, np.nan)
+                se2 = res2.std_errors.get(smoke_var, np.nan)
+                pval2 = res2.pvalues.get(smoke_var, np.nan)
+                stars2 = "***" if pval2 < 0.01 else "**" if pval2 < 0.05 else "*" if pval2 < 0.10 else ""
+            else:
+                coef2, se2, pval2, stars2 = np.nan, np.nan, np.nan, ""
+
+            # Spec 3: TWFE + controls
+            res3 = run_twfe(df, dep_var, smoke_var, controls=available,
+                            label=f"{thresh_label} +controls: {dep_label}")
+            if res3 is not None:
+                coef3 = res3.params.get(smoke_var, np.nan)
+                se3 = res3.std_errors.get(smoke_var, np.nan)
+                pval3 = res3.pvalues.get(smoke_var, np.nan)
+                stars3 = "***" if pval3 < 0.01 else "**" if pval3 < 0.05 else "*" if pval3 < 0.10 else ""
+            else:
+                coef3, se3, pval3, stars3 = np.nan, np.nan, np.nan, ""
+
+            print(f"    {dep_label:25s}  TWFE: β={coef2:.6f}{stars2:3s} (SE={se2:.6f})"
+                  f"  +Ctrl: β={coef3:.6f}{stars3:3s} (SE={se3:.6f})")
 
 
 def state_year_fe_regressions(df):
@@ -555,6 +588,441 @@ def temporal_dynamics_7day(df):
         print(f"\n  Saved figure: {fig_path}")
 
 
+def temporal_dynamics_controls(df):
+    """7-day temporal dynamics with controls (Spec 3) for mean PM2.5 and frac haze."""
+    print("\n" + "=" * 70)
+    print("TEMPORAL DYNAMICS WITH CONTROLS: 7-Day Windows")
+    print("  Treatment vars: Mean PM2.5, Fraction Haze (>20 µg/m³)")
+    print("=" * 70)
+
+    HAZE_THRESHOLD = 20.0
+
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+    print(f"  Controls: {available}")
+
+    # Load raw daily smoke data
+    print("  Loading raw daily smoke data...")
+    with open(SMOKE_FILE) as f:
+        sep = "\t" if "\t" in f.readline() else ","
+    smoke_raw = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    smoke_raw = smoke_raw.rename(columns={"GEOID": "fips", "smokePM_pred": "smoke_pm25"})
+    smoke_raw["fips"] = smoke_raw["fips"].str.zfill(5)
+    smoke_raw["date"] = pd.to_datetime(smoke_raw["date"], format="%Y%m%d")
+
+    # Compute 13 non-overlapping 7-day bins
+    n_bins = 13
+    bin_vars = []
+    for yr, edate_str in ELECTION_DATES.items():
+        edate = pd.Timestamp(edate_str)
+        earliest = edate - timedelta(days=n_bins * 7)
+        yr_smoke = smoke_raw[(smoke_raw["date"] > earliest) & (smoke_raw["date"] <= edate)].copy()
+
+        yr_bins = None
+        for b in range(n_bins):
+            bin_start = edate - timedelta(days=(b + 1) * 7)
+            bin_end = edate - timedelta(days=b * 7)
+            w = yr_smoke[(yr_smoke["date"] > bin_start) & (yr_smoke["date"] <= bin_end)]
+
+            bin_mean = w.groupby("fips")["smoke_pm25"].mean().rename(f"mean_bin_{b}")
+            bin_frac = w.groupby("fips")["smoke_pm25"].apply(
+                lambda x: (x > HAZE_THRESHOLD).mean()
+            ).rename(f"frac_bin_{b}")
+
+            if yr_bins is None:
+                yr_bins = pd.concat([bin_mean, bin_frac], axis=1)
+            else:
+                yr_bins = yr_bins.join(bin_mean, how="outer").join(bin_frac, how="outer")
+
+        yr_bins["year"] = yr
+        yr_bins = yr_bins.reset_index()
+        bin_vars.append(yr_bins)
+
+    bins_df = pd.concat(bin_vars, ignore_index=True).fillna(0)
+    bins_df = bins_df.set_index(["fips", "year"])
+
+    df_merged = df.join(bins_df, how="inner")
+    print(f"  Merged panel: {len(df_merged):,} obs")
+
+    outcomes = [
+        ("dem_vote_share", "DEM Vote Share"),
+        ("incumbent_vote_share", "Incumbent Vote Share"),
+        ("log_total_votes", "Log Total Votes"),
+    ]
+
+    treatments = [
+        ("mean_bin", "Mean Smoke PM$_{2.5}$", "Mean Smoke PM2.5",
+         "temporal_7day_mean_controls.png"),
+        ("frac_bin", "Frac. Days > 20 µg/m³ (Haze)", "Frac. Days Haze",
+         "temporal_7day_frac_controls.png"),
+    ]
+
+    bin_labels = [f"{b*7}\u2013{(b+1)*7-1}d" for b in range(n_bins)]
+    cum_labels = [f"0\u2013{(k+1)*7}d" for k in range(n_bins)]
+
+    all_treat_results = {}  # collect across treatments for combined figure
+
+    for prefix, fig_treat_label, print_treat_label, fig_name in treatments:
+        print(f"\n  === Treatment: {print_treat_label} ===")
+        bin_cols = [f"{prefix}_{b}" for b in range(n_bins)]
+
+        all_results = {}
+
+        for dep_var, dep_label in outcomes:
+            print(f"\n    --- {dep_label} ---")
+
+            # EXCLUSIVE: all 13 bins + controls as simultaneous regressors
+            cols_needed = [dep_var] + bin_cols + available
+            subset = df_merged[cols_needed].dropna().copy()
+            if len(subset) < 100:
+                print(f"      SKIP: only {len(subset)} obs")
+                continue
+
+            y = subset[dep_var]
+            x = sm.add_constant(subset[bin_cols + available])
+
+            try:
+                mod = PanelOLS(y, x, entity_effects=True, time_effects=True,
+                               check_rank=False, drop_absorbed=True)
+                res_excl = mod.fit(cov_type="clustered", cluster_entity=True)
+                excl_coefs = [res_excl.params.get(c, np.nan) for c in bin_cols]
+                excl_ses = [res_excl.std_errors.get(c, np.nan) for c in bin_cols]
+                excl_pvals = [res_excl.pvalues.get(c, np.nan) for c in bin_cols]
+
+                print(f"      Exclusive (N={int(res_excl.nobs):,}):")
+                for b in range(n_bins):
+                    stars = "***" if excl_pvals[b] < 0.01 else "**" if excl_pvals[b] < 0.05 else "*" if excl_pvals[b] < 0.10 else ""
+                    print(f"        {bin_labels[b]}: β={excl_coefs[b]:.6f} {stars} (SE={excl_ses[b]:.6f})")
+            except Exception as e:
+                print(f"      ERROR (exclusive): {e}")
+                excl_coefs, excl_ses = [np.nan] * n_bins, [np.nan] * n_bins
+
+            # CUMULATIVE: expanding windows + controls
+            cumul_coefs, cumul_ses = [], []
+            for k in range(n_bins):
+                cum_cols_k = bin_cols[:k + 1]
+                cum_var = f"{prefix}_cumul_{k}"
+                subset[cum_var] = subset[cum_cols_k].mean(axis=1)
+                y_k = subset[dep_var]
+                x_k = sm.add_constant(subset[[cum_var] + available])
+
+                try:
+                    mod_k = PanelOLS(y_k, x_k, entity_effects=True, time_effects=True,
+                                     check_rank=False, drop_absorbed=True)
+                    res_k = mod_k.fit(cov_type="clustered", cluster_entity=True)
+                    cumul_coefs.append(res_k.params.get(cum_var, np.nan))
+                    cumul_ses.append(res_k.std_errors.get(cum_var, np.nan))
+                except Exception:
+                    cumul_coefs.append(np.nan)
+                    cumul_ses.append(np.nan)
+
+            print(f"      Cumulative:")
+            for k in range(n_bins):
+                pval_k = np.nan
+                if not np.isnan(cumul_coefs[k]) and cumul_ses[k] > 0:
+                    from scipy import stats as sp_stats
+                    t_stat = cumul_coefs[k] / cumul_ses[k]
+                    pval_k = 2 * (1 - sp_stats.t.cdf(abs(t_stat), df=100))
+                stars = "***" if pval_k < 0.01 else "**" if pval_k < 0.05 else "*" if pval_k < 0.10 else ""
+                print(f"        0-{(k+1)*7}d: β={cumul_coefs[k]:.6f} {stars} (SE={cumul_ses[k]:.6f})")
+
+            all_results[dep_var] = {
+                "label": dep_label,
+                "excl_coefs": excl_coefs, "excl_ses": excl_ses,
+                "cumul_coefs": cumul_coefs, "cumul_ses": cumul_ses,
+            }
+
+        # Plot 3×2 figure (exclusive + cumulative, for appendix)
+        if all_results:
+            os.makedirs(FIG_DIR, exist_ok=True)
+            fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+            x_pos = np.arange(n_bins)
+            short_bin_labels = [f"{b*7}" for b in range(n_bins)]
+            short_cum_labels = [f"{(k+1)*7}" for k in range(n_bins)]
+            excl_color = "#2166ac"
+            cumul_color = "#b2182b"
+
+            for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+                if dep_var not in all_results:
+                    continue
+                r = all_results[dep_var]
+
+                # Exclusive (left column)
+                ax = axes[row_idx, 0]
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(r["excl_coefs"], r["excl_ses"])],
+                                [c + 1.96 * s for c, s in zip(r["excl_coefs"], r["excl_ses"])],
+                                alpha=0.2, color=excl_color)
+                ax.plot(x_pos, r["excl_coefs"], "o-", color=excl_color,
+                        linewidth=2, markersize=6)
+                ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(short_bin_labels, fontsize=8)
+                ax.tick_params(axis="y", labelsize=9)
+                ax.set_ylabel(dep_label, fontsize=10)
+                if row_idx == 0:
+                    ax.set_title("Exclusive 7-Day Windows", fontsize=12, fontweight="bold")
+                if row_idx == 2:
+                    ax.set_xlabel("Window start (days before election)", fontsize=10)
+
+                # Cumulative (right column)
+                ax = axes[row_idx, 1]
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(r["cumul_coefs"], r["cumul_ses"])],
+                                [c + 1.96 * s for c, s in zip(r["cumul_coefs"], r["cumul_ses"])],
+                                alpha=0.2, color=cumul_color)
+                ax.plot(x_pos, r["cumul_coefs"], "o-", color=cumul_color,
+                        linewidth=2, markersize=6)
+                ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(short_cum_labels, fontsize=8)
+                ax.tick_params(axis="y", labelsize=9)
+                if row_idx == 0:
+                    ax.set_title("Cumulative Windows", fontsize=12, fontweight="bold")
+                if row_idx == 2:
+                    ax.set_xlabel("Cumulative window (days)", fontsize=10)
+
+            plt.tight_layout()
+            fig_path = os.path.join(FIG_DIR, fig_name)
+            fig.savefig(fig_path, dpi=150, bbox_inches="tight")
+            plt.close()
+            print(f"\n  Saved figure: {fig_path}")
+
+        # Store for combined figure
+        all_treat_results[prefix] = all_results
+
+    # Combined cumulative-only figure: 3 rows (outcomes) × 2 cols (mean PM2.5, frac haze)
+    treat_configs = [
+        ("mean_bin", "Mean Smoke PM$_{2.5}$", "#2166ac"),
+        ("frac_bin", "Frac. Days > 20 µg/m$^3$ (Haze)", "#b2182b"),
+    ]
+    short_labels = [f"{(k+1)*7}" for k in range(n_bins)]
+
+    if all(t[0] in all_treat_results for t in treat_configs):
+        os.makedirs(FIG_DIR, exist_ok=True)
+        fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+        x_pos = np.arange(n_bins)
+
+        for col_idx, (prefix, col_title, color) in enumerate(treat_configs):
+            results = all_treat_results[prefix]
+            for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+                ax = axes[row_idx, col_idx]
+                if dep_var not in results:
+                    ax.set_visible(False)
+                    continue
+                r = results[dep_var]
+                coefs = r["cumul_coefs"]
+                ses = r["cumul_ses"]
+
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(coefs, ses)],
+                                [c + 1.96 * s for c, s in zip(coefs, ses)],
+                                alpha=0.2, color=color)
+                ax.plot(x_pos, coefs, "o-", color=color,
+                        linewidth=2, markersize=6)
+                ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(short_labels, fontsize=8)
+                ax.tick_params(axis="y", labelsize=9)
+                if col_idx == 0:
+                    ax.set_ylabel(dep_label, fontsize=10)
+                if row_idx == 0:
+                    ax.set_title(col_title, fontsize=12, fontweight="bold")
+                if row_idx == 2:
+                    ax.set_xlabel("Cumulative window (days)", fontsize=10)
+
+        plt.tight_layout()
+        fig_path = os.path.join(FIG_DIR, "temporal_cumulative_controls.png")
+        fig.savefig(fig_path, dpi=150, bbox_inches="tight")
+        plt.close()
+        print(f"\n  Saved combined cumulative figure: {fig_path}")
+
+
+def temporal_drop2020(df):
+    """Cumulative temporal dynamics: full sample vs. excluding 2020."""
+    print("\n" + "=" * 70)
+    print("TEMPORAL DYNAMICS: Full Sample vs. Excluding 2020")
+    print("  Cumulative windows, Spec 3 (TWFE + controls)")
+    print("=" * 70)
+
+    HAZE_THRESHOLD = 20.0
+
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+
+    # Load raw daily smoke data
+    print("  Loading raw daily smoke data...")
+    with open(SMOKE_FILE) as f:
+        sep = "\t" if "\t" in f.readline() else ","
+    smoke_raw = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    smoke_raw = smoke_raw.rename(columns={"GEOID": "fips", "smokePM_pred": "smoke_pm25"})
+    smoke_raw["fips"] = smoke_raw["fips"].str.zfill(5)
+    smoke_raw["date"] = pd.to_datetime(smoke_raw["date"], format="%Y%m%d")
+
+    # Compute 13 non-overlapping 7-day bins
+    n_bins = 13
+    bin_vars = []
+    for yr, edate_str in ELECTION_DATES.items():
+        edate = pd.Timestamp(edate_str)
+        earliest = edate - timedelta(days=n_bins * 7)
+        yr_smoke = smoke_raw[(smoke_raw["date"] > earliest) & (smoke_raw["date"] <= edate)].copy()
+
+        yr_bins = None
+        for b in range(n_bins):
+            bin_start = edate - timedelta(days=(b + 1) * 7)
+            bin_end = edate - timedelta(days=b * 7)
+            w = yr_smoke[(yr_smoke["date"] > bin_start) & (yr_smoke["date"] <= bin_end)]
+
+            bin_mean = w.groupby("fips")["smoke_pm25"].mean().rename(f"mean_bin_{b}")
+            bin_frac = w.groupby("fips")["smoke_pm25"].apply(
+                lambda x: (x > HAZE_THRESHOLD).mean()
+            ).rename(f"frac_bin_{b}")
+
+            if yr_bins is None:
+                yr_bins = pd.concat([bin_mean, bin_frac], axis=1)
+            else:
+                yr_bins = yr_bins.join(bin_mean, how="outer").join(bin_frac, how="outer")
+
+        yr_bins["year"] = yr
+        yr_bins = yr_bins.reset_index()
+        bin_vars.append(yr_bins)
+
+    bins_df = pd.concat(bin_vars, ignore_index=True).fillna(0)
+    bins_df = bins_df.set_index(["fips", "year"])
+
+    df_merged = df.join(bins_df, how="inner")
+
+    outcomes = [
+        ("dem_vote_share", "DEM Vote Share"),
+        ("incumbent_vote_share", "Incumbent Vote Share"),
+        ("log_total_votes", "Log Total Votes"),
+    ]
+
+    treatments = [
+        ("mean_bin", "Mean Smoke PM$_{2.5}$"),
+        ("frac_bin", "Frac. Days > 20 µg/m$^3$ (Haze)"),
+    ]
+
+    cum_labels = [f"0\u2013{(k+1)*7}d" for k in range(n_bins)]
+
+    samples = [
+        ("Full sample", df_merged),
+        ("Excl. 2020", df_merged[df_merged.index.get_level_values("year") != 2020]),
+    ]
+
+    print(f"  Full sample: {len(samples[0][1]):,} obs")
+    print(f"  Excl. 2020:  {len(samples[1][1]):,} obs")
+
+    # Run cumulative regressions for both samples
+    # results[prefix][dep_var][sample_label] = {"coefs": [...], "ses": [...]}
+    results = {}
+    for prefix, treat_label in treatments:
+        results[prefix] = {}
+        bin_cols = [f"{prefix}_{b}" for b in range(n_bins)]
+
+        for dep_var, dep_label in outcomes:
+            results[prefix][dep_var] = {}
+
+            for sample_label, sample_df in samples:
+                cols_needed = [dep_var] + bin_cols + available
+                subset = sample_df[cols_needed].dropna().copy()
+
+                cumul_coefs, cumul_ses = [], []
+                for k in range(n_bins):
+                    cum_cols_k = bin_cols[:k + 1]
+                    cum_var = f"{prefix}_cumul_{k}"
+                    subset[cum_var] = subset[cum_cols_k].mean(axis=1)
+                    y_k = subset[dep_var]
+                    x_k = sm.add_constant(subset[[cum_var] + available])
+
+                    try:
+                        mod_k = PanelOLS(y_k, x_k, entity_effects=True, time_effects=True,
+                                         check_rank=False, drop_absorbed=True)
+                        res_k = mod_k.fit(cov_type="clustered", cluster_entity=True)
+                        cumul_coefs.append(res_k.params.get(cum_var, np.nan))
+                        cumul_ses.append(res_k.std_errors.get(cum_var, np.nan))
+                    except Exception:
+                        cumul_coefs.append(np.nan)
+                        cumul_ses.append(np.nan)
+
+                results[prefix][dep_var][sample_label] = {
+                    "coefs": cumul_coefs, "ses": cumul_ses,
+                }
+
+                # Print summary at 30d (bin index 4, covering 0-35d ≈ 30d)
+                idx_30 = 3  # 0-28d is closest to 30d
+                coef_30 = cumul_coefs[idx_30] if idx_30 < len(cumul_coefs) else np.nan
+                se_30 = cumul_ses[idx_30] if idx_30 < len(cumul_ses) else np.nan
+                if not np.isnan(coef_30) and se_30 > 0:
+                    from scipy import stats as sp_stats
+                    t_stat = coef_30 / se_30
+                    pval_30 = 2 * (1 - sp_stats.t.cdf(abs(t_stat), df=100))
+                    stars = "***" if pval_30 < 0.01 else "**" if pval_30 < 0.05 else "*" if pval_30 < 0.10 else ""
+                    print(f"  {treat_label:35s} {dep_label:25s} {sample_label:12s}  "
+                          f"β(0-28d)={coef_30:.6f}{stars:3s} (SE={se_30:.6f})")
+
+    # Plot 3×2 figure: rows = outcomes, cols = treatments
+    # Two distinct colors per column: dark for full, orange for excl. 2020
+    os.makedirs(FIG_DIR, exist_ok=True)
+    fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+    x_pos = np.arange(n_bins)
+
+    # Use contrasting colors: dark blue/red for full, orange/coral for drop-2020
+    full_colors = {"mean_bin": "#2166ac", "frac_bin": "#b2182b"}
+    drop_colors = {"mean_bin": "#f4a582", "frac_bin": "#92c5de"}
+
+    # Shorter x-labels: just show the endpoint in days
+    short_labels = [f"{(k+1)*7}" for k in range(n_bins)]
+
+    for col_idx, (prefix, col_title) in enumerate(treatments):
+        fc = full_colors[prefix]
+        dc = drop_colors[prefix]
+        for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+            ax = axes[row_idx, col_idx]
+
+            # Full sample
+            r_full = results[prefix][dep_var]["Full sample"]
+            ax.fill_between(x_pos,
+                            [c - 1.96 * s for c, s in zip(r_full["coefs"], r_full["ses"])],
+                            [c + 1.96 * s for c, s in zip(r_full["coefs"], r_full["ses"])],
+                            alpha=0.2, color=fc)
+            ax.plot(x_pos, r_full["coefs"], "o-", color=fc,
+                    linewidth=2, markersize=6, label="2008\u20132020 (full)")
+
+            # Excl. 2020
+            r_drop = results[prefix][dep_var]["Excl. 2020"]
+            ax.fill_between(x_pos,
+                            [c - 1.96 * s for c, s in zip(r_drop["coefs"], r_drop["ses"])],
+                            [c + 1.96 * s for c, s in zip(r_drop["coefs"], r_drop["ses"])],
+                            alpha=0.2, color=dc)
+            ax.plot(x_pos, r_drop["coefs"], "s--", color=dc,
+                    linewidth=2, markersize=6, label="2008\u20132016 (excl. 2020)")
+
+            ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(short_labels, fontsize=8)
+            ax.tick_params(axis="y", labelsize=9)
+            if col_idx == 0:
+                ax.set_ylabel(dep_label, fontsize=10)
+            if row_idx == 0:
+                ax.set_title(col_title, fontsize=12, fontweight="bold")
+            if row_idx == 2:
+                ax.set_xlabel("Cumulative window (days)", fontsize=10)
+
+    # Shared legend at top
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", ncol=2,
+               fontsize=11, frameon=True, bbox_to_anchor=(0.5, 1.02))
+
+    plt.tight_layout(rect=[0, 0, 1, 0.97])
+    fig_path = os.path.join(FIG_DIR, "temporal_drop2020.png")
+    fig.savefig(fig_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"\n  Saved figure: {fig_path}")
+
+
 def placebo_test(df):
     """Test whether smoke in non-fire months predicts voting (should be null)."""
     print("\n" + "=" * 70)
@@ -750,6 +1218,121 @@ def robustness_controls(df):
         print_result(res, f"+Controls: {dep_label}", smoke_var)
 
 
+def _make_state_trends(df):
+    """Create state-specific linear trend columns for the panel.
+
+    Creates state_i × (year - mean) interactions. Collinear columns
+    are handled by drop_absorbed=True in the PanelOLS call.
+    """
+    fips_vals = df.index.get_level_values("fips").astype(str).str[:2]
+    year_vals = df.index.get_level_values("year").astype(float)
+    year_norm = year_vals - np.mean(year_vals)
+
+    states = sorted(fips_vals.unique())
+    if len(states) <= 1:
+        return df, []
+
+    # Drop first state for identification
+    trend_cols = []
+    for st in states[1:]:
+        col = f"trend_{st}"
+        df[col] = (fips_vals == st).astype(float) * year_norm
+        trend_cols.append(col)
+
+    return df, trend_cols
+
+
+def create_buildup_table(df):
+    """Build-up specification table: raw OLS → TWFE → +controls → +state trends."""
+    print("\n" + "=" * 70)
+    print("BUILD-UP SPECIFICATION TABLE (Presidential)")
+    print("  (1) Raw OLS  (2) County+Year FE  (3) +Controls  (4) +State Trends")
+    print("=" * 70)
+
+    smoke_var = "smoke_pm25_mean_30d"
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+
+    # Create state trend columns
+    df, trend_cols = _make_state_trends(df)
+
+    outcomes = [
+        ("dem_vote_share", "Panel A: DEM Vote Share"),
+        ("incumbent_vote_share", "Panel B: Incumbent Vote Share"),
+        ("log_total_votes", "Panel C: Log Total Votes"),
+    ]
+
+    results = {}
+
+    for dep_var, panel_label in outcomes:
+        print(f"\n  {panel_label}")
+        panel_results = []
+
+        # Spec 1: Raw OLS (no FE)
+        res1 = run_twfe(df, dep_var, smoke_var,
+                        absorb_entity=False, absorb_time=False,
+                        label=f"(1) Raw OLS: {dep_var}")
+        # Spec 2: County + Year FE
+        res2 = run_twfe(df, dep_var, smoke_var,
+                        label=f"(2) TWFE: {dep_var}")
+        # Spec 3: + Controls
+        res3 = run_twfe(df, dep_var, smoke_var, controls=available,
+                        label=f"(3) +Controls: {dep_var}")
+        # Spec 4: + State trends (drop absorbed variables automatically)
+        res4 = run_twfe(df, dep_var, smoke_var,
+                        controls=available + trend_cols,
+                        drop_absorbed=True,
+                        label=f"(4) +State trends: {dep_var}")
+
+        for i, res in enumerate([res1, res2, res3, res4], 1):
+            if res is not None:
+                coef = res.params.get(smoke_var, np.nan)
+                se = res.std_errors.get(smoke_var, np.nan)
+                pval = res.pvalues.get(smoke_var, np.nan)
+                n = int(res.nobs)
+                stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else ""
+                panel_results.append({"spec": i, "coef": coef, "se": se,
+                                      "pval": pval, "n": n, "stars": stars})
+            else:
+                panel_results.append({"spec": i, "coef": np.nan, "se": np.nan,
+                                      "pval": np.nan, "n": 0, "stars": ""})
+
+        results[dep_var] = panel_results
+
+    # Print formatted table
+    print("\n" + "-" * 80)
+    print(f"  {'':30s} {'(1)':>12s} {'(2)':>12s} {'(3)':>12s} {'(4)':>12s}")
+    print(f"  {'':30s} {'Raw OLS':>12s} {'TWFE':>12s} {'+Controls':>12s} {'+St.Trends':>12s}")
+    print("-" * 80)
+
+    for dep_var, panel_label in outcomes:
+        pr = results[dep_var]
+        coef_str = "  " + panel_label
+        se_str = "  "
+        print(coef_str)
+        coef_line = f"  {'Smoke PM2.5 (30d)':<30s}"
+        se_line = f"  {'':30s}"
+        for r in pr:
+            coef_line += f" {r['coef']:>10.5f}{r['stars']:<2s}"
+            se_line += f" ({r['se']:>9.5f}) "
+        print(coef_line)
+        print(se_line)
+        n_line = f"  {'Observations':<30s}"
+        for r in pr:
+            n_line += f" {r['n']:>11,} "
+        print(n_line)
+        print()
+
+    print(f"  {'County FE':<30s} {'':>12s} {'Yes':>12s} {'Yes':>12s} {'Yes':>12s}")
+    print(f"  {'Year FE':<30s} {'':>12s} {'Yes':>12s} {'Yes':>12s} {'Yes':>12s}")
+    print(f"  {'Controls':<30s} {'':>12s} {'':>12s} {'Yes':>12s} {'Yes':>12s}")
+    print(f"  {'State trends':<30s} {'':>12s} {'':>12s} {'':>12s} {'Yes':>12s}")
+    print("-" * 80)
+
+    return results
+
+
 def main():
     print("=" * 70)
     print("Phase 4: Wildfire Smoke and Voting Behavior — Analysis")
@@ -769,6 +1352,9 @@ def main():
     # Summary table
     create_summary_table(df)
 
+    # Build-up specification table
+    create_buildup_table(df)
+
     # Heterogeneity
     heterogeneity_tests(df)
 
@@ -781,8 +1367,14 @@ def main():
     # 7-day temporal dynamics
     temporal_dynamics_7day(df)
 
-    # Fraction unhealthy
-    frac_unhealthy_regressions(df)
+    # 7-day temporal dynamics with controls (Spec 3)
+    temporal_dynamics_controls(df)
+
+    # Temporal dynamics: full sample vs. drop 2020
+    temporal_drop2020(df)
+
+    # Threshold comparison (haze, USG, unhealthy)
+    threshold_comparison(df)
 
     # State×Year FE robustness
     state_year_fe_regressions(df)

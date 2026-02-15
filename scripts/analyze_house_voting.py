@@ -39,7 +39,8 @@ def load_data():
     return df
 
 
-def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_time=True, label=""):
+def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_time=True,
+             state_year_fe=False, label=""):
     """Run a two-way fixed effects regression using linearmodels PanelOLS."""
     cols = [dep_var, smoke_var]
     if controls:
@@ -57,12 +58,24 @@ def run_twfe(df, dep_var, smoke_var, controls=None, absorb_entity=True, absorb_t
     x = sm.add_constant(subset[x_cols])
 
     try:
-        mod = PanelOLS(
-            y, x,
-            entity_effects=absorb_entity,
-            time_effects=absorb_time,
-            check_rank=False,
-        )
+        if state_year_fe:
+            # For district-level data, extract state from district_id (first 2 chars)
+            entity_idx = subset.index.get_level_values(0).astype(str)
+            state_codes = entity_idx.str[:2]
+            state_year_cat = pd.Categorical(
+                state_codes + "_" +
+                subset.index.get_level_values("year").astype(str)
+            )
+            other_ef = pd.DataFrame(state_year_cat, index=subset.index, columns=["state_year"])
+            mod = PanelOLS(y, x, entity_effects=True, time_effects=False,
+                           other_effects=other_ef, check_rank=False)
+        else:
+            mod = PanelOLS(
+                y, x,
+                entity_effects=absorb_entity,
+                time_effects=absorb_time,
+                check_rank=False,
+            )
         res = mod.fit(cov_type="clustered", cluster_entity=True)
         return res
     except Exception as e:
@@ -199,7 +212,7 @@ def create_summary_table(df):
     print("HOUSE SUMMARY RESULTS TABLE")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     # Contested only for vote share specs
     df_cont = df[~df["uncontested"]].copy()
@@ -230,12 +243,34 @@ def create_summary_table(df):
 
     if rows:
         tbl = pd.DataFrame(rows)
-        print(f"\n  Treatment: Mean smoke PM2.5, 60-day pre-election window")
+        print(f"\n  Treatment: Mean smoke PM2.5, 30-day pre-election window")
         print(f"  Fixed effects: District + Year")
         print(f"  Standard errors: Clustered by district")
         print(f"\n{tbl.to_string(index=False)}")
 
     return rows
+
+
+def state_year_fe_regressions(df):
+    """Robustness check: State×Year FE instead of Year FE."""
+    print("\n" + "=" * 70)
+    print("ROBUSTNESS: State×Year Fixed Effects (District-Level House)")
+    print("  (Absorbs state-level time-varying shocks)")
+    print("=" * 70)
+
+    smoke_var = "smoke_pm25_mean_30d"
+    df_cont = df[~df["uncontested"]].copy()
+
+    specs = [
+        (df_cont, "dem_vote_share", "DEM vote share"),
+        (df_cont, "incumbent_vote_share", "Incumbent vote share"),
+        (df, "log_total_votes", "Log total votes"),
+    ]
+
+    for data, dep_var, dep_label in specs:
+        res = run_twfe(data, dep_var, smoke_var, state_year_fe=True,
+                       label=f"State×Year FE: {dep_label}")
+        print_result(res, f"State×Year FE: {dep_label}", smoke_var)
 
 
 def comparison_with_presidential(df):
@@ -244,7 +279,7 @@ def comparison_with_presidential(df):
     print("COMPARISON: House vs. Presidential Regressions")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     # House results (contested only for vote share)
     df_cont = df[~df["uncontested"]].copy()
@@ -317,7 +352,7 @@ def robustness_drop_uncontested(df):
     print("ROBUSTNESS: Including vs. Excluding Uncontested Races")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     df_all = df.copy()
     df_cont = df[~df["uncontested"]].copy()
@@ -355,7 +390,7 @@ def robustness_midterm_vs_presidential(df):
     print("ROBUSTNESS: Midterm vs. Presidential Election Years")
     print("=" * 70)
 
-    smoke_var = "smoke_pm25_mean_60d"
+    smoke_var = "smoke_pm25_mean_30d"
 
     midterm_years = {2006, 2010, 2014, 2018}
     presidential_years = {2008, 2012, 2016, 2020}
@@ -405,6 +440,9 @@ def main():
 
     # Summary table
     create_summary_table(df)
+
+    # State×Year FE robustness
+    state_year_fe_regressions(df)
 
     # Comparison with presidential
     comparison_with_presidential(df)

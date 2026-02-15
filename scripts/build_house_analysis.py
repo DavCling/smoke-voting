@@ -53,6 +53,7 @@ REDISTRICTING_CUTOFF_2010 = 2012
 REDISTRICTING_CUTOFF_2020 = 2022
 
 # EPA thresholds for smoke PM2.5 (µg/m³)
+HAZE_THRESHOLD = 20.0      # Visible haze onset
 EPA_USG_THRESHOLD = 35.5
 EPA_UNHEALTHY = 55.5
 
@@ -112,6 +113,9 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             smoke_days_gt1=lambda x: (x > 1).sum(),
             smoke_days_gt5=lambda x: (x > 5).sum(),
             smoke_days_gt12=lambda x: (x > 12).sum(),
+            smoke_frac_haze=lambda x: (x > HAZE_THRESHOLD).sum() / len(x),
+            smoke_frac_usg=lambda x: (x > EPA_USG_THRESHOLD).sum() / len(x),
+            smoke_frac_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum() / len(x),
         ).rename(columns={
             "smoke_days": f"smoke_days_{label}",
             "smoke_mean": f"smoke_pm25_mean_{label}",
@@ -121,6 +125,9 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
             "smoke_days_gt1": f"smoke_days_gt1_{label}",
             "smoke_days_gt5": f"smoke_days_gt5_{label}",
             "smoke_days_gt12": f"smoke_days_gt12_{label}",
+            "smoke_frac_haze": f"smoke_frac_haze_{label}",
+            "smoke_frac_usg": f"smoke_frac_usg_{label}",
+            "smoke_frac_unhealthy": f"smoke_frac_unhealthy_{label}",
         })
 
         result_df = result_df.merge(agg, on="fips", how="left")

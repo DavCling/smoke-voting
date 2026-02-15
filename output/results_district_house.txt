@@ -1,0 +1,204 @@
+======================================================================
+House Election Analysis: Wildfire Smoke and Voting Behavior
+======================================================================
+Loading House analysis dataset...
+  3,881 observations, 453 districts, 9 elections
+  Years: [2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022]
+  Uncontested: 475
+
+======================================================================
+SPECIFICATION A: Smoke Exposure → Democratic Vote Share (House)
+======================================================================
+  Using 3,406 contested district-year observations
+
+  Mean smoke PM2.5 (60 days)
+    β = -0.000266   (SE = 0.000419)
+    95% CI: [-0.001087, 0.000556]
+    p-value = 0.5262
+    N = 3,406
+    R² (within) = -0.0003
+
+  Smoke days (60 days)
+    β = -0.000789 **  (SE = 0.000327)
+    95% CI: [-0.001430, -0.000148]
+    p-value = 0.0159
+    N = 3,406
+    R² (within) = 0.0007
+
+  Severe smoke days (60 days)
+    β = -0.000592   (SE = 0.001908)
+    95% CI: [-0.004332, 0.003149]
+    p-value = 0.7566
+    N = 3,406
+    R² (within) = 0.0001
+
+  Mean smoke PM2.5 (7 days)
+    β = 0.000862   (SE = 0.001060)
+    95% CI: [-0.001216, 0.002939]
+    p-value = 0.4164
+    N = 3,406
+    R² (within) = -0.0004
+
+  Mean smoke PM2.5 (fire season)
+    β = -0.000070   (SE = 0.000858)
+    95% CI: [-0.001752, 0.001611]
+    p-value = 0.9345
+    N = 3,406
+    R² (within) = -0.0004
+
+  --- With lagged DEM vote share control ---
+
+  Mean PM2.5 (60d) + lag control
+    β = 0.000174   (SE = 0.000235)
+    95% CI: [-0.000287, 0.000635]
+    p-value = 0.4596
+    N = 2,260
+    R² (within) = 0.2827
+
+======================================================================
+SPECIFICATION B: Smoke Exposure → Incumbent Party Vote Share (House)
+======================================================================
+  Using 3,406 contested district-year observations
+
+  Mean smoke PM2.5 (60 days)
+    β = -0.002202 ***  (SE = 0.000769)
+    95% CI: [-0.003709, -0.000694]
+    p-value = 0.0042
+    N = 3,406
+    R² (within) = 0.0024
+
+  Smoke days (60 days)
+    β = -0.003092 ***  (SE = 0.000615)
+    95% CI: [-0.004297, -0.001887]
+    p-value = 0.0000
+    N = 3,406
+    R² (within) = -0.0296
+
+  Severe smoke days (60 days)
+    β = -0.006484 *  (SE = 0.003465)
+    95% CI: [-0.013276, 0.000308]
+    p-value = 0.0614
+    N = 3,406
+    R² (within) = 0.0015
+
+  Mean smoke PM2.5 (7 days)
+    β = -0.007490 ***  (SE = 0.001878)
+    95% CI: [-0.011171, -0.003809]
+    p-value = 0.0001
+    N = 3,406
+    R² (within) = 0.0035
+
+======================================================================
+SPECIFICATION C: Smoke Exposure → Voter Turnout (House)
+======================================================================
+  Using all 3,881 district-year observations (incl. uncontested)
+
+  Mean smoke PM2.5 (60 days)
+    β = -0.000612   (SE = 0.001428)
+    95% CI: [-0.003412, 0.002187]
+    p-value = 0.6681
+    N = 3,879
+    R² (within) = -0.0002
+
+  Smoke days (60 days)
+    β = -0.008031 **  (SE = 0.003168)
+    95% CI: [-0.014240, -0.001822]
+    p-value = 0.0113
+    N = 3,879
+    R² (within) = -0.0261
+
+  Mean smoke PM2.5 (7 days)
+    β = -0.006451   (SE = 0.004651)
+    95% CI: [-0.015566, 0.002665]
+    p-value = 0.1655
+    N = 3,879
+    R² (within) = -0.0009
+
+  Severe smoke days (60 days)
+    β = -0.008172 ***  (SE = 0.002996)
+    95% CI: [-0.014044, -0.002299]
+    p-value = 0.0064
+    N = 3,879
+    R² (within) = -0.0009
+
+======================================================================
+HOUSE SUMMARY RESULTS TABLE
+======================================================================
+
+  Treatment: Mean smoke PM2.5, 30-day pre-election window
+  Fixed effects: District + Year
+  Standard errors: Clustered by district
+
+               Specification   Dependent Variable          β         SE p-value     N R² (within)
+     Spec A: Pro-environment       DEM vote share  -0.000808 (0.000861)  0.3480 3,406      0.0019
+Spec B: Incumbent punishment Incumbent vote share  -0.001616 (0.001620)  0.3184 3,406     -0.0005
+             Spec C: Turnout      Log total votes -0.010215* (0.005652)  0.0708 3,879     -0.0032
+
+======================================================================
+ROBUSTNESS: State×Year Fixed Effects (District-Level House)
+  (Absorbs state-level time-varying shocks)
+======================================================================
+
+  State×Year FE: DEM vote share
+    β = -0.002890 **  (SE = 0.001243)
+    95% CI: [-0.005326, -0.000455]
+    p-value = 0.0201
+    N = 3,406
+    R² (within) = 0.0017
+
+  State×Year FE: Incumbent vote share
+    β = 0.004221 **  (SE = 0.001760)
+    95% CI: [0.000772, 0.007670]
+    p-value = 0.0165
+    N = 3,406
+    R² (within) = -0.0039
+
+  State×Year FE: Log total votes
+    β = -0.008736   (SE = 0.009352)
+    95% CI: [-0.027065, 0.009594]
+    p-value = 0.3503
+    N = 3,879
+    R² (within) = -0.0026
+
+======================================================================
+COMPARISON: House vs. Presidential Regressions
+======================================================================
+
+  Outcome                        House β    House p  House N         Pres β     Pres p   Pres N
+  ------------------------------------------------------------------------------------------
+  DEM vote share             -0.000808       0.3480    3,406     0.001346***     0.0000   12,428
+  Incumbent vote share       -0.001616       0.3184    3,406    -0.001722*      0.0573   12,428
+  Log total votes            -0.010215*      0.0708    3,879     0.003137***     0.0000   12,428
+
+
+######################################################################
+# ROBUSTNESS CHECKS
+######################################################################
+
+======================================================================
+ROBUSTNESS: Including vs. Excluding Uncontested Races
+======================================================================
+
+  All districts: 3,881 | Contested only: 3,406
+
+  Outcome                          All β      All p    Contested β  Contested p
+  -------------------------------------------------------------------------
+  DEM vote share              0.001206       0.1794    -0.000808         0.3480
+  Incumbent vote share       -0.004086**     0.0363    -0.001616         0.3184
+  Log total votes            -0.010215*      0.0708     0.000101         0.9170
+
+======================================================================
+ROBUSTNESS: Midterm vs. Presidential Election Years
+======================================================================
+
+  Midterm: 1,497 obs ([2006, 2010, 2014, 2018])
+  Presidential: 1,516 obs ([2008, 2012, 2016, 2020])
+
+  Outcome                      Midterm β      Mid p    Pres-yr β     Pres p
+  ---------------------------------------------------------------------
+  DEM vote share             -0.001774       0.3629  -0.000446       0.7315
+  Incumbent vote share       -0.007591       0.1823  -0.004037       0.3716
+
+======================================================================
+House analysis complete.
+======================================================================

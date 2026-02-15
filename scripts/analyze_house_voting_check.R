@@ -118,7 +118,27 @@ if (file.exists(pres_file)) {
               nrow(pres), uniqueN(pres$fips), uniqueN(pres$year)))
   cat(sprintf("  Years: %s\n\n", paste(sort(unique(pres$year)), collapse = ", ")))
 
-  # 30d base spec
+  # ---- Build-up Spec 1: Raw OLS (no FE) ----
+  cat("--- Presidential: Build-Up Spec (1) Raw OLS ---\n\n")
+
+  cat("Pres Raw OLS A: dem_vote_share ~ smoke_pm25_mean_30d\n")
+  pres_a_raw <- feols(dem_vote_share ~ smoke_pm25_mean_30d,
+                      data = pres, cluster = ~fips)
+  print_reg("", pres_a_raw, "smoke_pm25_mean_30d")
+
+  cat("Pres Raw OLS B: incumbent_vote_share ~ smoke_pm25_mean_30d\n")
+  pres_b_raw <- feols(incumbent_vote_share ~ smoke_pm25_mean_30d,
+                      data = pres, cluster = ~fips)
+  print_reg("", pres_b_raw, "smoke_pm25_mean_30d")
+
+  cat("Pres Raw OLS C: log_total_votes ~ smoke_pm25_mean_30d\n")
+  pres_c_raw <- feols(log_total_votes ~ smoke_pm25_mean_30d,
+                      data = pres, cluster = ~fips)
+  print_reg("", pres_c_raw, "smoke_pm25_mean_30d")
+
+  # ---- Build-up Spec 2: 30d base spec (County + Year FE) ----
+  cat("--- Presidential: Build-Up Spec (2) TWFE ---\n\n")
+
   cat("Pres A: dem_vote_share ~ smoke_pm25_mean_30d | fips + year\n")
   pres_a <- feols(dem_vote_share ~ smoke_pm25_mean_30d | fips + year,
                   data = pres, cluster = ~fips)
@@ -187,6 +207,29 @@ if (file.exists(pres_file)) {
                          log_median_income + log_population + october_tmean + october_ppt | fips + year,
                          data = pres, cluster = ~fips)
     print_reg("Pres +Controls C: Log total votes", pres_c_ctrl, "smoke_pm25_mean_30d")
+
+    # ---- Build-up Spec 4: TWFE + Controls + State Linear Trends ----
+    cat("--- Presidential: Build-Up Spec (4) +Controls +State Trends ---\n\n")
+
+    pres[, state_fips_2 := substr(fips, 1, 2)]
+
+    cat("Pres +Trends A: dem_vote_share ~ smoke_pm25_mean_30d + controls | fips + year + state_fips_2[year]\n")
+    pres_a_trend <- feols(dem_vote_share ~ smoke_pm25_mean_30d + unemployment_rate +
+                          log_median_income + log_population + october_tmean + october_ppt | fips + year + state_fips_2[year],
+                          data = pres, cluster = ~fips)
+    print_reg("", pres_a_trend, "smoke_pm25_mean_30d")
+
+    cat("Pres +Trends B: incumbent_vote_share ~ smoke_pm25_mean_30d + controls | fips + year + state_fips_2[year]\n")
+    pres_b_trend <- feols(incumbent_vote_share ~ smoke_pm25_mean_30d + unemployment_rate +
+                          log_median_income + log_population + october_tmean + october_ppt | fips + year + state_fips_2[year],
+                          data = pres, cluster = ~fips)
+    print_reg("", pres_b_trend, "smoke_pm25_mean_30d")
+
+    cat("Pres +Trends C: log_total_votes ~ smoke_pm25_mean_30d + controls | fips + year + state_fips_2[year]\n")
+    pres_c_trend <- feols(log_total_votes ~ smoke_pm25_mean_30d + unemployment_rate +
+                          log_median_income + log_population + october_tmean + october_ppt | fips + year + state_fips_2[year],
+                          data = pres, cluster = ~fips)
+    print_reg("", pres_c_trend, "smoke_pm25_mean_30d")
   } else {
     cat("--- Presidential: Controls not available, skipping ---\n\n")
   }
