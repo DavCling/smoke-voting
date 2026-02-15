@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-Download California precinct-level election data and precinct-to-tract crosswalk.
+Download California precinct-level election data and precinct-to-block crosswalks.
 
 Sources:
-  A. Pre-built precinct-to-tract crosswalk:
-     Voting and Registration Tabulation (VRT) / Nature Scientific Data 2025 paper
-     Harvard Dataverse doi:10.7910/DVN/NH5S2I (or similar)
-     Provides precinct-to-tract allocation factors for CA elections.
-
-  B. Statewide Database (SWDB) precinct-level election returns:
+  A. Statewide Database (SWDB) precinct-level election returns:
      https://statewidedatabase.org
      Statement of Vote files with precinct-level presidential and US House results
      for California general elections 2006-2022.
 
-  C. SWDB precinct boundary shapefiles (for crosswalk validation):
-     Used to independently compute area-weighted precinct→tract intersections.
+  B. SWDB precinct-to-block mapping files (sr_blk_map):
+     Maps state reporting precincts to census blocks with share weights.
+     Used to allocate precinct votes to tracts via blocks.
+
+  C. Fekrazad (2025) precinct-to-tract allocated votes (validation):
+     Harvard Dataverse doi:10.7910/DVN/Z8TSH3
+     Already-allocated tract-level vote tallies for 2016+2020.
 
 Output:
   data/california/elections/
-    swdb_<year>.csv           — SWDB precinct-level returns per election year
+    swdb_<year>/               — SWDB precinct-level returns per election year
   data/california/crosswalk/
-    prebuilt_crosswalk.csv    — Pre-built precinct→tract allocation
-    swdb_shapefiles/          — Precinct boundary shapefiles by year
+    sr_blk_map_<year>.csv      — Precinct-to-block mapping per year
+    fekrazad_ca.zip            — Pre-allocated tract-level votes (2016+2020)
 """
 
 import os
@@ -35,54 +35,64 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ELECTIONS_DIR = os.path.join(BASE_DIR, "data", "california", "elections")
 CROSSWALK_DIR = os.path.join(BASE_DIR, "data", "california", "crosswalk")
 
-# SWDB URLs for Statement of Vote data (general elections)
-# These are publicly available CSV downloads from statewidedatabase.org
-# Format: statewide precinct-level returns with party/candidate breakdowns
-SWDB_YEARS = {
+# SWDB precinct-level SOV data URLs (verified working)
+SWDB_SOV_URLS = {
     2006: {
-        "url": "https://statewidedatabase.org/d10/g06_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G06/state/state_g06_sov_data_by_g06_srprec.zip",
         "label": "2006 General (House)",
     },
     2008: {
-        "url": "https://statewidedatabase.org/d10/g08_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G08/state/state_g08_sov_data_by_g08_srprec.zip",
         "label": "2008 General (Pres + House)",
     },
     2010: {
-        "url": "https://statewidedatabase.org/d10/g10_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G10/state/state_g10_sov_data_by_g10_srprec.zip",
         "label": "2010 General (House)",
     },
     2012: {
-        "url": "https://statewidedatabase.org/d10/g12_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G12/state/state_g12_sov_data_by_g12_srprec.zip",
         "label": "2012 General (Pres + House)",
     },
     2014: {
-        "url": "https://statewidedatabase.org/d20/g14_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G14/state/state_g14_sov_data_by_g14_srprec.zip",
         "label": "2014 General (House)",
     },
     2016: {
-        "url": "https://statewidedatabase.org/d20/g16_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G16/state/state_g16_sov_data_by_g16_srprec.zip",
         "label": "2016 General (Pres + House)",
     },
     2018: {
-        "url": "https://statewidedatabase.org/d20/g18_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G18/state/state_g18_sov_data_by_g18_srprec.zip",
         "label": "2018 General (House)",
     },
     2020: {
-        "url": "https://statewidedatabase.org/d20/g20_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G20/state/state_g20_sov_data_by_g20_srprec.zip",
         "label": "2020 General (Pres + House)",
     },
     2022: {
-        "url": "https://statewidedatabase.org/d20/g22_geo_140_sr_csv.zip",
+        "url": "https://statewidedatabase.org/pub/data/G22/state/state_g22_sov_data_by_g22_srprec.zip",
         "label": "2022 General (House)",
     },
 }
 
-# Pre-built crosswalk sources
-# Harvard Dataverse: precinct-to-census geography allocation file
-PREBUILT_CROSSWALK_URL = (
-    "https://dataverse.harvard.edu/api/access/datafile/:persistentId?"
-    "persistentId=doi:10.7910/DVN/NH5S2I/XZPVGQ"
-)
+# SWDB precinct-to-block mapping files
+# These map state reporting precincts to census blocks with share weights
+# Format varies: some are .zip, some are .csv
+SWDB_BLK_MAP_URLS = {
+    2006: "https://statewidedatabase.org/pub/data/D10/2001by2011/state/state_g06_2011blk_by_g06_sr.csv",
+    2008: "https://statewidedatabase.org/pub/data/D10/2001by2011/state/state_g08_2011blk_by_g08_sr.csv",
+    2010: "https://statewidedatabase.org/pub/data/G10/state/state_g10_sr_blk_map.zip",
+    2012: "https://statewidedatabase.org/pub/data/G12/state/state_g12_sr_blk_map.zip",
+    2014: "https://statewidedatabase.org/pub/data/G14/state/state_g14_sr_blk_map.zip",
+    2016: "https://statewidedatabase.org/pub/data/G16/state/state_g16_sr_blk_map.zip",
+    2018: "https://statewidedatabase.org/pub/data/G18/state/state_g18_sr_blk_map.csv",
+    2020: "https://statewidedatabase.org/pub/data/G20/state/state_g20_sr_blk_map.csv",
+    2022: "https://statewidedatabase.org/pub/data/G22/state/state_g22_sr_blk_map.csv",
+}
+
+# Fekrazad (2025) pre-allocated tract-level votes for validation
+# DOI: 10.7910/DVN/Z8TSH3 — California file (060 CA.zip)
+FEKRAZAD_URL = "https://dataverse.harvard.edu/api/access/datafile/11111230"
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
@@ -93,7 +103,7 @@ def download_file(url, dest, chunk_size=1024 * 1024, headers=None):
     """Download a file with progress reporting."""
     if os.path.exists(dest):
         size_mb = os.path.getsize(dest) / 1e6
-        print(f"  File already exists ({size_mb:.1f} MB): {dest}")
+        print(f"  Already exists ({size_mb:.1f} MB): {dest}")
         return False
 
     print(f"  Downloading: {url[:80]}...")
@@ -124,11 +134,12 @@ def download_and_extract_zip(url, dest_dir, label=""):
     """Download a ZIP file and extract its contents."""
     zip_path = os.path.join(dest_dir, "_temp_download.zip")
 
-    # Check if we already have extracted files for this year
-    existing_csvs = [f for f in os.listdir(dest_dir) if f.endswith(".csv")]
-    if existing_csvs:
-        # Already extracted
-        return existing_csvs
+    # Check if we already have extracted files
+    existing = [f for f in os.listdir(dest_dir)
+                if f.endswith(".csv") or f.endswith(".dbf")]
+    if existing:
+        print(f"  Already extracted ({len(existing)} files): {dest_dir}")
+        return existing
 
     print(f"  Downloading {label}...")
     try:
@@ -143,7 +154,6 @@ def download_and_extract_zip(url, dest_dir, label=""):
         for chunk in resp.iter_content(chunk_size=1024 * 1024):
             f.write(chunk)
 
-    # Extract
     extracted = []
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -166,16 +176,9 @@ def download_swdb_elections():
     print("Downloading SWDB Precinct-Level Election Returns")
     print("=" * 60)
 
-    for year, info in sorted(SWDB_YEARS.items()):
+    for year, info in sorted(SWDB_SOV_URLS.items()):
         year_dir = os.path.join(ELECTIONS_DIR, f"swdb_{year}")
         os.makedirs(year_dir, exist_ok=True)
-
-        # Check if already processed
-        processed_file = os.path.join(ELECTIONS_DIR, f"swdb_{year}.csv")
-        if os.path.exists(processed_file):
-            df = pd.read_csv(processed_file, nrows=5)
-            print(f"\n  {year} ({info['label']}): already processed → {processed_file}")
-            continue
 
         print(f"\n  {year}: {info['label']}")
         extracted = download_and_extract_zip(info["url"], year_dir, info["label"])
@@ -184,62 +187,82 @@ def download_swdb_elections():
             print(f"  WARNING: No files extracted for {year}")
             continue
 
-        # Find and read the main data CSV
         csv_files = [f for f in extracted if f.lower().endswith(".csv")]
         if csv_files:
             print(f"  CSV files: {csv_files}")
 
 
-def download_prebuilt_crosswalk():
-    """Download pre-built precinct-to-tract crosswalk."""
+def download_blk_maps():
+    """Download SWDB precinct-to-block mapping files."""
     print("\n" + "=" * 60)
-    print("Downloading Pre-Built Precinct-to-Tract Crosswalk")
+    print("Downloading SWDB Precinct-to-Block Mappings")
     print("=" * 60)
 
     os.makedirs(CROSSWALK_DIR, exist_ok=True)
-    dest = os.path.join(CROSSWALK_DIR, "prebuilt_crosswalk.csv")
 
-    if os.path.exists(dest):
-        size_mb = os.path.getsize(dest) / 1e6
-        print(f"  Already exists ({size_mb:.1f} MB): {dest}")
-        return
+    for year, url in sorted(SWDB_BLK_MAP_URLS.items()):
+        dest_csv = os.path.join(CROSSWALK_DIR, f"sr_blk_map_{year}.csv")
 
-    # Try Harvard Dataverse
-    print("  Attempting Harvard Dataverse download...")
-    try:
-        downloaded = download_file(PREBUILT_CROSSWALK_URL, dest)
-        if downloaded:
-            print(f"  Saved to {dest}")
-            return
-    except Exception as e:
-        print(f"  Dataverse download failed: {e}")
+        if os.path.exists(dest_csv):
+            size_mb = os.path.getsize(dest_csv) / 1e6
+            print(f"\n  {year}: Already exists ({size_mb:.1f} MB)")
+            continue
 
-    # Fallback: provide manual instructions
-    print("\n  *** MANUAL DOWNLOAD MAY BE REQUIRED ***")
-    print()
-    print("  The pre-built precinct-to-tract crosswalk can be obtained from:")
-    print("  - Harvard Dataverse: doi:10.7910/DVN/NH5S2I")
-    print("  - Or the 2025 Nature Scientific Data paper supplementary materials")
-    print()
-    print(f"  Save the crosswalk file to: {dest}")
-    print("  Then re-run this script.")
+        print(f"\n  {year}: {url.split('/')[-1]}")
+
+        if url.endswith(".zip"):
+            # Download ZIP, extract CSV
+            tmp_dir = os.path.join(CROSSWALK_DIR, f"_tmp_blk_{year}")
+            os.makedirs(tmp_dir, exist_ok=True)
+            extracted = download_and_extract_zip(url, tmp_dir, f"{year} blk_map")
+            if extracted:
+                csv_files = [f for f in extracted if f.lower().endswith(".csv")]
+                if csv_files:
+                    src = os.path.join(tmp_dir, csv_files[0])
+                    os.rename(src, dest_csv)
+                    print(f"  Saved: {dest_csv}")
+                # Clean up temp dir
+                import shutil
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+        else:
+            # Direct CSV download
+            try:
+                download_file(url, dest_csv)
+            except Exception as e:
+                print(f"  ERROR: {e}")
 
 
-def download_swdb_shapefiles():
-    """Download SWDB precinct boundary shapefiles for crosswalk validation."""
+def download_fekrazad():
+    """Download Fekrazad (2025) pre-allocated tract-level votes for validation."""
     print("\n" + "=" * 60)
-    print("Downloading SWDB Precinct Boundary Shapefiles")
+    print("Downloading Fekrazad Tract-Level Votes (2016+2020, validation)")
     print("=" * 60)
 
-    shp_dir = os.path.join(CROSSWALK_DIR, "swdb_shapefiles")
-    os.makedirs(shp_dir, exist_ok=True)
+    os.makedirs(CROSSWALK_DIR, exist_ok=True)
+    dest_zip = os.path.join(CROSSWALK_DIR, "fekrazad_ca.zip")
+    dest_dir = os.path.join(CROSSWALK_DIR, "fekrazad_ca")
 
-    # SWDB provides shapefiles alongside the SOV data
-    # These use the same base URL pattern but with _shp suffix
-    print("  Note: SWDB shapefiles are typically bundled with the SOV ZIP files")
-    print("  or available separately from statewidedatabase.org.")
-    print("  The crosswalk builder will use these if available.")
-    print(f"  Expected location: {shp_dir}")
+    if os.path.exists(dest_dir) and os.listdir(dest_dir):
+        print(f"  Already downloaded: {dest_dir}")
+        return
+
+    try:
+        download_file(FEKRAZAD_URL, dest_zip)
+    except Exception as e:
+        print(f"  Download failed: {e}")
+        print("  Manual download: https://dataverse.harvard.edu/dataset.xhtml?"
+              "persistentId=doi:10.7910/DVN/Z8TSH3")
+        return
+
+    if os.path.exists(dest_zip):
+        os.makedirs(dest_dir, exist_ok=True)
+        try:
+            with zipfile.ZipFile(dest_zip, "r") as zf:
+                zf.extractall(dest_dir)
+            print(f"  Extracted to {dest_dir}")
+            os.remove(dest_zip)
+        except zipfile.BadZipFile:
+            print(f"  ERROR: Bad ZIP file")
 
 
 def verify_elections():
@@ -248,7 +271,7 @@ def verify_elections():
     print("Verifying Election Data")
     print("=" * 60)
 
-    for year in sorted(SWDB_YEARS.keys()):
+    for year in sorted(SWDB_SOV_URLS.keys()):
         year_dir = os.path.join(ELECTIONS_DIR, f"swdb_{year}")
         if not os.path.exists(year_dir):
             print(f"  {year}: NOT FOUND")
@@ -256,18 +279,34 @@ def verify_elections():
 
         files = os.listdir(year_dir)
         csv_files = [f for f in files if f.lower().endswith(".csv")]
-        shp_files = [f for f in files if f.lower().endswith(".shp")]
 
-        print(f"  {year}: {len(csv_files)} CSVs, {len(shp_files)} shapefiles")
+        print(f"  {year}: {len(csv_files)} CSVs")
 
-        # Try to read the first CSV to check structure
         for csv_f in csv_files[:1]:
             try:
                 df = pd.read_csv(os.path.join(year_dir, csv_f), nrows=5,
                                  low_memory=False)
-                print(f"    Columns: {list(df.columns[:10])}...")
+                cols = df.columns.str.upper().tolist()
+                # Look for presidential and house columns
+                pres_cols = [c for c in cols if "PRS" in c or "PRES" in c]
+                house_cols = [c for c in cols if c.startswith("USR") or "USREP" in c]
+                prec_col = next((c for c in cols if c in ["SRPREC", "PRECINCT"]), "?")
+                print(f"    Precinct col: {prec_col}, "
+                      f"Pres cols: {len(pres_cols)}, House cols: {len(house_cols)}")
+                print(f"    First 10 cols: {cols[:10]}")
             except Exception as e:
                 print(f"    Error reading {csv_f}: {e}")
+
+    # Verify block maps
+    print("\n  Block mappings:")
+    for year in sorted(SWDB_BLK_MAP_URLS.keys()):
+        path = os.path.join(CROSSWALK_DIR, f"sr_blk_map_{year}.csv")
+        if os.path.exists(path):
+            size_mb = os.path.getsize(path) / 1e6
+            df = pd.read_csv(path, nrows=3, dtype=str)
+            print(f"  {year}: {size_mb:.1f} MB, cols={list(df.columns[:5])}")
+        else:
+            print(f"  {year}: NOT FOUND")
 
 
 def main():
@@ -278,14 +317,14 @@ def main():
     os.makedirs(ELECTIONS_DIR, exist_ok=True)
     os.makedirs(CROSSWALK_DIR, exist_ok=True)
 
-    # A. Pre-built crosswalk
-    download_prebuilt_crosswalk()
-
-    # B. SWDB precinct-level election returns
+    # A. SWDB precinct-level election returns
     download_swdb_elections()
 
-    # C. SWDB shapefiles
-    download_swdb_shapefiles()
+    # B. SWDB precinct-to-block mappings
+    download_blk_maps()
+
+    # C. Fekrazad tract-level votes (validation)
+    download_fekrazad()
 
     # Verify
     verify_elections()

@@ -159,10 +159,9 @@ def compute_smoke_exposure(smoke_df, election_year, election_date, all_tracts=No
         agg[f"smoke_frac_usg_{label}"] = agg["smoke_n_usg"] / n_days
         agg[f"smoke_frac_unhealthy_{label}"] = agg["smoke_n_unhealthy"] / n_days
 
-        # Keep only the final columns
-        keep_cols = [c for c in agg.columns if c.startswith("smoke_pm25_") or
-                     c.startswith("smoke_days") or c.startswith("smoke_frac")]
-        agg = agg[keep_cols]
+        # Keep only the final suffixed columns (drop intermediate ones)
+        keep_cols = [c for c in agg.columns if label in c]
+        agg = agg[keep_cols].reset_index()
 
         result_df = result_df.merge(agg, on="geoid", how="left")
 

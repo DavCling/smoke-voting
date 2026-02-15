@@ -2,29 +2,33 @@
 """
 Build precinct-to-tract crosswalk and allocate CA election results to census tracts.
 
-Two methods:
-  A. Pre-built crosswalk (primary): Uses allocation factors from the 2025 Nature
-     Scientific Data precinct-to-census-geography dataset. Simply applies the
-     provided weights to allocate precinct votes to tracts.
+Method: Uses SWDB precinct-to-block mapping files (sr_blk_map) to allocate
+precinct-level votes to census blocks, then aggregates blocks up to tracts.
+Census blocks nest perfectly within tracts (tract GEOID = first 11 digits of
+15-digit block GEOID).
 
-  B. SWDB shapefiles (validation): Independently computes area-weighted
-     precinct→tract intersections using geopandas spatial overlay with SWDB
-     precinct boundary shapefiles and Census tract polygons.
+Key matching: Both SOV and block map files share the SRPREC_KEY column
+(FIPS county code + precinct number), enabling direct joins.
 
-The script compares both methods and reports correlation/RMSE for validation.
+Block map share column: PCTSRPREC = percentage of precinct's registered
+voters in each block (0-100 scale, divided by 100 to get fraction).
 
-Handles California's top-two primary (post-2012): flags races where both
-candidates share a party → excluded from DEM vote share but usable for turnout.
+Handles California's top-two primary (post-2012): if a House race has
+two candidates from the same party (e.g., two Democrats), the DEM vote
+share is undefined → flagged as same_party_race.
+
+SWDB column conventions:
+  Presidential: PRSDEM/PRSREP (2006-2008), PRSDEM01/PRSREP01 (2012+)
+  House:        CNGDEM/CNGREP (2006-2008), CNGDEM01+02/CNGREP01+02 (2012+)
+  District:     CDDIST (congressional district number in all years)
 
 Input:
-  data/california/crosswalk/prebuilt_crosswalk.csv
-  data/california/elections/swdb_<year>/
-  data/california/crosswalk/swdb_shapefiles/
+  data/california/elections/swdb_<year>/           — SWDB precinct SOV data
+  data/california/crosswalk/sr_blk_map_<year>.csv  — Precinct-to-block mapping
 
 Output:
   data/california/elections/tract_presidential.csv
   data/california/elections/tract_house.csv
-  data/california/crosswalk/crosswalk_validation.csv
 """
 
 import os
@@ -41,49 +45,67 @@ CROSSWALK_DIR = os.path.join(BASE_DIR, "data", "california", "crosswalk")
 PRESIDENTIAL_YEARS = [2008, 2012, 2016, 2020]
 HOUSE_YEARS = list(range(2006, 2023, 2))  # 2006-2022, biennial
 
-# Incumbent party by year (for presidential)
+# Incumbent party by year
 INCUMBENT_PARTY_PRES = {
-    2008: "REPUBLICAN",   # Bush admin
-    2012: "DEMOCRAT",      # Obama admin
-    2016: "DEMOCRAT",      # Obama admin
-    2020: "REPUBLICAN",   # Trump admin
+    2008: "REPUBLICAN",
+    2012: "DEMOCRAT",
+    2016: "DEMOCRAT",
+    2020: "REPUBLICAN",
 }
 
-# Incumbent party for House (party of president)
 INCUMBENT_PARTY_HOUSE = {
-    2006: "REPUBLICAN",   # Bush admin
+    2006: "REPUBLICAN",
     2008: "REPUBLICAN",
-    2010: "DEMOCRAT",      # Obama admin
+    2010: "DEMOCRAT",
     2012: "DEMOCRAT",
     2014: "DEMOCRAT",
     2016: "DEMOCRAT",
-    2018: "REPUBLICAN",   # Trump admin
+    2018: "REPUBLICAN",
     2020: "REPUBLICAN",
-    2022: "DEMOCRAT",      # Biden admin
-}
-
-# SWDB column name patterns for party votes
-# SWDB uses standardized column names like PRSDEM, PRSREP for president;
-# USR01D, USR01R for US House district 01 DEM/REP
-SWDB_PRES_COLS = {
-    "dem": ["PRSDEM", "PRES_DEM"],
-    "rep": ["PRSREP", "PRES_REP"],
-    "total": ["TOTVOTE", "PRSTOT"],
+    2022: "DEMOCRAT",
 }
 
 
-def load_prebuilt_crosswalk():
-    """Load the pre-built precinct-to-tract crosswalk."""
-    path = os.path.join(CROSSWALK_DIR, "prebuilt_crosswalk.csv")
+def load_blk_map(year):
+    """Load precinct-to-block mapping for a given year.
+
+    Returns DataFrame with columns: srprec_key, block_key, tract_geoid, share
+    """
+    path = os.path.join(CROSSWALK_DIR, f"sr_blk_map_{year}.csv")
     if not os.path.exists(path):
-        print("  Pre-built crosswalk not found.")
+        print(f"    Block map not found for {year}")
         return None
 
-    print(f"  Loading pre-built crosswalk: {path}")
     df = pd.read_csv(path, dtype=str, low_memory=False)
-    print(f"  Columns: {list(df.columns[:15])}...")
-    print(f"  Rows: {len(df):,}")
-    return df
+    df.columns = df.columns.str.upper().str.strip()
+    print(f"    Block map {year}: {len(df):,} rows")
+
+    # Filter out rows with missing SRPREC_KEY or BLOCK_KEY
+    df = df[df["SRPREC_KEY"].notna() & df["BLOCK_KEY"].notna()].copy()
+    df = df[~df["SRPREC_KEY"].str.contains("nan", case=False, na=True)].copy()
+
+    # PCTSRPREC is percentage (0-100), convert to fraction
+    df["share"] = pd.to_numeric(df["PCTSRPREC"], errors="coerce").fillna(0) / 100.0
+
+    # Derive tract GEOID from BLOCK_KEY (first 11 of 15 digits)
+    df["tract_geoid"] = df["BLOCK_KEY"].str[:11]
+
+    # Aggregate: sum shares by SRPREC_KEY → tract (blocks within a tract)
+    prec_tract = (
+        df.groupby(["SRPREC_KEY", "tract_geoid"])["share"]
+        .sum()
+        .reset_index()
+        .rename(columns={"SRPREC_KEY": "srprec_key", "share": "tract_share"})
+    )
+
+    # Filter to CA tracts
+    prec_tract = prec_tract[prec_tract["tract_geoid"].str.startswith("06")].copy()
+
+    n_prec = prec_tract["srprec_key"].nunique()
+    n_tract = prec_tract["tract_geoid"].nunique()
+    print(f"    {n_prec:,} precincts → {n_tract:,} tracts")
+
+    return prec_tract
 
 
 def load_swdb_year(year):
@@ -93,95 +115,60 @@ def load_swdb_year(year):
         print(f"  SWDB data not found for {year}")
         return None
 
-    # Find the main CSV file
     csv_files = [f for f in os.listdir(year_dir) if f.lower().endswith(".csv")]
     if not csv_files:
         print(f"  No CSV files found in {year_dir}")
         return None
 
-    # Read the first/main CSV
     csv_path = os.path.join(year_dir, csv_files[0])
     print(f"  Loading SWDB {year}: {csv_files[0]}")
 
-    try:
-        df = pd.read_csv(csv_path, dtype=str, low_memory=False)
-    except Exception as e:
-        print(f"  ERROR reading {csv_path}: {e}")
+    df = pd.read_csv(csv_path, dtype=str, low_memory=False)
+    df.columns = df.columns.str.upper().str.strip()
+
+    # Basic validation
+    if len(df) < 100:
+        print(f"  WARNING: Only {len(df)} rows — skipping (likely county summary, not precinct)")
         return None
 
-    # Normalize column names to uppercase
-    df.columns = df.columns.str.upper().str.strip()
     print(f"    {len(df):,} precincts, {len(df.columns)} columns")
-
     return df
 
 
 def extract_presidential_votes(swdb_df, year):
-    """Extract presidential DEM/REP votes from SWDB data."""
+    """Extract presidential DEM/REP votes from SWDB data.
+
+    2008: PRSDEM, PRSREP
+    2012+: PRSDEM01, PRSREP01 (numbered candidates)
+    """
     if swdb_df is None:
         return None
 
     cols = swdb_df.columns.tolist()
 
-    # Find DEM presidential column
-    dem_col = None
-    for candidate in SWDB_PRES_COLS["dem"]:
-        if candidate in cols:
-            dem_col = candidate
-            break
-    # Also try year-specific patterns (e.g., PRES_DEM08)
+    # Find DEM column: try PRSDEM then PRSDEM01
+    dem_col = "PRSDEM" if "PRSDEM" in cols else None
     if dem_col is None:
-        yy = str(year)[-2:]
-        for c in cols:
-            if "PRES" in c and "DEM" in c:
-                dem_col = c
-                break
-
-    # Find REP presidential column
-    rep_col = None
-    for candidate in SWDB_PRES_COLS["rep"]:
-        if candidate in cols:
-            rep_col = candidate
-            break
-    if rep_col is None:
-        yy = str(year)[-2:]
-        for c in cols:
-            if "PRES" in c and "REP" in c:
-                rep_col = c
-                break
-
-    # Find total vote column
-    total_col = None
-    for candidate in SWDB_PRES_COLS["total"]:
-        if candidate in cols:
-            total_col = candidate
-            break
-
-    if dem_col is None or rep_col is None:
-        print(f"    WARNING: Could not find presidential vote columns for {year}")
-        print(f"    Available columns with PRES: {[c for c in cols if 'PRES' in c]}")
+        dem_col = "PRSDEM01" if "PRSDEM01" in cols else None
+    if dem_col is None:
+        pres_cols = [c for c in cols if "PRS" in c]
+        print(f"    WARNING: No presidential DEM column. Available: {pres_cols}")
         return None
 
-    print(f"    Presidential columns: DEM={dem_col}, REP={rep_col}, Total={total_col}")
+    # Find REP column
+    rep_col = "PRSREP" if "PRSREP" in cols else None
+    if rep_col is None:
+        rep_col = "PRSREP01" if "PRSREP01" in cols else None
+    if rep_col is None:
+        print(f"    WARNING: No presidential REP column")
+        return None
 
-    # Extract precinct-level data
-    # SWDB uses SRPREC (short precinct) or PRECINCT as the precinct ID
-    prec_col = None
-    for candidate in ["SRPREC", "PRECINCT", "PREC"]:
-        if candidate in cols:
-            prec_col = candidate
-            break
+    total_col = "TOTVOTE" if "TOTVOTE" in cols else None
 
-    # County FIPS
-    county_col = None
-    for candidate in ["COUNTY", "CNTY", "CO"]:
-        if candidate in cols:
-            county_col = candidate
-            break
+    print(f"    Pres: DEM={dem_col}, REP={rep_col}, Total={total_col}")
 
     result = pd.DataFrame({
-        "precinct": swdb_df[prec_col] if prec_col else swdb_df.index.astype(str),
-        "county": swdb_df[county_col] if county_col else "",
+        "srprec_key": swdb_df["SRPREC_KEY"].str.strip(),
         "dem_votes": pd.to_numeric(swdb_df[dem_col], errors="coerce").fillna(0),
         "rep_votes": pd.to_numeric(swdb_df[rep_col], errors="coerce").fillna(0),
         "year": year,
@@ -199,180 +186,123 @@ def extract_presidential_votes(swdb_df, year):
 
 
 def extract_house_votes(swdb_df, year):
-    """Extract US House DEM/REP votes from SWDB data."""
+    """Extract US House DEM/REP votes from SWDB data.
+
+    All years use CNG* columns + CDDIST for district:
+      2006-2008: CNGDEM, CNGREP (single candidate per party)
+      2012+: CNGDEM01+CNGDEM02, CNGREP01+CNGREP02 (multiple candidates, top-two primary)
+
+    Returns one row per precinct with district assignment and party vote totals.
+    """
     if swdb_df is None:
         return None
 
     cols = swdb_df.columns.tolist()
 
-    # SWDB uses patterns like USR01D (US Rep district 01, Democrat)
-    # or USREP01D, or USHSE01D
-    house_dem_cols = {}
-    house_rep_cols = {}
-
-    for c in cols:
-        c_upper = c.upper()
-        # Pattern: USR##D or USR##R (## = district number)
-        if c_upper.startswith("USR") and len(c_upper) >= 6:
-            dist_num = c_upper[3:5]
-            party = c_upper[5]
-            if party == "D":
-                house_dem_cols[dist_num] = c
-            elif party == "R":
-                house_rep_cols[dist_num] = c
-
-    if not house_dem_cols:
-        # Try alternative pattern: USREP##D
-        for c in cols:
-            c_upper = c.upper()
-            if "USREP" in c_upper or "USHSE" in c_upper:
-                # Extract district and party
-                for prefix in ["USREP", "USHSE"]:
-                    if c_upper.startswith(prefix):
-                        rest = c_upper[len(prefix):]
-                        if len(rest) >= 3:
-                            dist_num = rest[:2]
-                            party = rest[2]
-                            if party == "D":
-                                house_dem_cols[dist_num] = c
-                            elif party == "R":
-                                house_rep_cols[dist_num] = c
-
-    if not house_dem_cols:
-        print(f"    WARNING: No House vote columns found for {year}")
+    if "CDDIST" not in cols:
+        print(f"    WARNING: No CDDIST column for {year}")
         return None
 
-    # Precinct and county identifiers
-    prec_col = None
-    for candidate in ["SRPREC", "PRECINCT", "PREC"]:
-        if candidate in cols:
-            prec_col = candidate
-            break
+    # Sum all DEM and REP House candidates
+    dem_cols = sorted([c for c in cols if c.startswith("CNGDEM")])
+    rep_cols = sorted([c for c in cols if c.startswith("CNGREP")])
 
-    county_col = None
-    for candidate in ["COUNTY", "CNTY", "CO"]:
-        if candidate in cols:
-            county_col = candidate
-            break
-
-    # Build house results by district
-    all_house = []
-    districts_found = sorted(set(house_dem_cols.keys()) | set(house_rep_cols.keys()))
-
-    for dist in districts_found:
-        dem_c = house_dem_cols.get(dist)
-        rep_c = house_rep_cols.get(dist)
-
-        # California district: "06" + district number
-        district_id = f"06{dist}"
-
-        row = pd.DataFrame({
-            "precinct": swdb_df[prec_col] if prec_col else swdb_df.index.astype(str),
-            "county": swdb_df[county_col] if county_col else "",
-            "district": district_id,
-            "dem_votes": pd.to_numeric(swdb_df[dem_c], errors="coerce").fillna(0) if dem_c else 0,
-            "rep_votes": pd.to_numeric(swdb_df[rep_c], errors="coerce").fillna(0) if rep_c else 0,
-            "year": year,
-        })
-
-        # Only keep precincts that voted in this district (nonzero votes)
-        row["total_votes"] = row["dem_votes"] + row["rep_votes"]
-        row = row[row["total_votes"] > 0].copy()
-
-        # Flag top-two same-party races (post-2012)
-        # If DEM or REP column is missing for a district, it's likely a same-party race
-        row["same_party_race"] = (dem_c is None) or (rep_c is None)
-
-        if len(row) > 0:
-            all_house.append(row)
-
-    if not all_house:
+    if not dem_cols and not rep_cols:
+        print(f"    WARNING: No CNG House columns for {year}")
         return None
 
-    result = pd.concat(all_house, ignore_index=True)
+    print(f"    House: DEM cols={dem_cols}, REP cols={rep_cols}")
+
+    # Build result
+    result = pd.DataFrame({
+        "srprec_key": swdb_df["SRPREC_KEY"].str.strip(),
+        "cddist": swdb_df["CDDIST"].str.strip(),
+        "year": year,
+    })
+
+    # Sum DEM votes across all DEM candidates
+    if dem_cols:
+        dem_sum = swdb_df[dem_cols].apply(pd.to_numeric, errors="coerce").fillna(0).sum(axis=1)
+        result["dem_votes"] = dem_sum
+    else:
+        result["dem_votes"] = 0.0
+
+    # Sum REP votes
+    if rep_cols:
+        rep_sum = swdb_df[rep_cols].apply(pd.to_numeric, errors="coerce").fillna(0).sum(axis=1)
+        result["rep_votes"] = rep_sum
+    else:
+        result["rep_votes"] = 0.0
+
+    result["total_votes"] = result["dem_votes"] + result["rep_votes"]
+
+    # Build district ID: "06" + zero-padded district number
+    result["district"] = "06" + result["cddist"].str.zfill(2)
+
+    # Keep only precincts with any House votes
+    result = result[result["total_votes"] > 0].copy()
+
+    # Flag same-party races (top-two primary, post-2012)
+    # If only DEM candidates or only REP candidates ran
+    result["same_party_race"] = (result["dem_votes"] == 0) | (result["rep_votes"] == 0)
+
     n_districts = result["district"].nunique()
-    print(f"    {n_districts} districts, {len(result):,} precinct-district rows")
+    print(f"    {n_districts} districts, {len(result):,} precinct rows, "
+          f"same-party: {result['same_party_race'].sum():,}")
 
     return result
 
 
-def allocate_to_tracts_prebuilt(precinct_votes, crosswalk, year):
-    """Allocate precinct votes to tracts using pre-built crosswalk weights."""
-    if crosswalk is None or precinct_votes is None:
+def allocate_votes_to_tracts(precinct_votes, blk_map, year):
+    """Allocate precinct votes to tracts using SRPREC_KEY matching."""
+    if blk_map is None or precinct_votes is None:
         return None
 
-    # The pre-built crosswalk should have columns like:
-    # precinct_id, tract_geoid, weight (allocation fraction)
-    # Exact column names depend on the dataset
-
-    # Try to identify the relevant columns
-    xw_cols = crosswalk.columns.tolist()
-    print(f"    Crosswalk columns: {xw_cols[:10]}...")
-
-    # This is a placeholder — the exact merge logic depends on the crosswalk format
-    # The crosswalk provides fraction of each precinct's area/population in each tract
-    print("    Note: Crosswalk allocation logic depends on actual file format")
-    print("    Will be refined after examining the downloaded crosswalk data")
-
-    return None
-
-
-def allocate_to_tracts_area(precinct_votes, year):
-    """
-    Allocate precinct votes to tracts using areal interpolation.
-
-    Uses geopandas to overlay precinct boundaries with tract boundaries,
-    computing area-of-intersection weights.
-    """
-    try:
-        import geopandas as gpd
-    except ImportError:
-        print("    geopandas not available — skipping areal interpolation")
-        return None
-
-    # Load precinct shapefile
-    shp_dir = os.path.join(CROSSWALK_DIR, "swdb_shapefiles")
-    shp_candidates = []
-    if os.path.exists(shp_dir):
-        for f in os.listdir(shp_dir):
-            if f.lower().endswith(".shp") and str(year) in f:
-                shp_candidates.append(os.path.join(shp_dir, f))
-
-    if not shp_candidates:
-        print(f"    No shapefile found for {year} — skipping areal interpolation")
-        return None
-
-    print(f"    Loading precinct shapefile: {shp_candidates[0]}")
-    precincts_gdf = gpd.read_file(shp_candidates[0])
-
-    # Load tract boundaries
-    print("    Loading tract boundaries...")
-    tracts_gdf = gpd.read_file(
-        f"https://www2.census.gov/geo/tiger/TIGER2019/TRACT/tl_2019_06_tract.zip"
+    # Merge on SRPREC_KEY
+    merged = precinct_votes.merge(
+        blk_map,
+        on="srprec_key",
+        how="inner",
     )
 
-    # Ensure same CRS
-    if precincts_gdf.crs != tracts_gdf.crs:
-        precincts_gdf = precincts_gdf.to_crs(tracts_gdf.crs)
+    n_matched = merged["srprec_key"].nunique()
+    n_total = precinct_votes["srprec_key"].nunique()
+    match_rate = n_matched / n_total * 100 if n_total > 0 else 0
+    print(f"    Precinct match: {n_matched:,}/{n_total:,} ({match_rate:.1f}%)")
 
-    # Project to equal-area for accurate area computation
-    precincts_proj = precincts_gdf.to_crs(epsg=3310)  # CA Albers
-    tracts_proj = tracts_gdf.to_crs(epsg=3310)
+    if n_matched == 0:
+        print(f"    SOV keys sample: {precinct_votes['srprec_key'].head(3).tolist()}")
+        print(f"    BLK keys sample: {blk_map['srprec_key'].head(3).tolist()}")
+        return None
 
-    # Compute precinct areas
-    precincts_proj["precinct_area"] = precincts_proj.geometry.area
+    # Allocate votes proportionally
+    for col in ["dem_votes", "rep_votes", "total_votes"]:
+        merged[col] = merged[col] * merged["tract_share"]
 
-    # Spatial overlay (intersection)
-    print("    Computing spatial overlay...")
-    overlay = gpd.overlay(precincts_proj, tracts_proj, how="intersection")
-    overlay["intersection_area"] = overlay.geometry.area
+    # Group columns
+    group_cols = ["tract_geoid", "year"]
+    if "district" in merged.columns:
+        group_cols.append("district")
 
-    # Weight = intersection area / precinct area
-    overlay["weight"] = overlay["intersection_area"] / overlay["precinct_area"]
+    # Aggregate to tract level
+    agg_cols = {"dem_votes": "sum", "rep_votes": "sum", "total_votes": "sum"}
+    if "same_party_race" in merged.columns:
+        # For same_party_race, take the first value per district (same for all precincts in a district)
+        group_cols_with_flag = group_cols + ["same_party_race"]
+        tract_votes = merged.groupby(group_cols_with_flag, dropna=False).agg(agg_cols).reset_index()
+    else:
+        tract_votes = merged.groupby(group_cols, dropna=False).agg(agg_cols).reset_index()
 
-    print(f"    {len(overlay):,} precinct-tract intersections")
+    tract_votes.rename(columns={"tract_geoid": "GEOID"}, inplace=True)
+    tract_votes = tract_votes[tract_votes["GEOID"].str.startswith("06")].copy()
 
-    return overlay[["precinct", "GEOID", "weight"]]
+    vote_pct_captured = (tract_votes["total_votes"].sum() /
+                         precinct_votes["total_votes"].sum() * 100)
+
+    print(f"    {tract_votes['GEOID'].nunique():,} tracts, "
+          f"votes captured: {vote_pct_captured:.1f}%")
+
+    return tract_votes
 
 
 def build_tract_election_results(race_type="presidential"):
@@ -384,18 +314,16 @@ def build_tract_election_results(race_type="presidential"):
     print(f"Building Tract-Level {race_type.title()} Results")
     print(f"{'='*60}")
 
-    # Load pre-built crosswalk
-    crosswalk = load_prebuilt_crosswalk()
-
     all_results = []
 
     for year in years:
         print(f"\n  --- {year} ---")
+
+        blk_map = load_blk_map(year)
         swdb_df = load_swdb_year(year)
         if swdb_df is None:
             continue
 
-        # Extract votes
         if race_type == "presidential":
             votes = extract_presidential_votes(swdb_df, year)
         else:
@@ -404,18 +332,12 @@ def build_tract_election_results(race_type="presidential"):
         if votes is None:
             continue
 
-        # Allocate to tracts using pre-built crosswalk
-        tract_votes = allocate_to_tracts_prebuilt(votes, crosswalk, year)
+        tract_votes = allocate_votes_to_tracts(votes, blk_map, year)
 
         if tract_votes is not None:
             all_results.append(tract_votes)
         else:
-            # Fall back: if crosswalk couldn't be applied, aggregate by
-            # county (crude fallback that preserves the data)
-            print("    Falling back to county-level aggregation")
-            # This preserves the precinct data for later crosswalk application
-            votes["GEOID"] = None  # Placeholder — requires crosswalk
-            all_results.append(votes)
+            print(f"    SKIPPING {year}")
 
     if not all_results:
         print(f"  No {race_type} results built!")
@@ -423,52 +345,79 @@ def build_tract_election_results(race_type="presidential"):
 
     combined = pd.concat(all_results, ignore_index=True)
 
-    # Compute derived outcomes
+    # Derived outcomes
     two_party = combined["dem_votes"] + combined["rep_votes"]
-    combined["dem_vote_share"] = np.where(
-        two_party > 0,
-        combined["dem_votes"] / two_party,
-        np.nan
+    combined["dem_vote_share"] = np.where(two_party > 0,
+                                          combined["dem_votes"] / two_party, np.nan)
+
+    combined["incumbent_party"] = combined["year"].map(incumbent_map)
+    combined["incumbent_vote_share"] = np.where(
+        combined["incumbent_party"] == "DEMOCRAT",
+        combined["dem_vote_share"],
+        1 - combined["dem_vote_share"],
     )
 
-    if "year" in combined.columns:
-        combined["incumbent_party"] = combined["year"].map(incumbent_map)
-        combined["incumbent_vote_share"] = np.where(
-            combined["incumbent_party"] == "DEMOCRAT",
-            combined["dem_vote_share"],
-            1 - combined["dem_vote_share"],
-        )
-
     combined["log_total_votes"] = np.log1p(combined["total_votes"])
+    combined["uncontested"] = (combined["dem_votes"] < 1) | (combined["rep_votes"] < 1)
 
-    # Flag uncontested races (only one party has votes)
-    combined["uncontested"] = (combined["dem_votes"] == 0) | (combined["rep_votes"] == 0)
+    # Summary
+    print(f"\n  Combined: {len(combined):,} rows, "
+          f"{combined['GEOID'].nunique():,} unique tracts, "
+          f"{combined['year'].nunique()} years")
 
     return combined
 
 
-def validate_crosswalks(prebuilt_tracts, swdb_tracts, year):
-    """Compare pre-built and SWDB-derived tract allocations."""
-    if prebuilt_tracts is None or swdb_tracts is None:
-        print("    Cannot validate — one or both crosswalks unavailable")
-        return None
+def validate_against_fekrazad(tract_df):
+    """Validate SWDB-derived tract totals against Fekrazad (2025) for 2016+2020."""
+    fek_dir = os.path.join(CROSSWALK_DIR, "fekrazad_ca", "060 CA", "Main Method", "Census Tracts")
+    if not os.path.exists(fek_dir):
+        print("  Fekrazad validation data not available — skipping")
+        return
 
-    # Merge on GEOID
-    merged = prebuilt_tracts.merge(
-        swdb_tracts, on="GEOID", suffixes=("_prebuilt", "_swdb")
-    )
+    print(f"\n{'='*60}")
+    print(f"Validating Against Fekrazad (2025) RLCR Method")
+    print(f"{'='*60}")
 
-    if len(merged) == 0:
-        print("    No matching tracts for validation")
-        return None
+    for fek_year, fek_file, dem_col, rep_col in [
+        (2016, "tracts-2016-RLCR.csv", "G16PREDCli", "G16PRERTru"),
+        (2020, "tracts-2020-RLCR.csv", "G20PREDBID", "G20PRERTRU"),
+    ]:
+        fek_path = os.path.join(fek_dir, fek_file)
+        if not os.path.exists(fek_path):
+            print(f"  {fek_year}: File not found")
+            continue
 
-    # Compute correlation and RMSE for DEM votes
-    corr = merged["dem_votes_prebuilt"].corr(merged["dem_votes_swdb"])
-    rmse = np.sqrt(((merged["dem_votes_prebuilt"] - merged["dem_votes_swdb"]) ** 2).mean())
+        fek = pd.read_csv(fek_path)
+        fek["GEOID"] = fek["tract_GEOID"].astype(str).str.zfill(11)
+        fek["fek_dem"] = fek[dem_col]
+        fek["fek_rep"] = fek[rep_col]
+        fek["fek_total"] = fek["fek_dem"] + fek["fek_rep"]
 
-    print(f"    Validation ({year}): correlation={corr:.4f}, RMSE={rmse:.1f}")
+        # Our data for this year
+        ours = tract_df[tract_df["year"] == fek_year][["GEOID", "dem_votes", "rep_votes", "total_votes"]]
 
-    return {"year": year, "correlation": corr, "rmse": rmse, "n_tracts": len(merged)}
+        merged = ours.merge(fek[["GEOID", "fek_dem", "fek_rep", "fek_total"]], on="GEOID", how="inner")
+
+        if len(merged) == 0:
+            print(f"  {fek_year}: No matching tracts")
+            continue
+
+        # Correlation and RMSE
+        dem_corr = merged["dem_votes"].corr(merged["fek_dem"])
+        rep_corr = merged["rep_votes"].corr(merged["fek_rep"])
+        dem_rmse = np.sqrt(((merged["dem_votes"] - merged["fek_dem"]) ** 2).mean())
+
+        # State totals
+        our_total_dem = merged["dem_votes"].sum()
+        fek_total_dem = merged["fek_dem"].sum()
+
+        print(f"\n  {fek_year} ({len(merged):,} tracts):")
+        print(f"    DEM correlation: {dem_corr:.4f}")
+        print(f"    REP correlation: {rep_corr:.4f}")
+        print(f"    DEM RMSE: {dem_rmse:.1f} votes/tract")
+        print(f"    State DEM total — Ours: {our_total_dem:,.0f}, Fekrazad: {fek_total_dem:,.0f}, "
+              f"diff: {abs(our_total_dem - fek_total_dem) / fek_total_dem * 100:.2f}%")
 
 
 def main():
@@ -476,17 +425,18 @@ def main():
     print("CA Step 4: Build Precinct-to-Tract Crosswalk")
     print("=" * 60)
 
-    # Build presidential results
+    # Presidential
     pres_out = os.path.join(ELECTIONS_DIR, "tract_presidential.csv")
     if os.path.exists(pres_out):
         print(f"\nPresidential already exists: {pres_out}")
+        pres_df = pd.read_csv(pres_out)
     else:
         pres_df = build_tract_election_results("presidential")
         if pres_df is not None:
             pres_df.to_csv(pres_out, index=False)
             print(f"\n  Saved: {pres_out} ({len(pres_df):,} rows)")
 
-    # Build house results
+    # House
     house_out = os.path.join(ELECTIONS_DIR, "tract_house.csv")
     if os.path.exists(house_out):
         print(f"\nHouse already exists: {house_out}")
@@ -496,9 +446,11 @@ def main():
             house_df.to_csv(house_out, index=False)
             print(f"\n  Saved: {house_out} ({len(house_df):,} rows)")
 
+    # Validate presidential against Fekrazad
+    if pres_df is not None:
+        validate_against_fekrazad(pres_df)
+
     print(f"\nStep 4 complete.")
-    print(f"  Presidential: {pres_out}")
-    print(f"  House: {house_out}")
 
 
 if __name__ == "__main__":
