@@ -328,42 +328,48 @@ def temporal_dynamics_controls(df):
                     "october_tmean", "october_ppt"]
     available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
 
-    # Load raw daily smoke data
-    print("  Loading raw daily smoke data...")
+    # Load raw daily smoke data (smoke days only — non-smoke days = 0, omitted)
+    print("  Loading raw daily smoke data (smoke days only)...")
     if not os.path.exists(SMOKE_FILE):
         print(f"  ERROR: Smoke file not found: {SMOKE_FILE}")
         return
 
-    with open(SMOKE_FILE) as f:
-        sep = "\t" if "\t" in f.readline() else ","
-    smoke_raw = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    smoke_raw = pd.read_csv(SMOKE_FILE, dtype={"GEOID": str})
     smoke_raw = smoke_raw.rename(columns={"GEOID": "geoid", "smokePM_pred": "smoke_pm25"})
     smoke_raw["geoid"] = smoke_raw["geoid"].str.zfill(11)
     smoke_raw["date"] = pd.to_datetime(smoke_raw["date"], format="%Y%m%d")
 
-    # Only use presidential election years that are in the data
+    # Only use election years that are in the data
     pres_dates = {yr: dt for yr, dt in ELECTION_DATES.items()
                   if yr in df.index.get_level_values(1).unique()}
 
     # Compute 13 non-overlapping 7-day bins
+    # NOTE: Each bin has 7 calendar days. Since the smoke file has only smoke-day
+    # rows, mean = sum / 7 (not sum / n_rows), and frac = n_above / 7.
     n_bins = 13
+    bin_days = 7  # calendar days per bin
     bin_vars = []
     for yr, edate_str in pres_dates.items():
         edate = pd.Timestamp(edate_str)
-        earliest = edate - timedelta(days=n_bins * 7)
+        earliest = edate - timedelta(days=n_bins * bin_days)
         yr_smoke = smoke_raw[(smoke_raw["date"] > earliest) &
                              (smoke_raw["date"] <= edate)].copy()
 
         yr_bins = None
         for b in range(n_bins):
-            bin_start = edate - timedelta(days=(b + 1) * 7)
-            bin_end = edate - timedelta(days=b * 7)
+            bin_start = edate - timedelta(days=(b + 1) * bin_days)
+            bin_end = edate - timedelta(days=b * bin_days)
             w = yr_smoke[(yr_smoke["date"] > bin_start) & (yr_smoke["date"] <= bin_end)]
 
-            bin_mean = w.groupby("geoid")["smoke_pm25"].mean().rename(f"mean_bin_{b}")
-            bin_frac = w.groupby("geoid")["smoke_pm25"].apply(
-                lambda x: (x > HAZE_THRESHOLD).mean()
-            ).rename(f"frac_bin_{b}")
+            # Sum smoke PM2.5 across smoke-day rows, divide by 7 calendar days
+            bin_sum = w.groupby("geoid")["smoke_pm25"].sum()
+            bin_mean = (bin_sum / bin_days).rename(f"mean_bin_{b}")
+
+            # Count days above haze threshold, divide by 7 calendar days
+            bin_n_haze = w.groupby("geoid")["smoke_pm25"].apply(
+                lambda x: (x > HAZE_THRESHOLD).sum()
+            )
+            bin_frac = (bin_n_haze / bin_days).rename(f"frac_bin_{b}")
 
             if yr_bins is None:
                 yr_bins = pd.concat([bin_mean, bin_frac], axis=1)
@@ -494,14 +500,12 @@ def temporal_drop2020(df):
                     "october_tmean", "october_ppt"]
     available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
 
-    # Load raw daily smoke data
+    # Load raw daily smoke data (smoke days only — non-smoke days = 0, omitted)
     if not os.path.exists(SMOKE_FILE):
         print(f"  ERROR: Smoke file not found")
         return
 
-    with open(SMOKE_FILE) as f:
-        sep = "\t" if "\t" in f.readline() else ","
-    smoke_raw = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    smoke_raw = pd.read_csv(SMOKE_FILE, dtype={"GEOID": str})
     smoke_raw = smoke_raw.rename(columns={"GEOID": "geoid", "smokePM_pred": "smoke_pm25"})
     smoke_raw["geoid"] = smoke_raw["geoid"].str.zfill(11)
     smoke_raw["date"] = pd.to_datetime(smoke_raw["date"], format="%Y%m%d")
@@ -510,22 +514,23 @@ def temporal_drop2020(df):
                   if yr in df.index.get_level_values(1).unique()}
 
     n_bins = 13
+    bin_days = 7
     smoke_var = "smoke_pm25_mean"
 
-    # Build bins
+    # Build bins (mean = sum / 7 calendar days, not sum / n_smoke_rows)
     bin_vars = []
     for yr, edate_str in pres_dates.items():
         edate = pd.Timestamp(edate_str)
-        earliest = edate - timedelta(days=n_bins * 7)
+        earliest = edate - timedelta(days=n_bins * bin_days)
         yr_smoke = smoke_raw[(smoke_raw["date"] > earliest) &
                              (smoke_raw["date"] <= edate)].copy()
 
         yr_bins = None
         for b in range(n_bins):
-            bin_start = edate - timedelta(days=(b + 1) * 7)
-            bin_end = edate - timedelta(days=b * 7)
+            bin_start = edate - timedelta(days=(b + 1) * bin_days)
+            bin_end = edate - timedelta(days=b * bin_days)
             w = yr_smoke[(yr_smoke["date"] > bin_start) & (yr_smoke["date"] <= bin_end)]
-            bin_mean = w.groupby("geoid")["smoke_pm25"].mean().rename(f"mean_bin_{b}")
+            bin_mean = (w.groupby("geoid")["smoke_pm25"].sum() / bin_days).rename(f"mean_bin_{b}")
             if yr_bins is None:
                 yr_bins = pd.DataFrame(bin_mean)
             else:

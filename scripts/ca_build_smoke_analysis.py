@@ -61,31 +61,42 @@ EPA_UNHEALTHY = 55.5       # Unhealthy
 
 
 def load_smoke_data():
-    """Load and standardize CA tract-level smoke PM2.5 data."""
+    """Load and standardize CA tract-level smoke PM2.5 data.
+
+    IMPORTANT: The source file contains ONLY smoke days. Non-smoke-day
+    tract-days have smokePM_pred = 0 and are not in the file. The
+    compute_smoke_exposure function accounts for this by using the total
+    number of calendar days in each window as the denominator for means
+    and fractions, not just the number of rows present.
+    """
     print("Loading CA tract-level smoke data...")
     if not os.path.exists(SMOKE_FILE):
         print(f"  ERROR: Smoke file not found: {SMOKE_FILE}")
         print("  Run ca_download_smoke_data.py first.")
         return None
 
-    # Auto-detect delimiter
-    with open(SMOKE_FILE) as f:
-        sep = "\t" if "\t" in f.readline() else ","
-
-    df = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    df = pd.read_csv(SMOKE_FILE, dtype={"GEOID": str})
     df = df.rename(columns={"GEOID": "geoid", "smokePM_pred": "smoke_pm25"})
     df["geoid"] = df["geoid"].str.zfill(11)
     df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
 
-    print(f"  {len(df):,} rows, {df['geoid'].nunique():,} tracts")
+    print(f"  {len(df):,} rows (smoke days only), {df['geoid'].nunique():,} tracts")
     print(f"  Date range: {df['date'].min().date()} to {df['date'].max().date()}")
-    print(f"  Mean smoke PM2.5: {df['smoke_pm25'].mean():.4f} µg/m³")
+    print(f"  Mean smoke PM2.5 (on smoke days): {df['smoke_pm25'].mean():.4f} µg/m³")
 
     return df[["geoid", "date", "smoke_pm25"]]
 
 
-def compute_smoke_exposure(smoke_df, election_year, election_date):
-    """Compute smoke exposure measures for a single election (vectorized)."""
+def compute_smoke_exposure(smoke_df, election_year, election_date, all_tracts=None):
+    """Compute smoke exposure measures for a single election.
+
+    The source data contains ONLY smoke days (non-smoke days = 0, omitted).
+    This function accounts for that by:
+      - Using total calendar days in each window as the denominator for means
+        and fractions (not the number of smoke-day rows).
+      - Including all CA tracts in the output, not just those with smoke days.
+        Tracts with no smoke-day rows in a window get 0 for all measures.
+    """
     edate = pd.Timestamp(election_date)
 
     # Define windows
@@ -107,40 +118,55 @@ def compute_smoke_exposure(smoke_df, election_year, election_date):
         (smoke_df["date"] >= earliest) & (smoke_df["date"] <= edate)
     ].copy()
 
-    if len(smoke_window) == 0:
-        print(f"  WARNING: No smoke data for {election_year} election window")
-        return pd.DataFrame()
+    # Start with all known tracts (from the full smoke file or provided list)
+    if all_tracts is not None:
+        unique_tracts = all_tracts
+    else:
+        unique_tracts = smoke_df["geoid"].unique()
 
-    # Vectorized aggregation per window
-    result_df = smoke_window[["geoid"]].drop_duplicates().copy()
+    result_df = pd.DataFrame({"geoid": unique_tracts})
     result_df["year"] = election_year
 
     for label, (start, end) in windows.items():
+        # Total calendar days in this window
+        n_days = (end - start).days
+
         w = smoke_window[(smoke_window["date"] >= start) & (smoke_window["date"] <= end)]
         grp = w.groupby("geoid")["smoke_pm25"]
 
+        # Aggregate smoke-day rows per tract
         agg = grp.agg(
+            # Number of rows with smoke_pm25 > 0 (all rows are smoke days,
+            # but some smoke days may have smokePM_pred = 0)
             smoke_days=lambda x: (x > 0).sum(),
-            smoke_mean=lambda x: x.mean(),
+            # Sum of smoke PM2.5 across smoke-day rows (for computing mean)
+            smoke_sum=lambda x: x.sum(),
             smoke_max=lambda x: x.max(),
             smoke_severe=lambda x: (x > EPA_USG_THRESHOLD).sum(),
-            smoke_cumul=lambda x: x.sum(),
-            smoke_frac_haze=lambda x: (x > HAZE_THRESHOLD).sum() / len(x),
-            smoke_frac_usg=lambda x: (x > EPA_USG_THRESHOLD).sum() / len(x),
-            smoke_frac_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum() / len(x),
-        ).rename(columns={
-            "smoke_days": f"smoke_days_{label}",
-            "smoke_mean": f"smoke_pm25_mean_{label}",
-            "smoke_max": f"smoke_pm25_max_{label}",
-            "smoke_severe": f"smoke_days_severe_{label}",
-            "smoke_cumul": f"smoke_pm25_cumul_{label}",
-            "smoke_frac_haze": f"smoke_frac_haze_{label}",
-            "smoke_frac_usg": f"smoke_frac_usg_{label}",
-            "smoke_frac_unhealthy": f"smoke_frac_unhealthy_{label}",
-        })
+            smoke_n_haze=lambda x: (x > HAZE_THRESHOLD).sum(),
+            smoke_n_usg=lambda x: (x > EPA_USG_THRESHOLD).sum(),
+            smoke_n_unhealthy=lambda x: (x > EPA_UNHEALTHY).sum(),
+        )
+
+        # Mean = sum of smoke PM2.5 / total calendar days in window
+        # (non-smoke days contribute 0 to the numerator)
+        agg[f"smoke_pm25_mean_{label}"] = agg["smoke_sum"] / n_days
+        agg[f"smoke_days_{label}"] = agg["smoke_days"]
+        agg[f"smoke_pm25_max_{label}"] = agg["smoke_max"]
+        agg[f"smoke_days_severe_{label}"] = agg["smoke_severe"]
+        agg[f"smoke_pm25_cumul_{label}"] = agg["smoke_sum"]
+        agg[f"smoke_frac_haze_{label}"] = agg["smoke_n_haze"] / n_days
+        agg[f"smoke_frac_usg_{label}"] = agg["smoke_n_usg"] / n_days
+        agg[f"smoke_frac_unhealthy_{label}"] = agg["smoke_n_unhealthy"] / n_days
+
+        # Keep only the final columns
+        keep_cols = [c for c in agg.columns if c.startswith("smoke_pm25_") or
+                     c.startswith("smoke_days") or c.startswith("smoke_frac")]
+        agg = agg[keep_cols]
 
         result_df = result_df.merge(agg, on="geoid", how="left")
 
+    # Tracts with no smoke-day rows in a window get 0
     result_df = result_df.fillna(0)
     return result_df
 
@@ -296,12 +322,17 @@ def main():
     }
     print(f"Eligible elections: {sorted(eligible_elections.keys())}")
 
+    # Get the full set of CA tracts (all tracts that ever appear in the smoke data)
+    ca_tracts = smoke_df["geoid"].unique()
+    print(f"Total CA tracts in smoke data: {len(ca_tracts):,}")
+
     # Compute smoke exposure for each election
     print("\nComputing smoke exposure measures...")
+    print("  (Non-smoke days filled with 0; means use total calendar days)")
     smoke_exposures = []
     for yr, dt in sorted(eligible_elections.items()):
         print(f"\n  {yr} election (date: {dt})...")
-        exposure = compute_smoke_exposure(smoke_df, yr, dt)
+        exposure = compute_smoke_exposure(smoke_df, yr, dt, all_tracts=ca_tracts)
         if len(exposure) > 0:
             print(f"    {len(exposure):,} tracts")
             print(f"    Mean smoke days (30d): {exposure['smoke_days_30d'].mean():.1f}")
