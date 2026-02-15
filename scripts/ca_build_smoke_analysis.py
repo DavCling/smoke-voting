@@ -25,6 +25,8 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CROSSWALK_DIR = os.path.join(BASE_DIR, "data", "california", "crosswalk")
+TRACT_RELATIONSHIP_FILE = os.path.join(CROSSWALK_DIR, "tract_2020_to_2010_natl.txt")
 SMOKE_FILE = os.path.join(BASE_DIR, "data", "california", "smoke",
                           "smoke_pm25_tract_daily.csv")
 PRES_ELECTION_FILE = os.path.join(BASE_DIR, "data", "california", "elections",
@@ -170,10 +172,105 @@ def compute_smoke_exposure(smoke_df, election_year, election_date, all_tracts=No
     return result_df
 
 
+def load_tract_2020_to_2010_map():
+    """Load Census 2020-to-2010 tract relationship file for CA.
+
+    Returns a DataFrame mapping 2020 Census GEOIDs to 2010 Census GEOIDs
+    with area weights, used to convert 2022 ACS controls (which use 2020
+    Census tract geography) to 2010 Census GEOIDs matching the smoke data.
+    """
+    if not os.path.exists(TRACT_RELATIONSHIP_FILE):
+        return None
+
+    df = pd.read_csv(TRACT_RELATIONSHIP_FILE, sep="|", dtype=str)
+    ca = df[df["GEOID_TRACT_20"].str.startswith("06")].copy()
+
+    ca["AREALAND_PART"] = pd.to_numeric(ca["AREALAND_PART"], errors="coerce").fillna(0)
+    total_area = ca.groupby("GEOID_TRACT_20")["AREALAND_PART"].transform("sum")
+    ca["area_weight"] = np.where(total_area > 0, ca["AREALAND_PART"] / total_area, 0)
+
+    result = ca[["GEOID_TRACT_20", "GEOID_TRACT_10", "area_weight"]].copy()
+    result = result.rename(columns={"GEOID_TRACT_20": "geoid_2020", "GEOID_TRACT_10": "geoid_2010"})
+    result = result[result["area_weight"] > 0].copy()
+
+    return result
+
+
+def convert_controls_2020_to_2010(acs_df, tract_map):
+    """Convert 2022 ACS controls from 2020 Census GEOIDs to 2010 Census GEOIDs.
+
+    For rate/proportion variables (unemployment_rate, pct_*), uses
+    area-weighted averages. For log variables (log_median_income,
+    log_population), uses area-weighted averages. This approximation is
+    reasonable because most 2020 tracts map almost entirely to one 2010 tract.
+    """
+    # Split into 2022 (needs conversion) and non-2022 (already 2010 GEOIDs)
+    mask_2022 = acs_df["year"] == 2022
+    acs_other = acs_df[~mask_2022].copy()
+    acs_2022 = acs_df[mask_2022].copy()
+
+    if len(acs_2022) == 0 or tract_map is None:
+        return acs_df
+
+    n_before = acs_2022["geoid"].nunique()
+
+    # Merge with mapping
+    merged = acs_2022.merge(
+        tract_map.rename(columns={"geoid_2020": "geoid"}),
+        on="geoid",
+        how="left",
+    )
+
+    # Unmapped tracts: keep as-is
+    unmapped = merged["geoid_2010"].isna()
+    if unmapped.any():
+        merged.loc[unmapped, "geoid_2010"] = merged.loc[unmapped, "geoid"]
+        merged.loc[unmapped, "area_weight"] = 1.0
+
+    # Replace geoid with 2010 version
+    merged["geoid"] = merged["geoid_2010"]
+
+    # Weighted average for all numeric control columns
+    numeric_cols = [c for c in merged.columns
+                    if c not in ("geoid", "year", "geoid_2010", "area_weight", "acs_vintage")
+                    and merged[c].dtype in ("float64", "int64")]
+
+    # Apply weights
+    for col in numeric_cols:
+        merged[col] = merged[col] * merged["area_weight"]
+
+    # Sum weights per 2010 tract (for normalizing weighted averages)
+    merged["_weight_sum"] = merged["area_weight"]
+
+    agg_dict = {col: "sum" for col in numeric_cols}
+    agg_dict["_weight_sum"] = "sum"
+
+    result = merged.groupby(["geoid", "year"], dropna=False).agg(agg_dict).reset_index()
+
+    # Normalize by weight sum to get weighted averages
+    for col in numeric_cols:
+        result[col] = result[col] / result["_weight_sum"]
+
+    result = result.drop(columns=["_weight_sum"])
+    result = result[result["geoid"].str.startswith("06")].copy()
+
+    n_after = result["geoid"].nunique()
+    print(f"  ACS 2022: converted 2020→2010 tracts: {n_before} → {n_after}")
+
+    # Recombine
+    # Ensure same columns
+    common_cols = [c for c in acs_other.columns if c in result.columns]
+    combined = pd.concat([acs_other[common_cols], result[common_cols]], ignore_index=True)
+    return combined
+
+
 def load_controls():
     """Load and merge ACS + weather controls into a single tract-year panel."""
     print("\nLoading controls...")
     dfs = []
+
+    # Load 2020→2010 tract mapping for ACS 2022 conversion
+    tract_map = load_tract_2020_to_2010_map()
 
     # ACS controls
     if os.path.exists(ACS_FILE):
@@ -188,6 +285,11 @@ def load_controls():
         keep_cols = [c for c in keep_cols if c in acs.columns]
         acs = acs[keep_cols]
         print(f"  ACS: {len(acs):,} rows, {acs['geoid'].nunique():,} tracts")
+
+        # Convert 2022 ACS from 2020 Census GEOIDs to 2010 Census GEOIDs
+        if tract_map is not None and 2022 in acs["year"].values:
+            acs = convert_controls_2020_to_2010(acs, tract_map)
+
         dfs.append(acs)
     else:
         print(f"  WARNING: ACS controls not found: {ACS_FILE}")

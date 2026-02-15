@@ -108,6 +108,24 @@ def fetch_acs_tract_data(vintage, variables, state_fips="06"):
     return df
 
 
+def get_available_variables(acs_vintage):
+    """Return ACS variables available for a given vintage.
+
+    B23025 (employment) first available in 2011 5-year release.
+    B15003 (educational attainment) first available in 2012 5-year release.
+    B19013 (median income), B01003 (population), B03002 (race) available from 2009.
+    """
+    available = {}
+    for var, label in ACS_VARIABLES.items():
+        table = var.split("_")[0]
+        if table == "B23025" and acs_vintage < 2011:
+            continue
+        if table == "B15003" and acs_vintage < 2012:
+            continue
+        available[var] = label
+    return available
+
+
 def download_acs_controls():
     """Download ACS tract-level controls for all election years."""
     print("\n" + "=" * 60)
@@ -119,11 +137,23 @@ def download_acs_controls():
         print(f"  Already exists: {OUT_FILE} ({len(df):,} rows)")
         return
 
-    variables = list(ACS_VARIABLES.keys())
     all_data = []
 
     for election_year, acs_vintage in sorted(ACS_VINTAGE_MAP.items()):
         print(f"\n  Election {election_year} (ACS vintage {acs_vintage})...")
+
+        avail_vars = get_available_variables(acs_vintage)
+        variables = list(avail_vars.keys())
+        if not variables:
+            print(f"    No variables available for vintage {acs_vintage}, skipping")
+            continue
+
+        missing_tables = set()
+        for var in ACS_VARIABLES:
+            if var not in avail_vars:
+                missing_tables.add(var.split("_")[0])
+        if missing_tables:
+            print(f"    Note: tables {', '.join(sorted(missing_tables))} not available for {acs_vintage}")
 
         df = fetch_acs_tract_data(acs_vintage, variables)
         if df is None:
@@ -136,11 +166,11 @@ def download_acs_controls():
         df["GEOID"] = df["state"] + df["county"] + df["tract"]
 
         # Rename variables
-        rename_map = {k: v for k, v in ACS_VARIABLES.items() if k in df.columns}
+        rename_map = {k: v for k, v in avail_vars.items() if k in df.columns}
         df = df.rename(columns=rename_map)
 
         # Convert to numeric
-        for col in ACS_VARIABLES.values():
+        for col in avail_vars.values():
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -149,7 +179,7 @@ def download_acs_controls():
 
         # Keep only GEOID + variable columns
         keep_cols = ["GEOID", "election_year", "acs_vintage"] + [
-            v for v in ACS_VARIABLES.values() if v in df.columns
+            v for v in avail_vars.values() if v in df.columns
         ]
         df = df[keep_cols]
 
@@ -170,39 +200,51 @@ def download_acs_controls():
     # Compute derived variables
     print("\n  Computing derived variables...")
 
-    # Unemployment rate
-    combined["unemployment_rate"] = np.where(
-        combined["labor_force"] > 0,
-        combined["unemployed"] / combined["labor_force"],
-        np.nan
-    )
+    # Unemployment rate (B23025 — available from 2011+)
+    if "labor_force" in combined.columns and "unemployed" in combined.columns:
+        combined["unemployment_rate"] = np.where(
+            combined["labor_force"] > 0,
+            combined["unemployed"] / combined["labor_force"],
+            np.nan
+        )
+    else:
+        combined["unemployment_rate"] = np.nan
 
     # Log median income (handle negative/zero/missing)
-    combined["log_median_income"] = np.where(
-        combined["median_income"] > 0,
-        np.log(combined["median_income"]),
-        np.nan
-    )
+    if "median_income" in combined.columns:
+        combined["log_median_income"] = np.where(
+            combined["median_income"] > 0,
+            np.log(combined["median_income"]),
+            np.nan
+        )
+    else:
+        combined["log_median_income"] = np.nan
 
     # Log population
-    combined["log_population"] = np.where(
-        combined["total_population"] > 0,
-        np.log(combined["total_population"]),
-        np.nan
-    )
+    if "total_population" in combined.columns:
+        combined["log_population"] = np.where(
+            combined["total_population"] > 0,
+            np.log(combined["total_population"]),
+            np.nan
+        )
+    else:
+        combined["log_population"] = np.nan
 
-    # Pct bachelor's or higher
-    educ_higher = (
-        combined["educ_bachelors"].fillna(0) +
-        combined["educ_masters"].fillna(0) +
-        combined["educ_professional"].fillna(0) +
-        combined["educ_doctorate"].fillna(0)
-    )
-    combined["pct_bachelors_plus"] = np.where(
-        combined["educ_total"] > 0,
-        educ_higher / combined["educ_total"],
-        np.nan
-    )
+    # Pct bachelor's or higher (B15003 — available from 2012+)
+    if "educ_total" in combined.columns:
+        educ_higher = (
+            combined["educ_bachelors"].fillna(0) +
+            combined["educ_masters"].fillna(0) +
+            combined["educ_professional"].fillna(0) +
+            combined["educ_doctorate"].fillna(0)
+        )
+        combined["pct_bachelors_plus"] = np.where(
+            combined["educ_total"] > 0,
+            educ_higher / combined["educ_total"],
+            np.nan
+        )
+    else:
+        combined["pct_bachelors_plus"] = np.nan
 
     # Race/ethnicity shares
     for race_var, label in [
@@ -211,11 +253,14 @@ def download_acs_controls():
         ("race_asian_nh", "pct_asian_nh"),
         ("race_hispanic", "pct_hispanic"),
     ]:
-        combined[label] = np.where(
-            combined["race_total"] > 0,
-            combined[race_var].fillna(0) / combined["race_total"],
-            np.nan
-        )
+        if race_var in combined.columns and "race_total" in combined.columns:
+            combined[label] = np.where(
+                combined["race_total"] > 0,
+                combined[race_var].fillna(0) / combined["race_total"],
+                np.nan
+            )
+        else:
+            combined[label] = np.nan
 
     # Save
     os.makedirs(OUT_DIR, exist_ok=True)

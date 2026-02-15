@@ -40,6 +40,10 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ELECTIONS_DIR = os.path.join(BASE_DIR, "data", "california", "elections")
 CROSSWALK_DIR = os.path.join(BASE_DIR, "data", "california", "crosswalk")
+TRACT_RELATIONSHIP_FILE = os.path.join(CROSSWALK_DIR, "tract_2020_to_2010_natl.txt")
+
+# Years that use 2020 Census geography (post-redistricting)
+YEARS_2020_CENSUS = {2022}
 
 # Election years
 PRESIDENTIAL_YEARS = [2008, 2012, 2016, 2020]
@@ -305,6 +309,96 @@ def allocate_votes_to_tracts(precinct_votes, blk_map, year):
     return tract_votes
 
 
+def load_tract_2020_to_2010_map():
+    """Load Census 2020-to-2010 tract relationship file for CA.
+
+    Returns DataFrame with columns: geoid_2020, geoid_2010, area_weight
+    where area_weight is the fraction of the 2020 tract's land area
+    that falls within each 2010 tract.
+    """
+    if not os.path.exists(TRACT_RELATIONSHIP_FILE):
+        print(f"  WARNING: Tract relationship file not found: {TRACT_RELATIONSHIP_FILE}")
+        return None
+
+    df = pd.read_csv(TRACT_RELATIONSHIP_FILE, sep="|", dtype=str)
+
+    # Filter to CA
+    ca = df[df["GEOID_TRACT_20"].str.startswith("06")].copy()
+
+    ca["AREALAND_PART"] = pd.to_numeric(ca["AREALAND_PART"], errors="coerce").fillna(0)
+
+    # Compute area weight: fraction of 2020 tract area in each 2010 tract
+    total_area = ca.groupby("GEOID_TRACT_20")["AREALAND_PART"].transform("sum")
+    ca["area_weight"] = np.where(total_area > 0, ca["AREALAND_PART"] / total_area, 0)
+
+    result = ca[["GEOID_TRACT_20", "GEOID_TRACT_10", "area_weight"]].copy()
+    result = result.rename(columns={"GEOID_TRACT_20": "geoid_2020", "GEOID_TRACT_10": "geoid_2010"})
+
+    # Drop rows with zero weight
+    result = result[result["area_weight"] > 0].copy()
+
+    print(f"  Loaded tract 2020→2010 mapping: {result['geoid_2020'].nunique()} 2020 tracts → "
+          f"{result['geoid_2010'].nunique()} 2010 tracts")
+
+    return result
+
+
+def convert_tracts_2020_to_2010(tract_votes, tract_map):
+    """Convert tract-level vote data from 2020 Census GEOIDs to 2010 Census GEOIDs.
+
+    Uses area-weighted allocation: votes are split proportionally across
+    overlapping 2010 tracts based on land area overlap.
+    """
+    if tract_map is None:
+        print("  WARNING: No tract mapping available, keeping 2020 GEOIDs")
+        return tract_votes
+
+    n_tracts_before = tract_votes["GEOID"].nunique()
+
+    # Merge with mapping
+    merged = tract_votes.merge(
+        tract_map.rename(columns={"geoid_2020": "GEOID"}),
+        on="GEOID",
+        how="left",
+    )
+
+    # Tracts without a mapping: keep as-is (may already be 2010 GEOIDs)
+    unmapped = merged["geoid_2010"].isna()
+    if unmapped.any():
+        print(f"    {unmapped.sum()} rows have no 2020→2010 mapping, keeping original GEOID")
+        merged.loc[unmapped, "geoid_2010"] = merged.loc[unmapped, "GEOID"]
+        merged.loc[unmapped, "area_weight"] = 1.0
+
+    # Apply area weights to vote columns
+    vote_cols = ["dem_votes", "rep_votes", "total_votes"]
+    for col in vote_cols:
+        if col in merged.columns:
+            merged[col] = merged[col] * merged["area_weight"]
+
+    # Replace GEOID with 2010 GEOID
+    merged["GEOID"] = merged["geoid_2010"]
+
+    # Aggregate by 2010 GEOID
+    group_cols = ["GEOID", "year"]
+    if "district" in merged.columns:
+        group_cols.append("district")
+
+    agg_cols = {col: "sum" for col in vote_cols if col in merged.columns}
+    if "same_party_race" in merged.columns:
+        group_cols_with_flag = group_cols + ["same_party_race"]
+        result = merged.groupby(group_cols_with_flag, dropna=False).agg(agg_cols).reset_index()
+    else:
+        result = merged.groupby(group_cols, dropna=False).agg(agg_cols).reset_index()
+
+    # Keep only CA tracts
+    result = result[result["GEOID"].str.startswith("06")].copy()
+
+    n_tracts_after = result["GEOID"].nunique()
+    print(f"    Converted 2020→2010 tracts: {n_tracts_before} → {n_tracts_after}")
+
+    return result
+
+
 def build_tract_election_results(race_type="presidential"):
     """Build tract-level election results for all years."""
     years = PRESIDENTIAL_YEARS if race_type == "presidential" else HOUSE_YEARS
@@ -313,6 +407,12 @@ def build_tract_election_results(race_type="presidential"):
     print(f"\n{'='*60}")
     print(f"Building Tract-Level {race_type.title()} Results")
     print(f"{'='*60}")
+
+    # Load 2020→2010 tract mapping for years using 2020 Census geography
+    tract_map = None
+    if any(y in YEARS_2020_CENSUS for y in years):
+        print("\n  Loading 2020→2010 Census tract mapping...")
+        tract_map = load_tract_2020_to_2010_map()
 
     all_results = []
 
@@ -335,6 +435,10 @@ def build_tract_election_results(race_type="presidential"):
         tract_votes = allocate_votes_to_tracts(votes, blk_map, year)
 
         if tract_votes is not None:
+            # Convert 2020 Census GEOIDs to 2010 for post-redistricting years
+            if year in YEARS_2020_CENSUS and tract_map is not None:
+                print(f"    Converting {year} from 2020→2010 Census tracts...")
+                tract_votes = convert_tracts_2020_to_2010(tract_votes, tract_map)
             all_results.append(tract_votes)
         else:
             print(f"    SKIPPING {year}")
