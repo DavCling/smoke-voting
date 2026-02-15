@@ -66,3 +66,28 @@ There is no Makefile, test suite, or linter configured.
 - Smoke variable naming: `smoke_pm25_mean_30d`, `smoke_days_30d`, `smoke_days_severe_30d` (window suffix)
 - `dem_vote_share` = DEM / (DEM + REP) two-party vote share
 - The R script `analyze_house_voting_check.R` exists specifically to cross-validate Python regression results
+
+## California Tract-Level Analysis
+
+A parallel analysis pipeline at census-tract resolution for California, using `ca_` prefixed scripts. Data in `data/california/`, output to `output/california/`, report in `report/`.
+
+```bash
+# CA Pipeline (Steps 1-3 can run in parallel)
+python scripts/ca_download_smoke_data.py          # 1. Tract-level smoke PM2.5
+python scripts/ca_download_election_data.py        # 2. SWDB precinct data + crosswalk
+python scripts/ca_download_controls_data.py        # 3a. ACS tract-level controls
+Rscript scripts/ca_download_weather_controls.R     # 3b. PRISM → tract weather
+
+python scripts/ca_build_crosswalk.py               # 4. Precinct→tract allocation
+python scripts/ca_build_smoke_analysis.py          # 5. Merge → analysis parquets
+
+python scripts/ca_analyze_smoke_voting.py          # 6. Regressions + figures
+Rscript scripts/ca_analyze_check.R                 # 6b. fixest cross-validation
+Rscript scripts/ca_map_smoke_tracts.R              # 7. Maps
+
+cd report && pdflatex ca_tract_analysis.tex        # 8. Compile report
+```
+
+**CA-specific identifiers:** Census tract GEOID (`geoid`, 11-digit), `county_fips` (GEOID[:5]).
+**FE structure:** Tract + Year (base), County trends (robustness), County×Year (most demanding).
+**Additional Python dependency:** geopandas (for crosswalk spatial overlay)
