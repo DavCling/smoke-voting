@@ -280,7 +280,7 @@ def load_controls():
 
         # Keep derived variables
         keep_cols = ["geoid", "year", "unemployment_rate", "log_median_income",
-                     "log_population", "pct_bachelors_plus",
+                     "log_population", "voting_age_population", "pct_bachelors_plus",
                      "pct_white_nh", "pct_black_nh", "pct_asian_nh", "pct_hispanic"]
         keep_cols = [c for c in keep_cols if c in acs.columns]
         acs = acs[keep_cols]
@@ -351,6 +351,20 @@ def build_analysis_dataset(smoke_panel, election_df, controls, race_type="presid
     # Lagged vote share (prior election)
     merged = merged.sort_values(["geoid", "year"])
     merged["dem_vote_share_lag"] = merged.groupby("geoid")["dem_vote_share"].shift(1)
+
+    # Turnout rate = total votes / voting-age population
+    if "voting_age_population" in merged.columns and "total_votes" in merged.columns:
+        merged["turnout_rate"] = np.where(
+            merged["voting_age_population"] > 0,
+            merged["total_votes"] / merged["voting_age_population"],
+            np.nan,
+        )
+        # Clip extreme values from allocation artifacts (VAP/vote mismatch)
+        n_extreme = (merged["turnout_rate"] > 1.5).sum()
+        merged.loc[merged["turnout_rate"] > 1.5, "turnout_rate"] = np.nan
+        n_tr = merged["turnout_rate"].notna().sum()
+        print(f"  Turnout rate computed: {n_tr:,}/{len(merged):,} "
+              f"({n_extreme} extreme values dropped)")
 
     return merged
 

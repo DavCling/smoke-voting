@@ -70,6 +70,15 @@ ACS_VARIABLES = {
     "B03002_004E": "race_black_nh",     # Not Hispanic: Black alone
     "B03002_006E": "race_asian_nh",     # Not Hispanic: Asian alone
     "B03002_012E": "race_hispanic",     # Hispanic or Latino
+    # Sex by age — under 18 components for VAP (B01001)
+    "B01001_003E": "male_under5",
+    "B01001_004E": "male_5to9",
+    "B01001_005E": "male_10to14",
+    "B01001_006E": "male_15to17",
+    "B01001_027E": "female_under5",
+    "B01001_028E": "female_5to9",
+    "B01001_029E": "female_10to14",
+    "B01001_030E": "female_15to17",
 }
 
 HEADERS = {
@@ -262,6 +271,14 @@ def download_acs_controls():
         else:
             combined[label] = np.nan
 
+    # Voting-age population (total pop minus under-18)
+    under18_cols = ["male_under5", "male_5to9", "male_10to14", "male_15to17",
+                    "female_under5", "female_5to9", "female_10to14", "female_15to17"]
+    if all(c in combined.columns for c in under18_cols):
+        under18 = sum(combined[c].fillna(0) for c in under18_cols)
+        combined["voting_age_population"] = combined["total_population"] - under18
+        combined["voting_age_population"] = combined["voting_age_population"].clip(lower=0)
+
     # Save
     os.makedirs(OUT_DIR, exist_ok=True)
     combined.to_csv(OUT_FILE, index=False)
@@ -274,6 +291,7 @@ def download_acs_controls():
     print("\n  Coverage (% non-missing):")
     derived_cols = [
         "unemployment_rate", "log_median_income", "log_population",
+        "voting_age_population",
         "pct_bachelors_plus", "pct_white_nh", "pct_hispanic",
     ]
     for col in derived_cols:

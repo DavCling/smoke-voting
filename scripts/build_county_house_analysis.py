@@ -324,6 +324,20 @@ def main():
     merged.loc[merged["total_votes"] <= 0, "total_votes"] = np.nan
     merged["log_total_votes"] = np.log(merged["total_votes"])
 
+    # Turnout rate = total votes / voting-age population
+    if "voting_age_population" in merged.columns:
+        merged["turnout_rate"] = np.where(
+            merged["voting_age_population"] > 0,
+            merged["total_votes"] / merged["voting_age_population"],
+            np.nan,
+        )
+        # Clip extreme values from allocation artifacts (VAP/vote mismatch)
+        n_extreme = (merged["turnout_rate"] > 1.5).sum()
+        merged.loc[merged["turnout_rate"] > 1.5, "turnout_rate"] = np.nan
+        n_tr = merged["turnout_rate"].notna().sum()
+        print(f"  Turnout rate computed: {n_tr:,}/{len(merged):,} "
+              f"({n_extreme} extreme values dropped)")
+
     # Summary
     print("\n" + "=" * 60)
     print("COUNTY-LEVEL HOUSE ANALYSIS DATASET SUMMARY")

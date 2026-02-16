@@ -218,6 +218,7 @@ def create_summary_table(df):
         (df_cont, "dem_vote_share", "DEM vote share", "Spec A: Pro-environment"),
         (df_cont, "incumbent_vote_share", "Incumbent vote share", "Spec B: Incumbent punishment"),
         (df, "log_total_votes", "Log total votes", "Spec C: Turnout"),
+        (df, "turnout_rate", "Turnout rate", "Spec D: Turnout rate"),
     ]
 
     rows = []
@@ -270,6 +271,7 @@ def frac_unhealthy_regressions(df):
         (df_cont, "dem_vote_share", "DEM vote share"),
         (df_cont, "incumbent_vote_share", "Incumbent vote share"),
         (df, "log_total_votes", "Log total votes"),
+        (df, "turnout_rate", "Turnout rate"),
     ]
 
     for data, dep_var, dep_label in specs:
@@ -292,6 +294,7 @@ def state_year_fe_regressions(df):
         (df_cont, "dem_vote_share", "DEM vote share"),
         (df_cont, "incumbent_vote_share", "Incumbent vote share"),
         (df, "log_total_votes", "Log total votes"),
+        (df, "turnout_rate", "Turnout rate"),
     ]
 
     for data, dep_var, dep_label in specs:
@@ -316,8 +319,9 @@ def comparison_three_way(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]:
-        data = df_cont if dep_var != "log_total_votes" else df
+        data = df_cont if dep_var in ("dem_vote_share", "incumbent_vote_share") else df
         res = run_twfe(data, dep_var, smoke_var, label=f"County House: {dep_label}")
         if res:
             county_house[dep_label] = {
@@ -338,8 +342,11 @@ def comparison_three_way(df):
             ("dem_vote_share", "DEM vote share"),
             ("incumbent_vote_share", "Incumbent vote share"),
             ("log_total_votes", "Log total votes"),
+            ("turnout_rate", "Turnout rate"),
         ]:
-            data = dist_cont if dep_var != "log_total_votes" else dist_df
+            if dep_var not in dist_df.columns:
+                continue
+            data = dist_cont if dep_var in ("dem_vote_share", "incumbent_vote_share") else dist_df
             res = run_twfe(data, dep_var, smoke_var, label=f"District House: {dep_label}")
             if res:
                 district_house[dep_label] = {
@@ -359,6 +366,7 @@ def comparison_three_way(df):
             ("dem_vote_share", "DEM vote share"),
             ("incumbent_vote_share", "Incumbent vote share"),
             ("log_total_votes", "Log total votes"),
+            ("turnout_rate", "Turnout rate"),
         ]:
             res = run_twfe(pres_df, dep_var, smoke_var, label=f"Pres: {dep_label}")
             if res:
@@ -377,7 +385,7 @@ def comparison_three_way(df):
     print(f"\n{header}")
     print("  " + "-" * 110)
 
-    for dep_label in ["DEM vote share", "Incumbent vote share", "Log total votes"]:
+    for dep_label in ["DEM vote share", "Incumbent vote share", "Log total votes", "Turnout rate"]:
         ch = county_house.get(dep_label, {})
         dh = district_house.get(dep_label, {})
         pr = pres_results.get(dep_label, {})
@@ -413,6 +421,7 @@ def robustness_drop_uncontested(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     header = f"  {'Outcome':<25s} {'All β':>12s} {'All p':>10s} {'Contested β':>14s} {'Contested p':>12s}"
@@ -459,6 +468,7 @@ def robustness_controls(df):
         ("dem_vote_share", "DEM vote share", df_cont),
         ("incumbent_vote_share", "Incumbent vote share", df_cont),
         ("log_total_votes", "Log total votes", df),
+        ("turnout_rate", "Turnout rate", df),
     ]
 
     print(f"\n  {'Outcome':<25} {'Baseline β':>12} {'+ Controls β':>14} "

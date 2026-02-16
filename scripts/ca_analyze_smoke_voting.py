@@ -173,6 +173,7 @@ def summary_statistics(df, label="CA Tract-Level"):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     control_vars = [
@@ -244,6 +245,7 @@ def create_buildup_table(df):
         ("dem_vote_share", "Panel A: DEM Vote Share"),
         ("incumbent_vote_share", "Panel B: Incumbent Vote Share"),
         ("log_total_votes", "Panel C: Log Total Votes"),
+        ("turnout_rate", "Panel D: Turnout Rate"),
     ]
 
     results = {}
@@ -390,6 +392,7 @@ def temporal_dynamics_controls(df):
         ("dem_vote_share", "DEM Vote Share"),
         ("incumbent_vote_share", "Incumbent Vote Share"),
         ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
     ]
 
     treatments = [
@@ -454,7 +457,10 @@ def temporal_dynamics_controls(df):
         # Plot cumulative figure
         if all_results:
             os.makedirs(FIG_DIR, exist_ok=True)
-            fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+            n_outcomes = len(outcomes)
+            fig, axes = plt.subplots(1, n_outcomes, figsize=(4.5 * n_outcomes, 4.5))
+            if n_outcomes == 1:
+                axes = [axes]
             x_pos = np.arange(n_bins)
             short_cum_labels = [f"{(k+1)*7}" for k in range(n_bins)]
             cumul_color = "#b2182b"
@@ -548,6 +554,7 @@ def temporal_drop2020(df):
         ("dem_vote_share", "DEM Vote Share"),
         ("incumbent_vote_share", "Incumbent Vote Share"),
         ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
     ]
 
     bin_cols = [f"mean_bin_{b}" for b in range(n_bins)]
@@ -575,7 +582,10 @@ def temporal_drop2020(df):
 
     # Run for full sample and drop-2020
     os.makedirs(FIG_DIR, exist_ok=True)
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+    n_outcomes = len(outcomes)
+    fig, axes = plt.subplots(1, n_outcomes, figsize=(4.5 * n_outcomes, 4.5))
+    if n_outcomes == 1:
+        axes = [axes]
     x_pos = np.arange(n_bins)
     short_labels = [f"{(k+1)*7}" for k in range(n_bins)]
 
@@ -642,6 +652,7 @@ def threshold_comparison(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     for smoke_var, thresh_label in thresholds:
@@ -687,6 +698,7 @@ def county_year_fe_regressions(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     for dep_var, dep_label in specs:
@@ -716,6 +728,7 @@ def robustness_controls(df):
         ("dem_vote_share", "DEM"),
         ("incumbent_vote_share", "Inc."),
         ("log_total_votes", "Turn."),
+        ("turnout_rate", "T.Rate"),
     ]
 
     # Base (no controls), full controls, leave-one-out
@@ -763,6 +776,7 @@ def house_comparison(pres_df, house_df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     print(f"\n  {'Outcome':<30s} {'Presidential':>15s} {'House':>15s}")
@@ -778,7 +792,7 @@ def house_comparison(pres_df, house_df):
 
             # For House, exclude uncontested races for vote share outcomes
             run_df = df
-            if label == "House" and "uncontested" in df.columns and dep_var != "log_total_votes":
+            if label == "House" and "uncontested" in df.columns and dep_var not in ("log_total_votes", "turnout_rate"):
                 run_df = df[~df["uncontested"]]
 
             res = run_twfe(run_df, dep_var, smoke_var, controls=avail,
@@ -821,6 +835,7 @@ def national_comparison(ca_df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     # Run both with Spec 3 (TWFE + controls)

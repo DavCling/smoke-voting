@@ -237,6 +237,7 @@ def threshold_comparison(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     for smoke_var, thresh_label in thresholds:
@@ -288,6 +289,7 @@ def state_year_fe_regressions(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     for dep_var, dep_label in specs:
@@ -473,6 +475,7 @@ def temporal_dynamics_7day(df):
         ("dem_vote_share", "DEM Vote Share"),
         ("incumbent_vote_share", "Incumbent Vote Share"),
         ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
     ]
 
     # Bin labels (days before election)
@@ -544,10 +547,11 @@ def temporal_dynamics_7day(df):
             "cumul_coefs": cumul_coefs, "cumul_ses": cumul_ses,
         }
 
-    # Plot 3×2 figure
+    # Plot figure: len(outcomes) rows × 2 cols
     if all_results:
         os.makedirs(FIG_DIR, exist_ok=True)
-        fig, axes = plt.subplots(3, 2, figsize=(14, 12))
+        n_rows = len(outcomes)
+        fig, axes = plt.subplots(n_rows, 2, figsize=(14, 4 * n_rows))
         x_pos = np.arange(n_bins)
 
         for row_idx, (dep_var, dep_label) in enumerate(outcomes):
@@ -565,7 +569,7 @@ def temporal_dynamics_7day(df):
             ax.set_ylabel(f"Effect on {dep_label}")
             if row_idx == 0:
                 ax.set_title("Exclusive 7-Day Windows")
-            if row_idx == 2:
+            if row_idx == n_rows - 1:
                 ax.set_xlabel("Days before election")
 
             # Cumulative (right column)
@@ -578,7 +582,7 @@ def temporal_dynamics_7day(df):
             ax.set_xticklabels(cum_labels, rotation=45, fontsize=7)
             if row_idx == 0:
                 ax.set_title("Cumulative Windows")
-            if row_idx == 2:
+            if row_idx == n_rows - 1:
                 ax.set_xlabel("Cumulative window length")
 
         plt.tight_layout()
@@ -649,6 +653,7 @@ def temporal_dynamics_controls(df):
         ("dem_vote_share", "DEM Vote Share"),
         ("incumbent_vote_share", "Incumbent Vote Share"),
         ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
     ]
 
     treatments = [
@@ -733,10 +738,11 @@ def temporal_dynamics_controls(df):
                 "cumul_coefs": cumul_coefs, "cumul_ses": cumul_ses,
             }
 
-        # Plot 3×2 figure (exclusive + cumulative, for appendix)
+        # Plot figure: len(outcomes) rows × 2 cols (exclusive + cumulative, for appendix)
         if all_results:
             os.makedirs(FIG_DIR, exist_ok=True)
-            fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+            n_rows = len(outcomes)
+            fig, axes = plt.subplots(n_rows, 2, figsize=(13, 3.3 * n_rows))
             x_pos = np.arange(n_bins)
             short_bin_labels = [f"{b*7}" for b in range(n_bins)]
             short_cum_labels = [f"{(k+1)*7}" for k in range(n_bins)]
@@ -763,7 +769,7 @@ def temporal_dynamics_controls(df):
                 ax.set_ylabel(dep_label, fontsize=10)
                 if row_idx == 0:
                     ax.set_title("Exclusive 7-Day Windows", fontsize=12, fontweight="bold")
-                if row_idx == 2:
+                if row_idx == n_rows - 1:
                     ax.set_xlabel("Window start (days before election)", fontsize=10)
 
                 # Cumulative (right column)
@@ -780,7 +786,7 @@ def temporal_dynamics_controls(df):
                 ax.tick_params(axis="y", labelsize=9)
                 if row_idx == 0:
                     ax.set_title("Cumulative Windows", fontsize=12, fontweight="bold")
-                if row_idx == 2:
+                if row_idx == n_rows - 1:
                     ax.set_xlabel("Cumulative window (days)", fontsize=10)
 
             plt.tight_layout()
@@ -792,7 +798,7 @@ def temporal_dynamics_controls(df):
         # Store for combined figure
         all_treat_results[prefix] = all_results
 
-    # Combined cumulative-only figure: 3 rows (outcomes) × 2 cols (mean PM2.5, frac haze)
+    # Combined cumulative-only figure: len(outcomes) rows × 2 cols (mean PM2.5, frac haze)
     treat_configs = [
         ("mean_bin", "Mean Smoke PM$_{2.5}$", "#2166ac"),
         ("frac_bin", "Frac. Days > 20 µg/m$^3$ (Haze)", "#b2182b"),
@@ -801,7 +807,8 @@ def temporal_dynamics_controls(df):
 
     if all(t[0] in all_treat_results for t in treat_configs):
         os.makedirs(FIG_DIR, exist_ok=True)
-        fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+        n_rows = len(outcomes)
+        fig, axes = plt.subplots(n_rows, 2, figsize=(13, 3.3 * n_rows))
         x_pos = np.arange(n_bins)
 
         for col_idx, (prefix, col_title, color) in enumerate(treat_configs):
@@ -829,7 +836,7 @@ def temporal_dynamics_controls(df):
                     ax.set_ylabel(dep_label, fontsize=10)
                 if row_idx == 0:
                     ax.set_title(col_title, fontsize=12, fontweight="bold")
-                if row_idx == 2:
+                if row_idx == n_rows - 1:
                     ax.set_xlabel("Cumulative window (days)", fontsize=10)
 
         plt.tight_layout()
@@ -898,6 +905,7 @@ def temporal_drop2020(df):
         ("dem_vote_share", "DEM Vote Share"),
         ("incumbent_vote_share", "Incumbent Vote Share"),
         ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
     ]
 
     treatments = [
@@ -963,10 +971,11 @@ def temporal_drop2020(df):
                     print(f"  {treat_label:35s} {dep_label:25s} {sample_label:12s}  "
                           f"β(0-28d)={coef_30:.6f}{stars:3s} (SE={se_30:.6f})")
 
-    # Plot 3×2 figure: rows = outcomes, cols = treatments
+    # Plot figure: len(outcomes) rows × 2 cols, rows = outcomes, cols = treatments
     # Two distinct colors per column: dark for full, orange for excl. 2020
     os.makedirs(FIG_DIR, exist_ok=True)
-    fig, axes = plt.subplots(3, 2, figsize=(13, 10))
+    n_rows = len(outcomes)
+    fig, axes = plt.subplots(n_rows, 2, figsize=(13, 3.3 * n_rows))
     x_pos = np.arange(n_bins)
 
     # Use contrasting colors: dark blue/red for full, orange/coral for drop-2020
@@ -1008,7 +1017,7 @@ def temporal_drop2020(df):
                 ax.set_ylabel(dep_label, fontsize=10)
             if row_idx == 0:
                 ax.set_title(col_title, fontsize=12, fontweight="bold")
-            if row_idx == 2:
+            if row_idx == n_rows - 1:
                 ax.set_xlabel("Cumulative window (days)", fontsize=10)
 
     # Shared legend at top
@@ -1052,6 +1061,7 @@ def create_summary_table(df):
         ("dem_vote_share", "DEM vote share", "Spec A: Pro-environment"),
         ("incumbent_vote_share", "Incumbent vote share", "Spec B: Incumbent punishment"),
         ("log_total_votes", "Log total votes", "Spec C: Turnout"),
+        ("turnout_rate", "Turnout rate (votes/VAP)", "Spec D: Turnout rate"),
     ]
 
     rows = []
@@ -1189,6 +1199,7 @@ def robustness_controls(df):
         ("dem_vote_share", "DEM vote share"),
         ("incumbent_vote_share", "Incumbent vote share"),
         ("log_total_votes", "Log total votes"),
+        ("turnout_rate", "Turnout rate"),
     ]
 
     print(f"\n  {'Outcome':<25} {'Baseline β':>12} {'+ Controls β':>14} "
@@ -1261,6 +1272,7 @@ def create_buildup_table(df):
         ("dem_vote_share", "Panel A: DEM Vote Share"),
         ("incumbent_vote_share", "Panel B: Incumbent Vote Share"),
         ("log_total_votes", "Panel C: Log Total Votes"),
+        ("turnout_rate", "Panel D: Turnout Rate"),
     ]
 
     results = {}

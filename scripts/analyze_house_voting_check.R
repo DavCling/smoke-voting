@@ -69,6 +69,15 @@ res_c <- feols(log_total_votes ~ smoke_pm25_mean_30d | district_id + year,
                data = house, cluster = ~district_id)
 print_reg("", res_c, "smoke_pm25_mean_30d")
 
+if ("turnout_rate" %in% names(house)) {
+  cat("Spec D: turnout_rate ~ smoke_pm25_mean_30d | district_id + year\n")
+  res_d <- feols(turnout_rate ~ smoke_pm25_mean_30d | district_id + year,
+                 data = house, cluster = ~district_id)
+  print_reg("", res_d, "smoke_pm25_mean_30d")
+} else {
+  cat("Spec D: turnout_rate not available in House data (no VAP at district level)\n\n")
+}
+
 # ---- House State×Year FE ----
 cat("--- House: State×Year FE ---\n\n")
 
@@ -87,6 +96,13 @@ res_c_sy <- feols(log_total_votes ~ smoke_pm25_mean_30d | district_id + state_fi
                   data = house, cluster = ~district_id)
 print_reg("", res_c_sy, "smoke_pm25_mean_30d")
 
+if ("turnout_rate" %in% names(house)) {
+  cat("State×Year FE D: turnout_rate ~ smoke_pm25_mean_30d | district_id + state_fips_2^year\n")
+  res_d_sy <- feols(turnout_rate ~ smoke_pm25_mean_30d | district_id + state_fips_2^year,
+                    data = house, cluster = ~district_id)
+  print_reg("", res_d_sy, "smoke_pm25_mean_30d")
+}
+
 # ---- House Fraction Unhealthy ----
 cat("--- House: Fraction Unhealthy ---\n\n")
 
@@ -99,6 +115,13 @@ cat("Frac Unhealthy C: log_total_votes ~ smoke_frac_unhealthy_30d | district_id 
 res_c_fu <- feols(log_total_votes ~ smoke_frac_unhealthy_30d | district_id + year,
                   data = house, cluster = ~district_id)
 print_reg("", res_c_fu, "smoke_frac_unhealthy_30d")
+
+if ("turnout_rate" %in% names(house)) {
+  cat("Frac Unhealthy D: turnout_rate ~ smoke_frac_unhealthy_30d | district_id + year\n")
+  res_d_fu <- feols(turnout_rate ~ smoke_frac_unhealthy_30d | district_id + year,
+                    data = house, cluster = ~district_id)
+  print_reg("", res_d_fu, "smoke_frac_unhealthy_30d")
+}
 
 
 # ============================================================
@@ -136,6 +159,11 @@ if (file.exists(pres_file)) {
                       data = pres, cluster = ~fips)
   print_reg("", pres_c_raw, "smoke_pm25_mean_30d")
 
+  cat("Pres Raw OLS D: turnout_rate ~ smoke_pm25_mean_30d\n")
+  pres_d_raw <- feols(turnout_rate ~ smoke_pm25_mean_30d,
+                      data = pres, cluster = ~fips)
+  print_reg("", pres_d_raw, "smoke_pm25_mean_30d")
+
   # ---- Build-up Spec 2: 30d base spec (County + Year FE) ----
   cat("--- Presidential: Build-Up Spec (2) TWFE ---\n\n")
 
@@ -153,6 +181,11 @@ if (file.exists(pres_file)) {
   pres_c <- feols(log_total_votes ~ smoke_pm25_mean_30d | fips + year,
                   data = pres, cluster = ~fips)
   print_reg("", pres_c, "smoke_pm25_mean_30d")
+
+  cat("Pres D: turnout_rate ~ smoke_pm25_mean_30d | fips + year\n")
+  pres_d <- feols(turnout_rate ~ smoke_pm25_mean_30d | fips + year,
+                  data = pres, cluster = ~fips)
+  print_reg("", pres_d, "smoke_pm25_mean_30d")
 
   # State×Year FE
   cat("--- Presidential: State×Year FE ---\n\n")
@@ -172,6 +205,11 @@ if (file.exists(pres_file)) {
                      data = pres, cluster = ~fips)
   print_reg("", pres_c_sy, "smoke_pm25_mean_30d")
 
+  cat("Pres State×Year D: turnout_rate ~ smoke_pm25_mean_30d | fips + state_fips^year\n")
+  pres_d_sy <- feols(turnout_rate ~ smoke_pm25_mean_30d | fips + state_fips^year,
+                     data = pres, cluster = ~fips)
+  print_reg("", pres_d_sy, "smoke_pm25_mean_30d")
+
   # Fraction Unhealthy
   cat("--- Presidential: Fraction Unhealthy ---\n\n")
 
@@ -184,6 +222,11 @@ if (file.exists(pres_file)) {
   pres_c_fu <- feols(log_total_votes ~ smoke_frac_unhealthy_30d | fips + year,
                      data = pres, cluster = ~fips)
   print_reg("", pres_c_fu, "smoke_frac_unhealthy_30d")
+
+  cat("Pres Frac Unhealthy D: turnout_rate ~ smoke_frac_unhealthy_30d | fips + year\n")
+  pres_d_fu <- feols(turnout_rate ~ smoke_frac_unhealthy_30d | fips + year,
+                     data = pres, cluster = ~fips)
+  print_reg("", pres_d_fu, "smoke_frac_unhealthy_30d")
 
   # ---- Presidential: With Controls ----
   ctrl_vars <- c("unemployment_rate", "log_median_income", "log_population",
@@ -208,6 +251,11 @@ if (file.exists(pres_file)) {
                          data = pres, cluster = ~fips)
     print_reg("Pres +Controls C: Log total votes", pres_c_ctrl, "smoke_pm25_mean_30d")
 
+    pres_d_ctrl <- feols(turnout_rate ~ smoke_pm25_mean_30d + unemployment_rate +
+                         log_median_income + log_population + october_tmean + october_ppt | fips + year,
+                         data = pres, cluster = ~fips)
+    print_reg("Pres +Controls D: Turnout rate", pres_d_ctrl, "smoke_pm25_mean_30d")
+
     # ---- Build-up Spec 4: TWFE + Controls + State Linear Trends ----
     cat("--- Presidential: Build-Up Spec (4) +Controls +State Trends ---\n\n")
 
@@ -230,6 +278,12 @@ if (file.exists(pres_file)) {
                           log_median_income + log_population + october_tmean + october_ppt | fips + year + state_fips_2[year],
                           data = pres, cluster = ~fips)
     print_reg("", pres_c_trend, "smoke_pm25_mean_30d")
+
+    cat("Pres +Trends D: turnout_rate ~ smoke_pm25_mean_30d + controls | fips + year + state_fips_2[year]\n")
+    pres_d_trend <- feols(turnout_rate ~ smoke_pm25_mean_30d + unemployment_rate +
+                          log_median_income + log_population + october_tmean + october_ppt | fips + year + state_fips_2[year],
+                          data = pres, cluster = ~fips)
+    print_reg("", pres_d_trend, "smoke_pm25_mean_30d")
   } else {
     cat("--- Presidential: Controls not available, skipping ---\n\n")
   }
@@ -268,6 +322,22 @@ if (file.exists(pres_file)) {
               coef(pres_c)["smoke_pm25_mean_30d"],
               pvalue(pres_c)["smoke_pm25_mean_30d"],
               nobs(pres_c)))
+
+  if (exists("res_d") && exists("pres_d")) {
+    cat(sprintf(fmt, "Turnout rate",
+                coef(res_d)["smoke_pm25_mean_30d"],
+                pvalue(res_d)["smoke_pm25_mean_30d"],
+                nobs(res_d),
+                coef(pres_d)["smoke_pm25_mean_30d"],
+                pvalue(pres_d)["smoke_pm25_mean_30d"],
+                nobs(pres_d)))
+  } else if (exists("pres_d")) {
+    cat(sprintf("  %-25s %10s %10s %7s     %10.6f %10.4f %7d\n",
+                "Turnout rate", "N/A", "N/A", "N/A",
+                coef(pres_d)["smoke_pm25_mean_30d"],
+                pvalue(pres_d)["smoke_pm25_mean_30d"],
+                nobs(pres_d)))
+  }
 } else {
   cat("Presidential data not found, skipping comparison.\n")
 }
@@ -308,6 +378,15 @@ if (file.exists(county_house_file)) {
                 data = ch, cluster = ~fips)
   print_reg("", ch_c, "smoke_pm25_mean_30d")
 
+  if ("turnout_rate" %in% names(ch) && sum(!is.na(ch$turnout_rate)) > 0) {
+    cat("County House D: turnout_rate ~ smoke_pm25_mean_30d | fips + year\n")
+    ch_d <- feols(turnout_rate ~ smoke_pm25_mean_30d | fips + year,
+                  data = ch, cluster = ~fips)
+    print_reg("", ch_d, "smoke_pm25_mean_30d")
+  } else {
+    cat("County House D: turnout_rate not available\n\n")
+  }
+
   # State×Year FE
   cat("--- County House: State×Year FE ---\n\n")
 
@@ -326,6 +405,13 @@ if (file.exists(county_house_file)) {
                    data = ch, cluster = ~fips)
   print_reg("", ch_c_sy, "smoke_pm25_mean_30d")
 
+  if ("turnout_rate" %in% names(ch) && sum(!is.na(ch$turnout_rate)) > 0) {
+    cat("County House State×Year D: turnout_rate ~ smoke_pm25_mean_30d | fips + state_fips^year\n")
+    ch_d_sy <- feols(turnout_rate ~ smoke_pm25_mean_30d | fips + state_fips^year,
+                     data = ch, cluster = ~fips)
+    print_reg("", ch_d_sy, "smoke_pm25_mean_30d")
+  }
+
   # Fraction Unhealthy
   cat("--- County House: Fraction Unhealthy ---\n\n")
 
@@ -338,6 +424,13 @@ if (file.exists(county_house_file)) {
   ch_c_fu <- feols(log_total_votes ~ smoke_frac_unhealthy_30d | fips + year,
                    data = ch, cluster = ~fips)
   print_reg("", ch_c_fu, "smoke_frac_unhealthy_30d")
+
+  if ("turnout_rate" %in% names(ch) && sum(!is.na(ch$turnout_rate)) > 0) {
+    cat("County House Frac Unhealthy D: turnout_rate ~ smoke_frac_unhealthy_30d | fips + year\n")
+    ch_d_fu <- feols(turnout_rate ~ smoke_frac_unhealthy_30d | fips + year,
+                     data = ch, cluster = ~fips)
+    print_reg("", ch_d_fu, "smoke_frac_unhealthy_30d")
+  }
 
   # ---- County House: With Controls ----
   ch_ctrl_vars <- c("unemployment_rate", "log_median_income", "log_population",
@@ -361,6 +454,13 @@ if (file.exists(county_house_file)) {
                        log_median_income + log_population + october_tmean + october_ppt | fips + year,
                        data = ch, cluster = ~fips)
     print_reg("County House +Controls C: Log total votes", ch_c_ctrl, "smoke_pm25_mean_30d")
+
+    if ("turnout_rate" %in% names(ch) && sum(!is.na(ch$turnout_rate)) > 0) {
+      ch_d_ctrl <- feols(turnout_rate ~ smoke_pm25_mean_30d + unemployment_rate +
+                         log_median_income + log_population + october_tmean + october_ppt | fips + year,
+                         data = ch, cluster = ~fips)
+      print_reg("County House +Controls D: Turnout rate", ch_d_ctrl, "smoke_pm25_mean_30d")
+    }
   } else {
     cat("--- County House: Controls not available, skipping ---\n\n")
   }

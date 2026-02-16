@@ -273,6 +273,85 @@ def download_census_popest():
 # Main
 # ---------------------------------------------------------------------------
 
+def download_census_vap():
+    """Download voting-age population from ACS 5-year at county level.
+
+    Uses B01001 (Sex by Age) to compute VAP = total pop - under 18.
+    Election years: 2008, 2012, 2016, 2020 → ACS vintages match.
+    """
+    out_file = os.path.join(OUT_DIR, "census_county_vap.csv")
+    if os.path.exists(out_file):
+        df = pd.read_csv(out_file)
+        print(f"\n  VAP: Already exists ({len(df):,} rows). Delete to re-download.")
+        return
+
+    print("\n  Downloading ACS county-level VAP...")
+
+    CENSUS_API_BASE = "https://api.census.gov/data"
+    # Under-18 variables from B01001
+    vap_vars = {
+        "B01003_001E": "total_population",
+        "B01001_003E": "male_under5",
+        "B01001_004E": "male_5to9",
+        "B01001_005E": "male_10to14",
+        "B01001_006E": "male_15to17",
+        "B01001_027E": "female_under5",
+        "B01001_028E": "female_5to9",
+        "B01001_029E": "female_10to14",
+        "B01001_030E": "female_15to17",
+    }
+    var_str = ",".join(vap_vars.keys())
+
+    # Election years and their ACS vintages (ACS 5yr starts at vintage 2009)
+    election_vintages = {2008: 2009, 2012: 2012, 2016: 2016, 2020: 2020}
+
+    all_data = []
+    for election_year, vintage in election_vintages.items():
+        url = (
+            f"{CENSUS_API_BASE}/{vintage}/acs/acs5"
+            f"?get={var_str}"
+            f"&for=county:*"
+        )
+        api_key = os.environ.get("CENSUS_API_KEY")
+        if api_key:
+            url += f"&key={api_key}"
+
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=120)
+            resp.raise_for_status()
+            data = resp.json()
+            header = data[0]
+            rows = data[1:]
+            df = pd.DataFrame(rows, columns=header)
+
+            # Construct FIPS
+            df["fips"] = df["state"] + df["county"]
+
+            # Convert to numeric
+            for acs_var, name in vap_vars.items():
+                df[name] = pd.to_numeric(df[acs_var], errors="coerce")
+
+            # Compute VAP
+            under18_cols = ["male_under5", "male_5to9", "male_10to14", "male_15to17",
+                            "female_under5", "female_5to9", "female_10to14", "female_15to17"]
+            under18 = sum(df[c].fillna(0) for c in under18_cols)
+            df["voting_age_population"] = (df["total_population"] - under18).clip(lower=0)
+
+            df["year"] = election_year
+            all_data.append(df[["fips", "year", "voting_age_population"]])
+            print(f"    {election_year} (ACS {vintage}): {len(df):,} counties")
+        except Exception as e:
+            print(f"    ERROR {election_year}: {e}")
+
+        time.sleep(1)
+
+    if all_data:
+        result = pd.concat(all_data, ignore_index=True)
+        result = harmonize_fips(result)
+        result.to_csv(out_file, index=False)
+        print(f"  Saved: {out_file} ({len(result):,} rows)")
+
+
 def main():
     print("=" * 60)
     print("Download County-Level Economic Controls")
@@ -283,12 +362,14 @@ def main():
     download_bls_laus()
     download_census_saipe()
     download_census_popest()
+    download_census_vap()
 
     # Summary
     print("\n" + "=" * 60)
     print("DOWNLOAD SUMMARY")
     print("=" * 60)
-    for fname in ["bls_laus_unemployment.csv", "census_saipe_income.csv", "census_popest_population.csv"]:
+    for fname in ["bls_laus_unemployment.csv", "census_saipe_income.csv",
+                  "census_popest_population.csv", "census_county_vap.csv"]:
         fpath = os.path.join(OUT_DIR, fname)
         if os.path.exists(fpath):
             df = pd.read_csv(fpath)

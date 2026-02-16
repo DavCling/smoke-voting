@@ -51,6 +51,18 @@ def load_population():
     return df[["fips", "year", "population"]]
 
 
+def load_vap():
+    """Load ACS voting-age population at county level."""
+    path = os.path.join(CONTROLS_DIR, "census_county_vap.csv")
+    if not os.path.exists(path):
+        print("  WARNING: County VAP file not found")
+        return None
+    df = pd.read_csv(path, dtype={"fips": str})
+    df["fips"] = df["fips"].str.zfill(5)
+    print(f"  VAP: {len(df):,} rows, {df['fips'].nunique():,} counties")
+    return df[["fips", "year", "voting_age_population"]]
+
+
 def load_weather():
     """Load PRISM October weather data."""
     path = os.path.join(CONTROLS_DIR, "prism", "county_weather_october.csv")
@@ -73,6 +85,7 @@ def main():
         "unemployment": load_unemployment(),
         "income": load_income(),
         "population": load_population(),
+        "vap": load_vap(),
         "weather": load_weather(),
     }
 
@@ -113,6 +126,7 @@ def main():
     control_vars = [
         "unemployment_rate", "median_hh_income", "poverty_rate",
         "population", "log_population", "log_median_income",
+        "voting_age_population",
         "october_tmean", "october_ppt",
     ]
     for var in control_vars:

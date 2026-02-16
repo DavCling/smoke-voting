@@ -21,3 +21,4 @@ data/
 *.synctex.gz
 *.fls
 *.fdb_latexmk
+.Rproj.user
