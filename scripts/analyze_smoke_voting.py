@@ -845,6 +845,140 @@ def temporal_dynamics_controls(df):
         plt.close()
         print(f"\n  Saved combined cumulative figure: {fig_path}")
 
+    # --- State×Year FE cumulative temporal dynamics (overlaid with Spec 3) ---
+    if all(t[0] in all_treat_results for t in treat_configs):
+        print("\n" + "-" * 60)
+        print("  STATE×YEAR FE: Cumulative Temporal Dynamics")
+        print("-" * 60)
+
+        from scipy import stats as sp_stats
+
+        # Collect state×year FE results in parallel structure
+        sy_treat_results = {}
+
+        for prefix, col_title, color in treat_configs:
+            print(f"\n  === State×Year FE — Treatment: {prefix} ===")
+            bin_cols = [f"{prefix}_{b}" for b in range(n_bins)]
+            sy_results = {}
+
+            for dep_var, dep_label in outcomes:
+                print(f"\n    --- {dep_label} ---")
+                cols_needed = [dep_var] + bin_cols + available
+                subset = df_merged[cols_needed].dropna().copy()
+                if len(subset) < 100:
+                    print(f"      SKIP: only {len(subset)} obs")
+                    continue
+
+                # Build state×year FE
+                state_year_cat = pd.Categorical(
+                    subset.index.get_level_values(0).astype(str).str[:2] + "_" +
+                    subset.index.get_level_values(1).astype(str)
+                )
+                state_year_df = pd.DataFrame(
+                    state_year_cat, index=subset.index, columns=["state_year"]
+                )
+
+                cumul_coefs_sy, cumul_ses_sy = [], []
+                for k in range(n_bins):
+                    cum_cols_k = bin_cols[:k + 1]
+                    cum_var = f"{prefix}_cumul_sy_{k}"
+                    subset[cum_var] = subset[cum_cols_k].mean(axis=1)
+                    y_k = subset[dep_var]
+                    x_k = sm.add_constant(subset[[cum_var] + available])
+
+                    try:
+                        mod_sy = PanelOLS(
+                            y_k, x_k, entity_effects=True, time_effects=False,
+                            other_effects=state_year_df, check_rank=False,
+                            drop_absorbed=True
+                        )
+                        res_sy = mod_sy.fit(cov_type="clustered", cluster_entity=True)
+                        cumul_coefs_sy.append(res_sy.params.get(cum_var, np.nan))
+                        cumul_ses_sy.append(res_sy.std_errors.get(cum_var, np.nan))
+                    except Exception as e:
+                        cumul_coefs_sy.append(np.nan)
+                        cumul_ses_sy.append(np.nan)
+
+                print(f"      Cumulative (State×Year FE):")
+                for k in range(n_bins):
+                    pval_k = np.nan
+                    if not np.isnan(cumul_coefs_sy[k]) and cumul_ses_sy[k] > 0:
+                        t_stat = cumul_coefs_sy[k] / cumul_ses_sy[k]
+                        pval_k = 2 * (1 - sp_stats.t.cdf(abs(t_stat), df=100))
+                    stars = "***" if pval_k < 0.01 else "**" if pval_k < 0.05 else "*" if pval_k < 0.10 else ""
+                    print(f"        0-{(k+1)*7}d: β={cumul_coefs_sy[k]:.6f} {stars} (SE={cumul_ses_sy[k]:.6f})")
+
+                sy_results[dep_var] = {
+                    "cumul_coefs": cumul_coefs_sy,
+                    "cumul_ses": cumul_ses_sy,
+                }
+
+            sy_treat_results[prefix] = sy_results
+
+        # Overlaid figure: Spec 3 (blue solid) vs State×Year FE (red dashed)
+        os.makedirs(FIG_DIR, exist_ok=True)
+        n_rows = len(outcomes)
+        fig, axes = plt.subplots(n_rows, 2, figsize=(13, 3.3 * n_rows))
+        x_pos = np.arange(n_bins)
+
+        for col_idx, (prefix, col_title, color) in enumerate(treat_configs):
+            spec3_results = all_treat_results[prefix]
+            sy_results = sy_treat_results.get(prefix, {})
+
+            for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+                ax = axes[row_idx, col_idx]
+
+                has_spec3 = dep_var in spec3_results
+                has_sy = dep_var in sy_results
+
+                if not has_spec3 and not has_sy:
+                    ax.set_visible(False)
+                    continue
+
+                # Spec 3 (TWFE + Controls): blue solid
+                if has_spec3:
+                    r3 = spec3_results[dep_var]
+                    coefs3 = r3["cumul_coefs"]
+                    ses3 = r3["cumul_ses"]
+                    ax.fill_between(x_pos,
+                                    [c - 1.96 * s for c, s in zip(coefs3, ses3)],
+                                    [c + 1.96 * s for c, s in zip(coefs3, ses3)],
+                                    alpha=0.15, color="#2166ac")
+                    ax.plot(x_pos, coefs3, "o-", color="#2166ac",
+                            linewidth=2, markersize=5, label="TWFE + Controls")
+
+                # State×Year FE: red dashed
+                if has_sy:
+                    rsy = sy_results[dep_var]
+                    coefs_sy = rsy["cumul_coefs"]
+                    ses_sy = rsy["cumul_ses"]
+                    ax.fill_between(x_pos,
+                                    [c - 1.96 * s for c, s in zip(coefs_sy, ses_sy)],
+                                    [c + 1.96 * s for c, s in zip(coefs_sy, ses_sy)],
+                                    alpha=0.15, color="#b2182b")
+                    ax.plot(x_pos, coefs_sy, "s--", color="#b2182b",
+                            linewidth=2, markersize=5, label="State×Year FE")
+
+                ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(short_labels, fontsize=8)
+                ax.tick_params(axis="y", labelsize=9)
+                if col_idx == 0:
+                    ax.set_ylabel(dep_label, fontsize=10)
+                if row_idx == 0:
+                    ax.set_title(col_title, fontsize=12, fontweight="bold")
+                if row_idx == n_rows - 1:
+                    ax.set_xlabel("Cumulative window (days)", fontsize=10)
+                # Legend in top-left panel only
+                if row_idx == 0 and col_idx == 0:
+                    ax.legend(fontsize=8, loc="upper left")
+
+        plt.tight_layout()
+        fig_path = os.path.join(FIG_DIR, "temporal_cumulative_stateyear.png")
+        fig.savefig(fig_path, dpi=150, bbox_inches="tight")
+        plt.close()
+        print(f"\n  Saved overlaid cumulative figure: {fig_path}")
+
 
 def temporal_drop2020(df):
     """Cumulative temporal dynamics: full sample vs. excluding 2020."""

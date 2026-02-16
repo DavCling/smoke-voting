@@ -404,6 +404,8 @@ def temporal_dynamics_controls(df):
 
     cum_labels = [f"0\u2013{(k+1)*7}d" for k in range(n_bins)]
 
+    all_treat_results = {}  # collect across treatments for county×year overlay figure
+
     for prefix, fig_treat_label, print_treat_label, fig_name in treatments:
         print(f"\n  === Treatment: {print_treat_label} ===")
         bin_cols = [f"{prefix}_{b}" for b in range(n_bins)]
@@ -490,6 +492,151 @@ def temporal_dynamics_controls(df):
             fig.savefig(fig_path, dpi=150, bbox_inches="tight")
             plt.close()
             print(f"\n  Saved figure: {fig_path}")
+
+        all_treat_results[prefix] = all_results
+
+    # ------------------------------------------------------------------
+    # County×Year FE cumulative temporal dynamics (overlay figure)
+    # ------------------------------------------------------------------
+    print(f"\n{'='*70}")
+    print("COUNTY×YEAR FE: Cumulative Temporal Dynamics (CA Tracts)")
+    print(f"{'='*70}")
+
+    # Run county×year FE regressions for each treatment × outcome × window
+    cy_treat_results = {}
+    for prefix, fig_treat_label, print_treat_label, fig_name in treatments:
+        print(f"\n  === County×Year FE — Treatment: {print_treat_label} ===")
+        bin_cols = [f"{prefix}_{b}" for b in range(n_bins)]
+
+        cy_results = {}
+        for dep_var, dep_label in outcomes:
+            print(f"\n    --- {dep_label} ---")
+
+            cols_needed = [dep_var] + bin_cols + available
+            subset = df_merged[[c for c in cols_needed if c in df_merged.columns]].dropna().copy()
+            if len(subset) < 100:
+                print(f"      SKIP: only {len(subset)} obs")
+                continue
+
+            cumul_coefs, cumul_ses = [], []
+            for k in range(n_bins):
+                cum_cols_k = bin_cols[:k + 1]
+                cum_var = f"{prefix}_cy_cumul_{k}"
+                subset[cum_var] = subset[cum_cols_k].mean(axis=1)
+                y_k = subset[dep_var]
+                avail_in_subset = [v for v in available if v in subset.columns]
+                x_k = sm.add_constant(subset[[cum_var] + avail_in_subset])
+
+                try:
+                    county_year_cat = pd.Categorical(
+                        subset.index.get_level_values(0).astype(str).str[:5] + "_" +
+                        subset.index.get_level_values(1).astype(str)
+                    )
+                    county_year_df = pd.DataFrame(county_year_cat, index=subset.index,
+                                                  columns=["county_year"])
+                    mod_cy = PanelOLS(y_k, x_k, entity_effects=True, time_effects=False,
+                                      other_effects=county_year_df, check_rank=False,
+                                      drop_absorbed=True)
+                    res_cy = mod_cy.fit(cov_type="clustered", cluster_entity=True)
+                    cumul_coefs.append(res_cy.params.get(cum_var, np.nan))
+                    cumul_ses.append(res_cy.std_errors.get(cum_var, np.nan))
+                except Exception as e:
+                    print(f"        Window 0-{(k+1)*7}d ERROR: {e}")
+                    cumul_coefs.append(np.nan)
+                    cumul_ses.append(np.nan)
+
+            # Print county×year FE results
+            print(f"      County×Year FE cumulative:")
+            for k in range(n_bins):
+                pval_k = np.nan
+                if not np.isnan(cumul_coefs[k]) and cumul_ses[k] > 0:
+                    from scipy import stats as sp_stats
+                    t_stat = cumul_coefs[k] / cumul_ses[k]
+                    pval_k = 2 * (1 - sp_stats.t.cdf(abs(t_stat), df=100))
+                stars = "***" if pval_k < 0.01 else "**" if pval_k < 0.05 else "*" if pval_k < 0.10 else ""
+                print(f"        0-{(k+1)*7}d: β={cumul_coefs[k]:.6f} {stars} (SE={cumul_ses[k]:.6f})")
+
+            cy_results[dep_var] = {
+                "label": dep_label,
+                "cumul_coefs": cumul_coefs, "cumul_ses": cumul_ses,
+            }
+
+        cy_treat_results[prefix] = cy_results
+
+    # --- Combined overlay figure: Spec 3 (TWFE+Controls) vs County×Year FE ---
+    # Layout: len(outcomes) rows × 2 cols (mean PM2.5, frac haze)
+    treat_order = [("mean_bin", "Mean Smoke PM$_{2.5}$"),
+                   ("frac_bin", "Frac. Days > 20 µg/m³ (Haze)")]
+    n_rows = len(outcomes)
+    n_cols = len(treat_order)
+
+    os.makedirs(FIG_DIR, exist_ok=True)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5.5 * n_cols, 3.8 * n_rows))
+    if n_rows == 1:
+        axes = axes[np.newaxis, :]
+    if n_cols == 1:
+        axes = axes[:, np.newaxis]
+
+    x_pos = np.arange(n_bins)
+    short_cum_labels = [f"{(k+1)*7}" for k in range(n_bins)]
+    color_spec3 = "#2166ac"  # blue
+    color_cy = "#b2182b"     # red
+
+    for col_idx, (prefix, treat_label) in enumerate(treat_order):
+        spec3_data = all_treat_results.get(prefix, {})
+        cy_data = cy_treat_results.get(prefix, {})
+
+        for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+            ax = axes[row_idx, col_idx]
+
+            # Spec 3 (TWFE + Controls) — blue solid
+            if dep_var in spec3_data:
+                r = spec3_data[dep_var]
+                coefs = r["cumul_coefs"]
+                ses = r["cumul_ses"]
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(coefs, ses)],
+                                [c + 1.96 * s for c, s in zip(coefs, ses)],
+                                alpha=0.15, color=color_spec3)
+                ax.plot(x_pos, coefs, "o-", color=color_spec3, linewidth=2,
+                        markersize=4, label="TWFE + Controls")
+
+            # County×Year FE — red dashed
+            if dep_var in cy_data:
+                r = cy_data[dep_var]
+                coefs = r["cumul_coefs"]
+                ses = r["cumul_ses"]
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(coefs, ses)],
+                                [c + 1.96 * s for c, s in zip(coefs, ses)],
+                                alpha=0.10, color=color_cy)
+                ax.plot(x_pos, coefs, "s--", color=color_cy, linewidth=2,
+                        markersize=4, label="County×Year FE")
+
+            ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+            ax.set_xticks(x_pos)
+            ax.set_xticklabels(short_cum_labels, fontsize=7)
+            ax.tick_params(axis="y", labelsize=8)
+
+            if row_idx == 0:
+                ax.set_title(treat_label, fontsize=11, fontweight="bold")
+            if row_idx == n_rows - 1:
+                ax.set_xlabel("Cumulative window (days)", fontsize=9)
+            if col_idx == 0:
+                ax.set_ylabel(dep_label, fontsize=9)
+
+            # Legend in top-left panel only
+            if row_idx == 0 and col_idx == 0:
+                ax.legend(fontsize=8, loc="best")
+
+    fig.suptitle("CA Tract-Level: Cumulative Temporal Dynamics\n"
+                 "TWFE + Controls vs. County×Year FE",
+                 fontsize=13, fontweight="bold", y=1.03)
+    plt.tight_layout()
+    cy_fig_path = os.path.join(FIG_DIR, "ca_temporal_cumulative_countyyear.png")
+    fig.savefig(cy_fig_path, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"\n  Saved overlay figure: {cy_fig_path}")
 
 
 # ============================================================
