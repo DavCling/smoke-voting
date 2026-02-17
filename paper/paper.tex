@@ -13,40 +13,44 @@
 \bibliographystyle{apalike}
 \onehalfspacing
 
-\title{Wildfire Smoke and Voting Behavior in the United States\thanks{Preliminary draft. Please do not cite or circulate without permission.}}
+\title{Wildfire Smoke and Voter Turnout in the United States\thanks{Preliminary draft. Please do not cite or circulate without permission.}}
 \author{David Clingingsmith\\Case Western Reserve University}
-\date{February 14, 2026}
+\date{February 17, 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-\noindent Does wildfire smoke exposure shift political behavior? I exploit the quasi-random spatial dispersion of wildfire smoke plumes---driven by wind patterns rather than local conditions---to estimate the effect of smoke-derived PM\textsubscript{2.5} on county-level presidential and House election voting. Using daily county-level wildfire smoke PM\textsubscript{2.5} estimates \citep{childs2022daily} merged with election returns across multiple cycles (2008--2020 for presidential, 2016--2022 for House), I find that higher pre-election smoke exposure increases the Democratic two-party vote share, with suggestive evidence for incumbent punishment. A 10~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 30 days before the election is associated with a 1.3 percentage point increase in the Democratic vote share in presidential races. Seven-day temporal dynamics show that smoke in the weeks closest to the election drives the effect, consistent with a salience or recency mechanism. Effects are present across the partisan spectrum. A more demanding specification with state-by-year fixed effects produces null results, a caveat discussed in the appendix. These results extend findings on fire proximity \citep{hazlett2020wildfire} and general air pollution \citep{bellani2024air} to a nationally representative setting where treatment assignment is plausibly exogenous.
+\noindent Does wildfire smoke exposure affect voter participation? I exploit the quasi-random spatial dispersion of wildfire smoke plumes---driven by wind patterns rather than local conditions---to estimate the effect of smoke-derived PM\textsubscript{2.5} on county-level voter turnout and voting patterns. Using daily county-level wildfire smoke PM\textsubscript{2.5} estimates \citep{childs2022daily} merged with election returns across multiple cycles (2008--2020 for presidential, 2016--2022 for House), I find that higher pre-election smoke exposure increases voter turnout. Under the preferred specification with county and year fixed effects plus time-varying controls, a 1~$\mu$g/m$^3$ increase in mean smoke PM\textsubscript{2.5} over the 30 days before the election is associated with a 0.085 percentage point increase in the turnout rate ($p < 0.001$). This effect survives state-specific linear time trends ($p < 0.001$) and is present in both presidential and House elections. Suggestive evidence also points to a pro-Democratic shift in presidential voting and to incumbent punishment, though these effects are less robust: the pro-Democratic shift is driven by the 2020 fire season, and the incumbent effect does not survive the addition of controls. A more demanding specification with state-by-year fixed effects produces null results for all outcomes---an important limitation I discuss in the main text rather than relegating to an appendix. The positive sign of the turnout effect rules out a simple disruption or suppression mechanism and is consistent with smoke increasing the salience of environmental concerns, mobilizing voters to participate.
 
 \medskip
-\noindent \textit{JEL:} D72, Q54 \quad \textit{Keywords:} Wildfire smoke, voting behavior, air pollution, climate salience
+\noindent \textit{JEL:} D72, Q54 \quad \textit{Keywords:} Wildfire smoke, voter turnout, air pollution, climate salience
 \end{abstract}
 
 %----------------------------------------------------------------------
 \section{Introduction}
 %----------------------------------------------------------------------
 
-Wildfires are among the most visible and rapidly growing consequences of climate change in the United States. Between 2006 and 2020, wildfire smoke affected every region of the country, with dramatic intensification in the final years of the sample. Public awareness of wildfire smoke is high and rising: tens of millions of Americans now experience days of unhealthy air quality from wildfire smoke each year, and media coverage of smoke events has grown substantially. Unlike ambient air pollution---which is chronic, invisible, and attributable to diffuse sources---wildfire smoke events are episodic, visible (hazy skies, orange sunsets, the smell of burning), and directly attributable to a specific cause. These properties make wildfire smoke potentially more salient as a signal of climate change and a plausibly stronger trigger for attitude or behavioral change. A growing literature investigates whether environmental shocks alter political behavior: \citet{hazlett2020wildfire} find that proximity to California wildfires increases pro-environment voting, but only in already-Democratic areas; \citet{bellani2024air} show that overall PM\textsubscript{10} pollution on election day shifts German voters against the incumbent; and \citet{gomez2007weather} demonstrate that rain suppresses voter turnout.
+Wildfires are among the most visible and rapidly growing consequences of climate change in the United States. Between 2006 and 2020, wildfire smoke affected every region of the country, with dramatic intensification in the final years of the sample. Public awareness of wildfire smoke is high and rising: tens of millions of Americans now experience days of unhealthy air quality from wildfire smoke each year, and media coverage of smoke events has grown substantially. Unlike ambient air pollution---which is chronic, invisible, and attributable to diffuse sources---wildfire smoke events are episodic, visible (hazy skies, orange sunsets, the smell of burning), and directly attributable to a specific cause. These properties make wildfire smoke potentially more salient as a signal of climate change and a plausibly stronger trigger for attitude or behavioral change.
 
-This paper bridges these strands by using \textit{wildfire-specific} smoke PM\textsubscript{2.5} as a treatment variable across the entire continental United States. Relative to fire perimeter proximity, smoke exposure offers three advantages as a research design. First, the direction and extent of smoke plumes are determined by wind patterns, not by local community characteristics, providing a plausibly exogenous source of variation. Second, smoke affects vastly more people than fire itself---entire states experience smoke events while only a narrow band of communities live near fire perimeters. Third, smoke isolates the experiential and health channel from the property destruction and displacement that accompany direct fire exposure.
+This paper bridges several strands of the literature by using \textit{wildfire-specific} smoke PM\textsubscript{2.5} as a treatment variable across the entire continental United States. Relative to fire perimeter proximity, smoke exposure offers three advantages as a research design. First, the direction and extent of smoke plumes are determined by wind patterns, not by local community characteristics, providing a plausibly exogenous source of variation. Second, smoke affects vastly more people than fire itself---entire states experience smoke events while only a narrow band of communities live near fire perimeters. Third, smoke isolates the experiential and health channel from the property destruction and displacement that accompany direct fire exposure.
+
+The primary finding is that wildfire smoke \textit{increases} voter turnout. Under progressively demanding specifications---from baseline two-way fixed effects (TWFE) through the addition of time-varying controls and state-specific linear trends---the turnout effect remains positive and statistically significant. This positive sign rules out a simple disruption or suppression mechanism, in which smoke deters participation as rain does \citep{gomez2007weather}, and instead points toward a mobilization channel: visible smoke may increase the salience of environmental issues, prompting more voters to go to the polls. Suggestive evidence also points to a pro-Democratic shift in presidential voting and to incumbent punishment, but these effects are less robust. The pro-Democratic shift is driven by the extreme 2020 Western fire season; the incumbent effect does not survive the addition of county-level controls. A more demanding specification with state-by-year fixed effects produces null results for all outcomes, including turnout. I discuss this limitation honestly in the main text: 41\% of the identifying variation is between-state-by-year, and with only four presidential elections, the remaining within-state variation may be insufficient for precise estimation---but the possibility of state-level confounding cannot be ruled out.
 
 %----------------------------------------------------------------------
 \section{Related Literature}
 \label{sec:literature}
 %----------------------------------------------------------------------
 
-This paper connects four literatures: environmental shocks and voting, retrospective incumbent punishment, air pollution and political behavior, and the economics of wildfire smoke. Appendix~\ref{sec:litreview} provides a comprehensive review; here I focus on the papers most directly related to this study's contributions and interpretation.
+This paper connects five literatures: environmental shocks and voter turnout, environmental shocks and vote choice, retrospective incumbent punishment, air pollution and political behavior, and the economics of wildfire smoke. Appendix~\ref{sec:litreview} provides a comprehensive review; here I focus on the papers most directly related to this study's contributions and interpretation.
 
-\paragraph{Wildfires and voting.} The most closely related paper is \citet{hazlett2020wildfire}, who use proximity to California wildfire perimeters to study effects on pro-environment ballot proposition voting. They find that fire proximity increases pro-environment voting, but only in already-Democratic areas; Republican areas show no response. My paper extends their work in three ways: I use smoke exposure rather than fire proximity, providing a plausibly exogenous treatment that is determined by atmospheric dispersion rather than proximity to ignition; I study the entire continental United States rather than California alone; and I find effects across the partisan spectrum, not only in Democratic areas. \citet{liao2022extreme} provide complementary evidence showing that natural disasters hurt incumbents with anti-environment records in House races, using campaign contribution data.
+\paragraph{Environmental shocks and voter turnout.} The most directly relevant precedent for the turnout finding is \citet{gomez2007weather}, who show that rain on election day suppresses voter turnout, with differential effects by party. My finding runs in the opposite direction: smoke \textit{increases} turnout. The key difference is timing---I measure smoke exposure over the 30 days \textit{before} the election, not on election day itself. Pre-election smoke plausibly operates through a salience channel, making environmental concerns more vivid and motivating participation, rather than through the logistical cost channel by which election-day rain deters voting. \citet{bellani2024air} study the effect of ambient PM\textsubscript{10} on German elections and find no effect on turnout, attributing their vote-share results to a subconscious emotional channel. The contrast with my finding may reflect the visibility of wildfire smoke: voters can see haze, smell burning, and feel respiratory irritation, which could activate deliberate engagement rather than only subconscious mood shifts.
 
-\paragraph{Air pollution and voting.} \citet{bellani2024air} is the closest analogue for the pollution--voting mechanism. Using 60 German federal and state elections, they exploit within-county variation in PM\textsubscript{10} on election day to show that higher pollution shifts votes from incumbent to opposition parties. They argue this operates through a subconscious emotional channel: day-to-day PM\textsubscript{10} fluctuations are imperceptible, yet they increase negative emotions that reduce support for the status quo. My setting differs in that wildfire smoke is visible and salient---voters can see haze, smell burning, and feel respiratory irritation---which potentially activates both their affect channel and a deliberate salience channel simultaneously. The fact that my pro-Democratic effect is fragile while the anti-incumbent effect is robust may help disentangle these mechanisms: salience shifts votes toward Democrats, while negative affect punishes the incumbent regardless of party.
+\paragraph{Wildfires and voting.} The most closely related paper on vote choice is \citet{hazlett2020wildfire}, who use proximity to California wildfire perimeters to study effects on pro-environment ballot proposition voting. They find that fire proximity increases pro-environment voting, but only in already-Democratic areas; Republican areas show no response. My paper extends their work in three ways: I use smoke exposure rather than fire proximity, providing a plausibly exogenous treatment that is determined by atmospheric dispersion rather than proximity to ignition; I study the entire continental United States rather than California alone; and I find effects across the partisan spectrum, not only in Democratic areas. \citet{liao2022extreme} provide complementary evidence showing that natural disasters hurt incumbents with anti-environment records in House races, using campaign contribution data.
 
-\paragraph{Incumbent punishment and retrospective voting.} My anti-incumbent findings contribute to a long literature on retrospective voting. \citet{healy2010myopic} show that voters punish incumbents for disaster damage but reward disaster relief spending, implying underinvestment in preparedness. \citet{achen2016democracy} argue more provocatively that voters engage in ``blind retrospection,'' punishing incumbents for events beyond governmental control---though \citet{fowler2018sharks} and \citet{gasper2011make} show that voters do partly distinguish between harm and government response. \citet{healy2010substituting} demonstrate that even irrelevant events (college football outcomes) shift incumbent evaluations through mood contamination, while \citet{huber2012sources} confirm experimentally that voters overweight recent experiences. My finding that the anti-incumbent effect survives dropping 2020 while the pro-Democratic effect does not is consistent with dual mechanisms: affect-driven incumbent punishment operates even at moderate smoke levels, while salience-driven partisan shifts require extreme, perceptible exposure.
+\paragraph{Air pollution and voting.} \citet{bellani2024air} is the closest analogue for the pollution--voting mechanism. Using 60 German federal and state elections, they exploit within-county variation in PM\textsubscript{10} on election day to show that higher pollution shifts votes from incumbent to opposition parties. They argue this operates through a subconscious emotional channel: day-to-day PM\textsubscript{10} fluctuations are imperceptible, yet they increase negative emotions that reduce support for the status quo. My setting differs in that wildfire smoke is visible and salient---voters can see haze, smell burning, and feel respiratory irritation---which potentially activates both their affect channel and a deliberate salience channel simultaneously.
+
+\paragraph{Incumbent punishment and retrospective voting.} My secondary anti-incumbent findings contribute to a long literature on retrospective voting. \citet{healy2010myopic} show that voters punish incumbents for disaster damage but reward disaster relief spending, implying underinvestment in preparedness. \citet{achen2016democracy} argue more provocatively that voters engage in ``blind retrospection,'' punishing incumbents for events beyond governmental control---though \citet{fowler2018sharks} and \citet{gasper2011make} show that voters do partly distinguish between harm and government response. \citet{healy2010substituting} demonstrate that even irrelevant events (college football outcomes) shift incumbent evaluations through mood contamination, while \citet{huber2012sources} confirm experimentally that voters overweight recent experiences.
 
 \paragraph{Wildfire smoke economics.} \citet{borgschulte2022air} is the leading paper using wildfire smoke as an exogenous source of PM\textsubscript{2.5} variation, estimating that each additional smoke day reduces quarterly earnings by about 0.1\%. Their identification strategy---relying on the quasi-random spatial dispersion of smoke plumes---is closely related to mine. \citet{burke2021exposures} document that during smoke events, people express more negative sentiment and alter behavior, providing direct evidence for the mood channel I invoke. \citet{miller2024wildfire} and \citet{jung2025mental} establish that wildfire smoke harms physical and mental health, supporting the negative-affect mechanism. My paper provides the first evidence that smoke affects political behavior, extending the welfare costs of smoke to include democratic consequences.
 
@@ -58,15 +62,15 @@ This paper connects four literatures: environmental shocks and voting, retrospec
 
 \paragraph{Wildfire smoke PM\textsubscript{2.5}.} I use daily county-level estimates of wildfire-attributed PM\textsubscript{2.5} from \citet{childs2022daily}, covering all U.S.\ counties from January 2006 through December 2023 (v2.0 of the dataset). These estimates use NOAA Hazard Mapping System satellite smoke plume classifications combined with machine learning to separate wildfire-derived PM\textsubscript{2.5} from background pollution.
 
-\paragraph{Election returns.} County-level presidential election returns for 2000--2024 come from the MIT Election Data + Science Lab \citep{medsl2024county}. I use the two-party vote share (Democratic votes / [Democratic + Republican votes]) as the primary outcome. For House elections, I use precinct-level returns with county identifiers (2016, 2018, 2020, 2022) from the same source, aggregating precinct votes to the county level to enable analysis at the same geographic unit as the presidential regressions.
+\paragraph{Election returns.} County-level presidential election returns for 2000--2024 come from the MIT Election Data + Science Lab \citep{medsl2024county}. I use the two-party vote share (Democratic votes / [Democratic + Republican votes]) as one outcome. For House elections, I use precinct-level returns with county identifiers (2016, 2018, 2020, 2022) from the same source, aggregating precinct votes to the county level to enable analysis at the same geographic unit as the presidential regressions.
 
-\paragraph{Analysis samples.} The overlap of smoke data (2006--2020) and presidential elections yields four election cycles: 2008, 2012, 2016, and 2020. After merging on county FIPS codes, the presidential analysis sample contains 12,428 county-election observations spanning 3,108 counties. The county-level House sample covers four election cycles (2016, 2018, 2020, 2022) with 12,206 county-election observations.
+\paragraph{Analysis samples.} The overlap of smoke data (2006--2020) and presidential elections yields four election cycles: 2008, 2012, 2016, and 2020. After merging on county FIPS codes, the presidential analysis sample contains 12,432 county-election observations spanning 3,108 counties. The county-level House sample covers four election cycles (2016, 2018, 2020, 2022) with 12,206 county-election observations.
+
+\paragraph{Voting age population and turnout rate.} To construct a turnout rate with a proper population denominator, I obtain county-level voting age population (VAP) from the American Community Survey (ACS) 5-year estimates, using the B01001 age-by-sex table to sum the population aged 18 and over. I match each election year to the closest ACS vintage (e.g., 2008 to the 2005--2009 ACS, 2020 to the 2016--2020 ACS). The turnout rate is defined as total votes cast divided by VAP. County-election observations with turnout rates exceeding 1.5 are dropped as allocation artifacts (affecting fewer than 0.1\% of observations). This yields 12,432 county-election observations for presidential elections. For House elections, VAP data are available only for the 2016 and 2020 cycles (6,088 observations), as the off-year elections (2018, 2022) do not align with the decennial-anchored ACS vintages used.
 
 \paragraph{Smoke exposure measures.} For each county and election, I aggregate daily smoke PM\textsubscript{2.5} over pre-election windows: 7, 30, 60, and 90 days before election day, plus the full fire season (June 1 to election day). The primary treatment variable is the mean daily smoke PM\textsubscript{2.5} in the 30 days before the election, motivated by the temporal dynamics analysis showing that smoke in the weeks closest to the election has the largest effect (Section~\ref{sec:temporal}).
 
-\paragraph{Perceptibility and threshold measures.} A key distinction between wildfire smoke and the ambient PM\textsubscript{10} studied by \citet{bellani2024air} is that smoke is perceptible: people can see haze, smell burning, and feel respiratory irritation. These sensory channels matter theoretically because they enable deliberate salience-based reasoning in addition to subconscious affect. PM\textsubscript{2.5} is the primary driver of reduced visibility, and haze from wildfire smoke becomes noticeable at concentrations of roughly 20--40~$\mu$g/m$^3$, depending on background conditions \citep{burke2021exposures}. At higher concentrations---above approximately 55~$\mu$g/m$^3$, corresponding to the EPA ``Unhealthy'' AQI category---smoke produces obvious visual impairment and widespread respiratory symptoms.
-
-To capture the extensive margin of salient smoke exposure, I construct a second treatment variable: the fraction of days in the pre-election window on which daily smoke PM\textsubscript{2.5} exceeded 20~$\mu$g/m$^3$, corresponding to the onset of visible haze. At this level, residents can see degraded air quality and may experience mild respiratory irritation, making the smoke exposure salient even if it falls below official health advisory thresholds. In the 30-day presidential sample, 1.9\% of county-election observations (236 of 12,432) have at least one day above this threshold, providing substantially more variation than higher thresholds: only 0.4\% exceed the EPA ``Unhealthy for Sensitive Groups'' cutoff of 35.5~$\mu$g/m$^3$, and only 0.2\% exceed the ``Unhealthy'' cutoff of 55.5~$\mu$g/m$^3$. Appendix~\ref{sec:thresholds} compares results across all three thresholds. While the mean PM\textsubscript{2.5} measure captures the average intensity of smoke, the fraction-above-threshold measure captures the frequency of acute, perceptible smoke episodes---a more direct proxy for the experiential channel through which smoke might affect political behavior.
+\paragraph{Perceptibility and threshold measures.} A key distinction between wildfire smoke and the ambient PM\textsubscript{10} studied by \citet{bellani2024air} is that smoke is perceptible: people can see haze, smell burning, and feel respiratory irritation. PM\textsubscript{2.5} is the primary driver of reduced visibility, and haze from wildfire smoke becomes noticeable at concentrations of roughly 20--40~$\mu$g/m$^3$, depending on background conditions \citep{burke2021exposures}. To capture the extensive margin of salient smoke exposure, I construct a second treatment variable: the fraction of days in the pre-election window on which daily smoke PM\textsubscript{2.5} exceeded 20~$\mu$g/m$^3$, corresponding to the onset of visible haze. In the 30-day presidential sample, 1.9\% of county-election observations (236 of 12,432) have at least one day above this threshold, providing substantially more variation than higher thresholds: only 0.4\% exceed the EPA ``Unhealthy for Sensitive Groups'' cutoff of 35.5~$\mu$g/m$^3$, and only 0.2\% exceed the ``Unhealthy'' cutoff of 55.5~$\mu$g/m$^3$. Appendix~\ref{sec:thresholds} compares results across all three thresholds.
 
 %----------------------------------------------------------------------
 \section{Empirical Strategy}
@@ -79,13 +83,13 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
 \end{equation}
 where $Y_{ct}$ is the outcome in county $c$ in election year $t$, $\alpha_c$ are county fixed effects absorbing all time-invariant county characteristics, $\gamma_t$ are election-year fixed effects absorbing national swings, and $\text{SmokePM}_{ct}$ is the mean wildfire smoke PM\textsubscript{2.5} in the pre-election window. Standard errors are clustered by county.
 
+The primary outcome is the \textit{turnout rate} (total votes / voting age population). Secondary outcomes are log total votes, the Democratic two-party vote share, and the incumbent party's vote share.
+
 \paragraph{Identifying assumption.} The key assumption is that, conditional on county and year fixed effects, variation in wildfire smoke exposure is uncorrelated with unobserved determinants of voting. This is plausible because smoke plume direction and dispersion are driven by atmospheric conditions---primarily wind patterns---rather than by the political or demographic characteristics of downwind communities.
 
 \paragraph{Threats to identification.} Two potential concerns merit discussion. First, spatially correlated shocks such as drought could affect both fire activity and local economic conditions. This is mitigated by the fact that smoke travels hundreds of miles from fire origins, so downwind counties experience smoke without experiencing the local conditions that generated the fires. Second, secular trends in fire-prone versus non-fire-prone regions could confound the estimates; county fixed effects absorb level differences, and year fixed effects absorb national trends, but region-specific trends remain a potential concern.
 
-\paragraph{Continuous treatment and TWFE.} Recent work by \citet{callaway2024continuous} shows that TWFE regressions with a continuous treatment variable can produce coefficients that lack a clear causal interpretation when the dose--response function is heterogeneous across units. Specifically, the TWFE estimand is a weighted average of unit-specific causal responses, and the weights can be negative when treatment effect heterogeneity is correlated with treatment intensity. Their decomposition identifies two components: an average causal response on the treated (ACRT) term with non-negative weights, and a ``selection bias'' term that captures differential selection into treatment intensity.
-
-In our setting, several features limit these concerns. First, treatment intensity (smoke PM\textsubscript{2.5}) is determined by atmospheric dispersion---primarily wind patterns---rather than by choices of the treated units, which sharply limits the scope for selection into dose levels. Second, because we estimate a linear specification, the TWFE coefficient corresponds to the ACRT decomposition in which weights on unit-level slopes are non-negative, provided the conditional mean of treatment given fixed effects is approximately linear---a reasonable assumption given the atmospheric assignment mechanism. Third, as a direct robustness check, I verify that results are qualitatively similar when the continuous treatment is replaced with a binary indicator (above/below median smoke) or discretized into dose quintiles, reducing sensitivity to functional form assumptions about the dose--response relationship.
+\paragraph{Continuous treatment and TWFE.} Recent work by \citet{callaway2024continuous} shows that TWFE regressions with a continuous treatment variable can produce coefficients that lack a clear causal interpretation when the dose--response function is heterogeneous across units. In our setting, several features limit these concerns. First, treatment intensity (smoke PM\textsubscript{2.5}) is determined by atmospheric dispersion rather than by choices of the treated units, which sharply limits the scope for selection into dose levels. Second, because we estimate a linear specification, the TWFE coefficient corresponds to the ACRT decomposition in which weights on unit-level slopes are non-negative, provided the conditional mean of treatment given fixed effects is approximately linear. Third, as a direct robustness check, I verify that results are qualitatively similar when the continuous treatment is replaced with a binary indicator or discretized into dose quintiles.
 
 %----------------------------------------------------------------------
 \section{Results}
@@ -95,9 +99,11 @@ In our setting, several features limit these concerns. First, treatment intensit
 
 Table~\ref{tab:main} presents presidential election estimates using the 30-day pre-election window under progressively more demanding specifications. Column~(1) shows the raw pooled OLS correlation with no fixed effects. Column~(2) adds county and year fixed effects---the baseline TWFE specification. Column~(3) adds five time-varying county controls (unemployment rate, log median household income, log population, October mean temperature, and October total precipitation). Column~(4) further adds state-specific linear time trends, which absorb differential secular trends across states.
 
-The raw correlation in Column~(1) is large and negative for Democratic vote share, reflecting the fact that smoke-prone Western counties tend to be more Republican. County and year fixed effects in Column~(2) reverse the sign, revealing that \textit{within} counties, higher smoke exposure is associated with a 0.13 percentage point increase in the Democratic vote share per 1~$\mu$g/m$^3$ ($p < 0.001$). Adding time-varying controls in Column~(3) attenuates the estimate only slightly (0.00119, $p < 0.001$), indicating the result is not driven by local economic conditions or weather. However, adding state linear trends in Column~(4) eliminates the effect ($-$0.00017, $p > 0.10$), suggesting that state-level differential trends may partly drive the baseline estimate.
+The primary finding is that wildfire smoke increases voter turnout. Panel~A shows that the turnout rate is positively and significantly associated with smoke exposure across all specifications. The raw correlation in Column~(1) is positive (0.00536, $p < 0.001$), and unlike the other outcomes, does not change sign when fixed effects are added---suggesting that the turnout effect is not an artifact of cross-sectional confounders. Under TWFE (Column~2), a 1~$\mu$g/m$^3$ increase in 30-day mean smoke PM\textsubscript{2.5} raises the turnout rate by 0.10 percentage points ($p < 0.001$). Adding time-varying controls attenuates the estimate only slightly to 0.085 percentage points (Column~3, $p < 0.001$), and adding state trends reduces it further to 0.065 percentage points (Column~4, $p < 0.001$). The turnout effect is the \textit{only} outcome that survives all four specifications.
 
-For incumbent vote share (Panel~B), the marginally significant anti-incumbent effect in Column~(2) disappears with controls and state trends. For turnout (Panel~C), the positive effect survives controls and state trends, with the Column~(4) estimate (0.00122, $p < 0.001$) roughly one-third the size of the baseline.
+Panel~B corroborates the turnout finding using log total votes, which does not require a population denominator. The pattern is qualitatively identical: positive and highly significant across all specifications, with the state-trends estimate (0.00124, $p < 0.001$) roughly one-third the size of the TWFE baseline.
+
+For Democratic vote share (Panel~C), the raw correlation is negative, reflecting the fact that smoke-prone Western counties tend to be more Republican. TWFE reverses the sign, revealing that \textit{within} counties, higher smoke exposure is associated with a 0.13 percentage point increase in Democratic vote share ($p < 0.001$). Controls attenuate this slightly, but state trends eliminate it ($-$0.00016, $p > 0.10$). For incumbent vote share (Panel~D), the marginally significant TWFE anti-incumbent effect ($-$0.00172, $p < 0.10$) disappears with controls.
 
 \begin{table}[htbp]
 \centering
@@ -108,15 +114,18 @@ For incumbent vote share (Panel~B), the marginally significant anti-incumbent ef
 \toprule
 & (1) & (2) & (3) & (4) \\
 \midrule
-\multicolumn{5}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00832*** & 0.00135*** & 0.00119*** & $-$0.00017 \\
-& (0.00133) & (0.00021) & (0.00022) & (0.00022) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.02028*** & $-$0.00172* & 0.00073 & 0.00081 \\
-& (0.00259) & (0.00091) & (0.00094) & (0.00109) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.02900*** & 0.00314*** & 0.00228*** & 0.00122*** \\
-& (0.00503) & (0.00052) & (0.00044) & (0.00022) \\[3pt]
+\multicolumn{5}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00536*** & 0.00100*** & 0.00085*** & 0.00065*** \\
+& (0.00068) & (0.00020) & (0.00019) & (0.00016) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.02911*** & 0.00314*** & 0.00245*** & 0.00124*** \\
+& (0.00504) & (0.00052) & (0.00051) & (0.00024) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00831*** & 0.00135*** & 0.00125*** & $-$0.00016 \\
+& (0.00132) & (0.00021) & (0.00023) & (0.00021) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.02028*** & $-$0.00172* & 0.00070 & 0.00080 \\
+& (0.00259) & (0.00091) & (0.00094) & (0.00108) \\[3pt]
 \midrule
 County FE & & \checkmark & \checkmark & \checkmark \\
 Year FE & & \checkmark & \checkmark & \checkmark \\
@@ -127,44 +136,100 @@ Observations & 12,432 & 12,432 & 12,400 & 12,400 \\
 \multicolumn{5}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. Standard errors clustered by county.} \\
 \multicolumn{5}{l}{\footnotesize Controls: unemployment rate, log median household income, log population,} \\
 \multicolumn{5}{l}{\footnotesize October mean temperature, October total precipitation.} \\
+\multicolumn{5}{l}{\footnotesize Turnout rate = total votes / voting age population (ACS).} \\
 \end{tabular}
 \end{table}
 
-\subsection{Heterogeneity by Prior Partisanship}
+\subsection{State-by-Year Fixed Effects}
+\label{sec:stateyear}
 
-Table~\ref{tab:hetero} splits the sample by terciles of lagged Democratic vote share. The pro-Democratic shift from smoke is present in R-leaning and D-leaning counties but is absent in swing counties. Unlike \citet{hazlett2020wildfire}, who find effects \textit{only} in Democratic areas for fire proximity, I find that smoke exposure moves both R-leaning and D-leaning counties toward the Democrats, with the strongest effect in R-leaning counties (0.155~pp).
+The baseline TWFE specification identifies the smoke effect from both within-state and between-state variation in smoke exposure across elections. A natural concern is that state-level time-varying shocks---such as statewide political campaigns, ballot measures, or economic conditions---could be correlated with smoke exposure and drive the results. To address this, I replace year fixed effects with state-by-year fixed effects, so that identification comes only from \textit{within-state} variation in smoke across counties within the same election.
+
+Table~\ref{tab:stateyear} presents the results. No coefficient is statistically significant for any outcome in either the presidential or county House specifications. The turnout rate effect shrinks from 0.00100 to essentially zero ($-$0.00005, $p = 0.79$) in the presidential sample. The Democratic vote share effect shrinks from 0.00135 to 0.00001, and the log total votes effect from 0.00314 to 0.00023.
 
 \begin{table}[htbp]
 \centering
-\caption{Heterogeneity by Prior Partisanship}
-\label{tab:hetero}
+\caption{State-by-Year Fixed Effects: Presidential and County House}
+\label{tab:stateyear}
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-& R-Leaning & Swing & D-Leaning \\
+& (1) & (2) \\
+& Presidential & County House \\
 \midrule
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00155*** & 0.00007 & 0.00126*** \\
-& (0.00033) & (0.00055) & (0.00040) \\[6pt]
-Observations & 4,143 & 4,140 & 4,144 \\
+\multicolumn{3}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00005 & 0.00060 \\
+& (0.00018) & (0.00092) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00023 & 0.00161 \\
+& (0.00030) & (0.00135) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00001 & 0.00011 \\
+& (0.00025) & (0.00025) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00079 & 0.00214 \\
+& (0.00086) & (0.00140) \\[6pt]
+\midrule
+FE & County + State$\times$Year & County + State$\times$Year \\
+Observations & 12,432 & 6,088 / 12,197 \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. County and year FE. SEs clustered by county.} \\
+\multicolumn{3}{l}{\footnotesize No coefficient is significant at the 10\% level. SEs clustered by county.} \\
+\multicolumn{3}{l}{\footnotesize Panels A and C--D use contested races only for County House.} \\
 \end{tabular}
 \end{table}
+
+Figure~\ref{fig:resid_map} provides visual context for these null results. After residualizing county-level smoke on state-by-year means, the remaining within-state variation is concentrated in a small number of Western states during high-fire years (especially 2020). Figure~\ref{fig:stateyear_overlay} further illustrates this by overlaying the cumulative temporal dynamics under the preferred Specification~(3) and the state-by-year FE specification: the divergence between the two is stark, with the state-by-year estimates centered on zero at all window lengths.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{smoke_exposure_map_residualized.png}
+\caption{Within-state variation in pre-election smoke exposure. County-level smoke PM\textsubscript{2.5} (30-day window) residualized on state-by-year means. The diverging scale shows counties with more (red) or less (blue) smoke than their state average. Meaningful within-state variation is concentrated in Western states during high-fire years.}
+\label{fig:resid_map}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{temporal_cumulative_stateyear.png}
+\caption{Temporal dynamics: Specification~(3) vs.\ state-by-year fixed effects. Each point is a separate regression using the indicated cumulative window. The divergence illustrates the large share of identifying variation absorbed by state-by-year fixed effects.}
+\label{fig:stateyear_overlay}
+\end{figure}
+
+How should these null results be interpreted? Two views are possible. Under the first, state-by-year fixed effects are overly demanding: they absorb 41\% of the identifying variation in smoke exposure, including legitimate exogenous variation driven by atmospheric dispersion patterns that differ across states. Because smoke plumes are wind-driven, between-state differences in smoke conditional on year may be genuinely exogenous, and removing this variation discards real signal. Under the second view, between-state smoke variation is correlated with state-level shocks---such as drought, economic conditions, or political campaigns---and the baseline estimates are partly confounded by these omitted factors.
+
+I cannot definitively adjudicate between these interpretations with four presidential elections. Several considerations favor the first view: the atmospheric dispersion mechanism that generates smoke exposure is physically independent of local political and economic conditions; the smoke data from \citet{childs2022daily} isolates wildfire-specific PM\textsubscript{2.5} from other pollution sources; and \citet{borgschulte2022air} show that controlling for wind direction does not change their smoke-based labor market estimates, suggesting smoke variation is genuinely exogenous. However, I cannot rule out the second view, and the state-by-year null should be taken seriously as a limitation. Additional election cycles would provide the statistical power needed to resolve this ambiguity.
 
 \subsection{Temporal Dynamics}
 \label{sec:temporal}
 
 Figure~\ref{fig:windows} presents the temporal dynamics of the smoke--voting relationship using cumulative windows of expanding length, estimated under the preferred Specification~(3) with controls. The left column uses mean smoke PM\textsubscript{2.5} as the treatment; the right column uses the fraction of days exceeding the 20~$\mu$g/m$^3$ visible haze threshold. Each point is a separate regression in which the treatment variable is the average over the indicated window.
 
-For Democratic vote share (top row), the mean PM\textsubscript{2.5} effect builds over the first 14--35 days and then stabilizes around the 30-day estimate, confirming that recent smoke drives the effect. The fraction-above-haze measure tells a similar story with larger point estimates, consistent with perceptible episodes mattering most. For incumbent vote share (middle row), the mean PM\textsubscript{2.5} effect is concentrated in the first 14 days and washes out at longer windows, while the haze fraction shows a persistent positive effect---suggesting that visible smoke exposure may actually benefit incumbents at moderate levels, unlike the punishment effect found at higher thresholds (Appendix~\ref{sec:thresholds}). For turnout (bottom row), positive effects are stable across all window lengths under both treatments.
+For turnout rate (top row), positive effects are stable and significant across all window lengths under both treatments, confirming that the turnout finding is not an artifact of a particular window choice. The mean PM\textsubscript{2.5} estimate is significant from the shortest windows and remains stable as the window expands, consistent with a persistent mobilization effect. For log total votes (second row), the pattern is similar, with positive and significant effects at all windows.
+
+For Democratic vote share (third row), the mean PM\textsubscript{2.5} effect builds over the first 14--35 days and then stabilizes around the 30-day estimate, confirming that recent smoke drives the effect. The fraction-above-haze measure tells a similar story with larger point estimates. For incumbent vote share (bottom row), the mean PM\textsubscript{2.5} effect is concentrated in the first 14 days and washes out at longer windows, while the haze fraction shows a persistent positive effect---suggesting that visible smoke exposure may benefit incumbents at moderate levels, unlike the punishment effect found at higher thresholds (Appendix~\ref{sec:thresholds}).
 
 The temporal pattern---strongest effects at short lags, stabilizing as the window expands---is consistent with a salience or recency mechanism and difficult to explain with confounders. It also motivates the use of the 30-day window as the base specification: short enough to capture the recency-weighted signal, long enough to smooth over week-to-week noise.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{temporal_cumulative_controls.png}
-\caption{Temporal dynamics of smoke effects using expanding cumulative windows. Left column: mean smoke PM\textsubscript{2.5}. Right column: fraction of days exceeding the visible haze threshold (20~$\mu$g/m$^3$). Rows: DEM vote share, incumbent vote share, log total votes. Each point is a separate regression with the indicated cumulative window as treatment. All specifications include county and year FE plus time-varying controls (Specification~3). Bars are 95\% confidence intervals; SEs clustered by county.}
+\caption{Temporal dynamics of smoke effects using expanding cumulative windows. Left column: mean smoke PM\textsubscript{2.5}. Right column: fraction of days exceeding the visible haze threshold (20~$\mu$g/m$^3$). Rows: turnout rate, log total votes, DEM vote share, incumbent vote share. Each point is a separate regression with the indicated cumulative window as treatment. All specifications include county and year FE plus time-varying controls (Specification~3). Bars are 95\% confidence intervals; SEs clustered by county.}
 \label{fig:windows}
+\end{figure}
+
+\subsection{Close-In Daily Dynamics}
+\label{sec:closein}
+
+Figure~\ref{fig:closein} examines the very-short-run dynamics at daily resolution, using cumulative windows from 1 to 7 days before the election. These estimates speak to the question of how quickly smoke affects electoral behavior.
+
+For turnout rate, the effect is positive and marginally significant from a single day of pre-election exposure (0.021, $p < 0.10$), growing steadily to 0.118 ($p < 0.10$) at the 7-day window. For log total votes, significance emerges from day 1 (0.049, $p < 0.01$) and strengthens monotonically.
+
+The most mechanistically compelling close-in result is for incumbent vote share. The anti-incumbent effect builds monotonically from near zero at 1 day to $-$0.020 ($p < 0.01$) at 7 days, consistent with a recency-driven blame attribution mechanism in which voters punish the incumbent for discomfort experienced in the days immediately before casting their ballot. This close-in pattern---absent in the 30-day results where the effect washes out---suggests that incumbent punishment operates through a short-lived negative-affect channel, while the turnout mobilization effect is more persistent.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{temporal_closein_daily.png}
+\caption{Close-in daily dynamics: cumulative windows from 1 to 7 days before the election. Each point is a separate regression (Specification~3). The monotonic build-up of the anti-incumbent effect is consistent with a recency-driven blame attribution mechanism. Bars are 95\% confidence intervals; SEs clustered by county.}
+\label{fig:closein}
 \end{figure}
 
 \subsection{Geographic Variation in Smoke Exposure}
@@ -182,7 +247,7 @@ Figure~\ref{fig:maps} displays county-level mean smoke PM\textsubscript{2.5} in 
 
 To test whether the effects extend beyond presidential races, I aggregate MEDSL precinct-level House returns (which include county FIPS identifiers) directly to the county level for 2016--2022, avoiding the measurement error that would be introduced by a county-to-congressional-district crosswalk.
 
-Table~\ref{tab:house} presents the county-level House results alongside the presidential estimates, all using the 30-day mean smoke PM\textsubscript{2.5} treatment. The county-level House analysis covers approximately 3,000 counties per election across four cycles (2016, 2018, 2020, 2022). Multi-district counties have votes from all House races aggregated, measuring overall House candidate performance in each county rather than individual district outcomes. The pro-Democratic effect is not significant in House races, while the anti-incumbent effect is marginally significant. The turnout effect is strong in both presidential and House races.
+Table~\ref{tab:house} presents the county-level House results alongside the presidential estimates, all using the 30-day mean smoke PM\textsubscript{2.5} treatment and TWFE. The turnout effect is strong in both presidential and House races. County-level House turnout shows a larger point estimate (0.00173, $p < 0.05$) than presidential turnout (0.00100, $p < 0.001$), though the House estimate is less precise due to the smaller sample (VAP data are available only for 2016 and 2020 House elections). Log total votes are also significantly positive in both samples. The pro-Democratic effect is not significant in House races, while the incumbent effect flips sign (positive in House races), possibly reflecting the advantage of name recognition for House incumbents in smoke-affected areas.
 
 \begin{table}[htbp]
 \centering
@@ -194,37 +259,39 @@ Table~\ref{tab:house} presents the county-level House results alongside the pres
 & (1) & (2) \\
 & County House & Presidential \\
 \midrule
-\multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00033 & 0.00135*** \\
-& (0.00029) & (0.00021) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00304* & $-$0.00172* \\
-& (0.00178) & (0.00091) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
+\multicolumn{3}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00173** & 0.00100*** \\
+& (0.00076) & (0.00020) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
 Mean Smoke PM\textsubscript{2.5} (30d) & 0.00356*** & 0.00314*** \\
 & (0.00119) & (0.00052) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00033 & 0.00135*** \\
+& (0.00029) & (0.00021) \\[6pt]
+\multicolumn{3}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00304* & $-$0.00172* \\
+& (0.00178) & (0.00091) \\[6pt]
 \midrule
 Unit & County & County \\
 FE & County + Year & County + Year \\
-Observations & 11,155 / 12,197 & 12,428 \\
 Elections & 2016--2022 & 2008--2020 \\
 \bottomrule
 \multicolumn{3}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. SEs clustered by county.} \\
-\multicolumn{3}{l}{\footnotesize Panels A--B use contested races only; Panel C includes all.} \\
+\multicolumn{3}{l}{\footnotesize Panels C--D use contested races only (House: 11,155 obs; Presidential: 12,432).} \\
+\multicolumn{3}{l}{\footnotesize Panel B uses all races (House: 12,197; Presidential: 12,432).} \\
+\multicolumn{3}{l}{\footnotesize Panel A: House 6,088 obs (VAP available 2016, 2020 only); Presidential 12,432.} \\
 \end{tabular}
 \end{table}
 
-As a further robustness check, I also estimate the House specifications at the congressional district level using Census county-to-district crosswalks (Appendix Table~\ref{tab:district_house}). The district-level estimates are noisier due to the measurement error introduced by the crosswalk, but the anti-incumbent effect remains statistically significant.
+As a further robustness check, I also estimate the House specifications at the congressional district level using Census county-to-district crosswalks (Appendix Table~\ref{tab:district_house}). The district-level estimates are noisier due to the measurement error introduced by the crosswalk.
 
 \subsection{Robustness to Excluding 2020}
 
 The 2020 election coincided with historically extreme wildfire smoke across the Western United States, raising the question of whether the main results are driven by this single year. Figure~\ref{fig:drop2020} addresses this by overlaying the cumulative temporal dynamics for the full sample and the sample excluding 2020, using the same Specification~(3) as Figure~\ref{fig:windows}.
 
-The results reveal a sharp divergence. For mean smoke PM\textsubscript{2.5} (left column), the pro-Democratic effect reverses sign when 2020 is excluded: the full-sample positive effect at the 28-day window ($\beta = 0.0022$, $p < 0.001$) becomes negative without 2020 ($\beta = -0.0035$, $p < 0.001$). This confirms that the 2020 Western fire season---which produced extreme smoke in Oregon, Washington, and California---is essential for the pro-Democratic result.
+The turnout effect is positive and significant in both samples. At the 28-day window, the turnout rate coefficient is 0.0011 ($p < 0.05$) in the full sample and 0.0040 ($p < 0.001$) excluding 2020---the turnout effect is actually \textit{stronger} without 2020, confirming that it is not driven by the extreme fire season. The same pattern holds for log total votes.
 
-The anti-incumbent effect, however, is dramatically \textit{stronger} without 2020. The full-sample estimate is near zero at the 28-day window, but excluding 2020 reveals a large and significant anti-incumbent effect ($\beta = -0.033$, $p < 0.001$). This pattern---visible across all window lengths---suggests that the 2020 election, in which smoke-exposed areas happened to favor the incumbent, masked a strong underlying incumbent punishment effect operating in 2008--2016.
-
-The haze threshold measure (right column) tells a similar story: the pro-Democratic effect disappears without 2020, while a large anti-incumbent effect emerges ($\beta = -0.73$, $p < 0.001$ at 28 days). Turnout effects are positive and significant in both samples under both treatments. These patterns---visible across the full temporal profile rather than at a single window---suggest that anti-incumbent punishment is the most robust electoral consequence of wildfire smoke, while the pro-Democratic shift is driven by the 2020 fire season.
+For the secondary outcomes, the divergence between samples is more dramatic. The pro-Democratic effect reverses sign when 2020 is excluded: the full-sample positive effect at 28 days ($\beta = 0.0023$, $p < 0.001$) becomes negative without 2020 ($\beta = -0.0034$, $p < 0.001$). This confirms that the pro-Democratic result is leveraged by the 2020 Western fire season. The anti-incumbent effect, however, is dramatically \textit{stronger} without 2020: near zero in the full sample but large and significant excluding 2020 ($\beta = -0.033$, $p < 0.001$), suggesting that the 2020 election---in which smoke-exposed areas happened to favor the incumbent---masked a strong underlying punishment effect.
 
 \begin{figure}[htbp]
 \centering
@@ -233,25 +300,47 @@ The haze threshold measure (right column) tells a similar story: the pro-Democra
 \label{fig:drop2020}
 \end{figure}
 
+\subsection{Heterogeneity by Prior Partisanship}
+
+Table~\ref{tab:hetero} splits the presidential sample by terciles of lagged Democratic vote share to test whether the pro-Democratic shift from smoke varies across the partisan spectrum. The effect is present in R-leaning and D-leaning counties but is absent in swing counties. Unlike \citet{hazlett2020wildfire}, who find effects \textit{only} in Democratic areas for fire proximity, smoke exposure moves both R-leaning and D-leaning counties toward the Democrats, with the strongest effect in R-leaning counties (0.155~pp). This cross-partisan pattern is consistent with smoke operating as a general salience signal rather than reinforcing existing preferences.
+
+\begin{table}[htbp]
+\centering
+\caption{Heterogeneity by Prior Partisanship (DEM Vote Share)}
+\label{tab:hetero}
+\small
+\begin{tabular}{lccc}
+\toprule
+& R-Leaning & Swing & D-Leaning \\
+\midrule
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00155*** & 0.00007 & 0.00126*** \\
+& (0.00033) & (0.00055) & (0.00040) \\[6pt]
+Observations & 4,146 & 4,144 & 4,147 \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. County and year FE. SEs clustered by county.} \\
+\multicolumn{4}{l}{\footnotesize Outcome: DEM vote share. Terciles defined by lagged DEM vote share.} \\
+\end{tabular}
+\end{table}
+
 %----------------------------------------------------------------------
 \section{Discussion}
 %----------------------------------------------------------------------
 
-Three mechanisms could drive these results. First, a \textit{salience} channel: smoke makes climate change tangible, increasing the weight voters place on environmental issues and benefiting the party perceived as more pro-environment \citep{hazlett2020wildfire, kahn2007voting}. Second, a \textit{negative affect} channel: smoke degrades well-being and mood, and voters punish incumbents for experienced discomfort regardless of policy responsibility \citep{bellani2024air, healy2010myopic}. Third, a \textit{disruption} channel: smoke could differentially suppress turnout among certain voter groups \citep{gomez2007weather, burke2021exposures}.
+The primary finding of this paper is that wildfire smoke increases voter turnout. This effect is robust across specifications: it survives the addition of time-varying county controls and state-specific linear trends, is present in both presidential and House elections, and is not driven by the extreme 2020 fire season. The positive sign of the effect rules out a \textit{disruption} mechanism---in which smoke deters participation as election-day rain does \citep{gomez2007weather}---and instead points toward \textit{mobilization}. Visible smoke may increase the salience of environmental and public health concerns, prompting voters who might otherwise abstain to participate.
 
-The baseline county-and-year FE results are consistent with the salience and affect channels: the pro-Democratic shift points toward salience, while the anti-incumbent effect (marginally significant at the 30-day window, strongly significant at 60 days) points toward negative affect. The threshold comparison in Appendix~\ref{sec:thresholds} further supports this interpretation: the pro-Democratic shift is present at all thresholds with a dose-response pattern (larger effects at higher cutoffs), while the incumbent effect \textit{reverses sign} between moderate and severe exposure---visible haze benefits incumbents, but severe unhealthy episodes punish them. This is consistent with moderate smoke activating a rally-around-the-flag response while severe smoke triggers blame attribution. The drop-2020 analysis in Figure~\ref{fig:drop2020} sharpens the interpretation further: the pro-Democratic effect reverses sign without 2020, while the anti-incumbent effect is dramatically stronger---masked in the full sample by the 2020 election, in which smoke-exposed areas happened to favor the incumbent. The temporal dynamics (Figure~\ref{fig:windows}) provide the most compelling evidence for a genuine smoke effect: smoke in the weeks closest to the election produces the largest estimates, a pattern difficult to explain with confounders.
+Two secondary findings provide suggestive evidence about how smoke affects vote \textit{choice}. First, smoke exposure is associated with a pro-Democratic shift in presidential voting, consistent with climate salience benefiting the party perceived as more pro-environment \citep{hazlett2020wildfire, kahn2007voting}. However, this effect is fragile: it is driven by the 2020 fire season (reversing sign without it) and does not survive state trends. Second, close-in incumbent punishment---building monotonically from 0 to $-$0.020 over the 7 days before the election---is consistent with the negative-affect channel identified by \citet{bellani2024air}, in which experienced discomfort reduces support for the status quo. This close-in effect is strongest when 2020 is excluded, suggesting it is a general phenomenon not specific to one election cycle.
 
-Table~\ref{tab:main} shows that the baseline estimates are robust to adding time-varying county controls (Column~3)---unemployment rate, log median household income, log population, and October temperature and precipitation---ruling out the possibility that the results are driven by local economic conditions or weather confounders correlated with smoke exposure. Adding state-specific linear trends (Column~4) further attenuates the pro-Democratic effect to insignificance, though the turnout effect survives.
+The state-by-year fixed effects null (Section~\ref{sec:stateyear}) is the most important limitation. As discussed there, two interpretations are possible: the null could reflect an overly demanding specification that discards genuine exogenous variation, or it could indicate that state-level confounders partly drive the baseline results. I lean toward the first interpretation given the atmospheric dispersion mechanism, but cannot rule out the second with only four presidential elections. The fact that 41\% of the identifying variation is between-state-by-year makes this a binding constraint. Future work with additional election cycles---the 2024 election, with its major Canadian wildfire smoke events affecting the Eastern United States, would be particularly valuable---could resolve this ambiguity by providing enough within-state variation for precise estimation under state-by-year FE.
 
-Appendix~\ref{sec:stateyear} presents a more demanding specification replacing year FE with state-by-year FE, so that identification comes only from within-state variation in smoke across counties within the same election. No coefficient survives this test, which is unsurprising given that the within-state variation in smoke---shown in the residualized maps of Figure~\ref{fig:resid_map}---is concentrated in a few Western states in high-fire years. With only four presidential elections, the within-state, within-year variation may be insufficient for precise estimation, but this remains a limitation that future work with additional election cycles could address.
-
-\paragraph{Limitations.} This proof of concept has several limitations that subsequent work should address. The analysis covers only four presidential elections and four House elections, and as the robustness analysis demonstrates, the pro-Democratic finding is leveraged by the 2020 fire season. The turnout measure (log total votes) is a crude proxy without a proper population denominator. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
+\paragraph{Limitations.} Several additional limitations merit discussion. The analysis covers only four presidential elections and four House elections, and the sample is small by the standards of the environmental economics literature. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
 
 %----------------------------------------------------------------------
 \section{Conclusion}
 %----------------------------------------------------------------------
 
-Under county-and-year fixed effects, wildfire smoke exposure in the 30 days before an election is associated with a pro-Democratic shift in presidential voting, with effects strongest in the weeks immediately preceding the election. The 7-day temporal dynamics provide the most compelling evidence for a causal effect, as the recency pattern is difficult to explain with confounders. A more demanding specification with state-by-year fixed effects eliminates the effects (Appendix~\ref{sec:stateyear}), suggesting that within-state variation---concentrated in a few Western states in high-fire years---may be insufficient for precise estimation with only four elections. House elections show weaker and less consistent patterns. These preliminary results suggest that wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---offers a promising research design for studying how environmental experience shapes political behavior, but additional election cycles and sharper identification strategies are needed to establish causality.
+Wildfire smoke exposure in the 30 days before an election increases voter turnout, a finding that survives progressively demanding specifications including state-specific linear time trends and is present in both presidential and House elections. The positive sign rules out disruption and points toward a mobilization mechanism driven by the salience of visible smoke. Suggestive evidence also points to a pro-Democratic shift and close-in incumbent punishment, though these vote-choice effects are less robust.
+
+The most important caveat is that state-by-year fixed effects---which absorb 41\% of the identifying variation---eliminate all effects. Whether this reflects insufficient within-state power or genuine state-level confounding cannot be resolved with four elections. Additional election cycles, particularly the 2024 cycle with its geographically novel smoke patterns, offer the most promising path to sharper identification. Wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---remains a promising research design for studying how environmental experience shapes democratic participation.
 
 \bibliography{references}
 
@@ -273,14 +362,14 @@ Figures~\ref{fig:excl_mean} and~\ref{fig:excl_frac} present the exclusive-window
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{temporal_7day_mean_controls.png}
-\caption{Temporal dynamics: mean smoke PM\textsubscript{2.5}. Left column: exclusive 7-day windows (all bins entered simultaneously). Right column: cumulative windows (same as left column of Figure~\ref{fig:windows}). County and year FE with controls. 95\% CIs; SEs clustered by county.}
+\caption{Temporal dynamics: mean smoke PM\textsubscript{2.5}. Left column: exclusive 7-day windows (all bins entered simultaneously). Right column: cumulative windows (same as left column of Figure~\ref{fig:windows}). Rows: turnout rate, log total votes, DEM vote share, incumbent vote share. County and year FE with controls. 95\% CIs; SEs clustered by county.}
 \label{fig:excl_mean}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{temporal_7day_frac_controls.png}
-\caption{Temporal dynamics: fraction of days exceeding the visible haze threshold (20~$\mu$g/m$^3$). Left column: exclusive 7-day windows. Right column: cumulative windows (same as right column of Figure~\ref{fig:windows}). County and year FE with controls. 95\% CIs; SEs clustered by county.}
+\caption{Temporal dynamics: fraction of days exceeding the visible haze threshold (20~$\mu$g/m$^3$). Left column: exclusive 7-day windows. Right column: cumulative windows (same as right column of Figure~\ref{fig:windows}). Rows: turnout rate, log total votes, DEM vote share, incumbent vote share. County and year FE with controls. 95\% CIs; SEs clustered by county.}
 \label{fig:excl_frac}
 \end{figure}
 
@@ -292,7 +381,7 @@ Figures~\ref{fig:excl_mean} and~\ref{fig:excl_frac} present the exclusive-window
 
 Table~\ref{tab:thresholds} compares the fraction-above-threshold treatment variable at three cutoffs: 20~$\mu$g/m$^3$ (onset of visible haze, used in the main text), 35.5~$\mu$g/m$^3$ (EPA ``Unhealthy for Sensitive Groups''), and 55.5~$\mu$g/m$^3$ (EPA ``Unhealthy''). All specifications use the 30-day pre-election window with county and year fixed effects plus time-varying controls (Specification~3).
 
-The haze threshold has substantially more variation (236 nonzero observations, 1.9\%) than the higher thresholds (47 and 19 nonzero, respectively). For Democratic vote share, all three thresholds produce significant positive estimates, with larger coefficients at higher thresholds---consistent with a dose-response relationship in which more severe smoke produces stronger pro-Democratic shifts. For incumbent vote share, the sign flips across thresholds: the haze measure shows a significant \textit{positive} effect (moderate smoke may benefit incumbents through rally effects), while the unhealthy measure shows a significant \textit{negative} effect (severe smoke punishes incumbents). This sign reversal is consistent with dual mechanisms operating at different exposure intensities. For turnout, only the haze threshold is significant, reflecting its greater statistical power.
+The haze threshold has substantially more variation (236 nonzero observations, 1.9\%) than the higher thresholds (47 and 19 nonzero, respectively). For turnout rate, the haze threshold produces a significant positive effect (0.045, $p < 0.01$), the unhealthy threshold is also significant (0.049, $p < 0.05$), but the intermediate USG threshold is not---likely reflecting the small number of nonzero observations at that cutoff. For Democratic vote share, all three thresholds produce significant positive estimates, with larger coefficients at higher thresholds---consistent with a dose-response relationship. For incumbent vote share, the sign flips across thresholds: the haze measure shows a significant \textit{positive} effect while the unhealthy measure shows a significant \textit{negative} effect, consistent with dual mechanisms operating at different exposure intensities.
 
 \begin{table}[htbp]
 \centering
@@ -303,15 +392,18 @@ The haze threshold has substantially more variation (236 nonzero observations, 1
 \toprule
 & Haze ($>$20) & USG ($>$35.5) & Unhealthy ($>$55.5) \\
 \midrule
-\multicolumn{4}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Frac.\ days above threshold & 0.05709*** & 0.09548** & 0.15082*** \\
-& (0.01516) & (0.04349) & (0.03730) \\[6pt]
-\multicolumn{4}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Frac.\ days above threshold & 0.16459** & $-$0.16548 & $-$0.24938*** \\
-& (0.06772) & (0.10456) & (0.07877) \\[6pt]
-\multicolumn{4}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Frac.\ days above threshold & 0.09413*** & 0.03815 & 0.09920 \\
-& (0.02947) & (0.06404) & (0.09138) \\[3pt]
+\multicolumn{4}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Frac.\ days above threshold & 0.04497*** & $-$0.00065 & 0.04909** \\
+& (0.01427) & (0.03037) & (0.02279) \\[6pt]
+\multicolumn{4}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
+Frac.\ days above threshold & 0.10585*** & 0.04803 & 0.09839 \\
+& (0.03298) & (0.06271) & (0.08007) \\[6pt]
+\multicolumn{4}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Frac.\ days above threshold & 0.06162*** & 0.09929** & 0.15047*** \\
+& (0.01611) & (0.04410) & (0.03746) \\[6pt]
+\multicolumn{4}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Frac.\ days above threshold & 0.16253** & $-$0.16716 & $-$0.24933*** \\
+& (0.06755) & (0.10465) & (0.07825) \\[3pt]
 \midrule
 Nonzero obs (of 12,432) & 236 (1.9\%) & 47 (0.4\%) & 19 (0.2\%) \\
 County + Year FE & \checkmark & \checkmark & \checkmark \\
@@ -364,7 +456,7 @@ Elections & 2006--2022 & 2016--2022 \\
 \label{sec:controls}
 %----------------------------------------------------------------------
 
-Table~\ref{tab:controls} presents the controls robustness check for both presidential and county House specifications side by side. The presidential columns correspond to Columns~(2) and~(3) of Table~\ref{tab:main}; the county House columns extend the same test to House elections. Controls are the unemployment rate (BLS LAUS), log median household income (Census SAIPE), log population (Census Population Estimates), and October mean temperature and total precipitation (PRISM).
+Table~\ref{tab:controls} presents the controls robustness check for both presidential and county House specifications side by side. Controls are the unemployment rate (BLS LAUS), log median household income (Census SAIPE), log population (Census Population Estimates), and October mean temperature and total precipitation (PRISM).
 
 \begin{table}[htbp]
 \centering
@@ -377,73 +469,30 @@ Table~\ref{tab:controls} presents the controls robustness check for both preside
 \cmidrule(lr){2-3} \cmidrule(lr){4-5}
 & Baseline & + Controls & Baseline & + Controls \\
 \midrule
-\multicolumn{5}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & 0.00119*** & $-$0.00033 & $-$0.00043 \\
-& (0.00021) & (0.00022) & (0.00029) & (0.00028) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00172* & 0.00073 & 0.00304* & 0.00375** \\
-& (0.00091) & (0.00094) & (0.00178) & (0.00151) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00314*** & 0.00228*** & 0.00356*** & 0.00323*** \\
-& (0.00052) & (0.00041) & (0.00119) & (0.00114) \\[3pt]
+\multicolumn{5}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00100*** & 0.00085*** & 0.00173** & 0.00126* \\
+& (0.00020) & (0.00019) & (0.00076) & (0.00072) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00314*** & 0.00245*** & 0.00356*** & 0.00323*** \\
+& (0.00052) & (0.00051) & (0.00119) & (0.00114) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & 0.00125*** & $-$0.00033 & $-$0.00043 \\
+& (0.00021) & (0.00023) & (0.00029) & (0.00028) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00172* & 0.00070 & 0.00304* & 0.00375** \\
+& (0.00091) & (0.00094) & (0.00178) & (0.00151) \\[3pt]
 \midrule
 County FE & \checkmark & \checkmark & \checkmark & \checkmark \\
 Year FE & \checkmark & \checkmark & \checkmark & \checkmark \\
 Controls & & \checkmark & & \checkmark \\
-Observations & 12,432 & 12,400 & 11,155 / 12,197 & 11,123 / 12,165 \\
+Observations & 12,432 & 12,400 & 6,088 / 12,197 & 6,072 / 12,165 \\
 \bottomrule
 \multicolumn{5}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. SEs clustered by county.} \\
 \multicolumn{5}{l}{\footnotesize Controls: unemployment rate, log median household income, log population,} \\
 \multicolumn{5}{l}{\footnotesize October mean temperature, October total precipitation.} \\
-\multicolumn{5}{l}{\footnotesize Panels A--B use contested races only; Panel C includes all.} \\
+\multicolumn{5}{l}{\footnotesize Panels C--D use contested races only; Panels A--B include all.} \\
 \end{tabular}
 \end{table}
-
-%----------------------------------------------------------------------
-\clearpage
-\subsection{State-by-Year Fixed Effects}
-\label{sec:stateyear}
-%----------------------------------------------------------------------
-
-Table~\ref{tab:stateyear} presents estimates replacing year fixed effects with state-by-year fixed effects, so that identification comes only from within-state variation in smoke across counties within the same election. This is substantially more demanding than the state linear trends in Column~(4) of Table~\ref{tab:main}: state-by-year FE absorb \textit{all} state-level time variation, not just linear trends.
-
-No coefficient is statistically significant in either the presidential or county House specifications. The presidential pro-Democratic effect shrinks from 0.00135 to essentially zero (0.00001), and the anti-incumbent effect is halved and loses significance. This pattern is consistent with state-level time-varying shocks---such as statewide political campaigns, ballot measures, or economic conditions---being correlated with smoke exposure and driving part of the baseline estimates.
-
-Figure~\ref{fig:resid_map} provides visual context for these null results. After residualizing county-level smoke on state-by-year means, the remaining within-state variation is concentrated in a small number of Western states during high-fire years (especially 2020). With only four presidential elections, the effective identifying variation under state-by-year fixed effects may simply be too limited for precise estimation.
-
-\begin{table}[htbp]
-\centering
-\caption{State-by-Year Fixed Effects: Presidential and County House}
-\label{tab:stateyear}
-\small
-\begin{tabular}{lcc}
-\toprule
-& (1) & (2) \\
-& Presidential & County House \\
-\midrule
-\multicolumn{3}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00001 & 0.00011 \\
-& (0.00025) & (0.00025) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00079 & 0.00214 \\
-& (0.00086) & (0.00140) \\[6pt]
-\multicolumn{3}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Mean Smoke PM\textsubscript{2.5} (30d) & 0.00023 & 0.00161 \\
-& (0.00030) & (0.00135) \\[6pt]
-\midrule
-FE & County + State$\times$Year & County + State$\times$Year \\
-Observations & 12,428 & 11,155 / 12,197 \\
-\bottomrule
-\multicolumn{3}{l}{\footnotesize No coefficient is significant at the 10\% level. SEs clustered by county.} \\
-\end{tabular}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{smoke_exposure_map_residualized.png}
-\caption{Within-state variation in pre-election smoke exposure. County-level smoke PM\textsubscript{2.5} (30-day window) residualized on state-by-year means. The diverging scale shows counties with more (red) or less (blue) smoke than their state average. Meaningful within-state variation is concentrated in Western states during high-fire years.}
-\label{fig:resid_map}
-\end{figure}
 
 %----------------------------------------------------------------------
 \clearpage
@@ -471,7 +520,7 @@ A large literature examines whether environmental shocks alter political behavio
 
 \subsubsection{Weather and Turnout}
 
-\citet{gomez2007weather} show that rain on election day suppresses voter turnout with differential effects by party. This is relevant for the turnout channel: my positive turnout coefficient could be in tension with their finding if smoke operates like bad weather, but smoke exposure in my specification is measured over the pre-election window rather than on election day itself.
+\citet{gomez2007weather} show that rain on election day suppresses voter turnout with differential effects by party. This is relevant for the turnout channel: my positive turnout coefficient could be in tension with their finding if smoke operated like bad weather, but smoke exposure in my specification is measured over the pre-election window rather than on election day itself, and the positive sign indicates mobilization rather than suppression.
 
 \subsection{Anti-Incumbent Voting: Theoretical Foundations}
 
