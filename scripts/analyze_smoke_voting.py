@@ -1645,6 +1645,276 @@ def create_buildup_table(df):
     return results
 
 
+def state_by_state_analysis(df):
+    """Run TWFE+controls regressions state-by-state and examine coefficient distribution.
+
+    Addresses state×year FE concern: if most states individually show positive
+    turnout coefficients, the effect is hard to attribute to state-level confounding.
+    """
+    from scipy import stats as sp_stats
+
+    print("\n" + "=" * 70)
+    print("STATE-BY-STATE TURNOUT ANALYSIS")
+    print("  TWFE+controls within each state, meta-analytic aggregation")
+    print("=" * 70)
+
+    STATE_NAMES = {
+        "01": "Alabama", "02": "Alaska", "04": "Arizona", "05": "Arkansas",
+        "06": "California", "08": "Colorado", "09": "Connecticut", "10": "Delaware",
+        "11": "DC", "12": "Florida", "13": "Georgia", "15": "Hawaii",
+        "16": "Idaho", "17": "Illinois", "18": "Indiana", "19": "Iowa",
+        "20": "Kansas", "21": "Kentucky", "22": "Louisiana", "23": "Maine",
+        "24": "Maryland", "25": "Massachusetts", "26": "Michigan", "27": "Minnesota",
+        "28": "Mississippi", "29": "Missouri", "30": "Montana", "31": "Nebraska",
+        "32": "Nevada", "33": "New Hampshire", "34": "New Jersey", "35": "New Mexico",
+        "36": "New York", "37": "North Carolina", "38": "North Dakota", "39": "Ohio",
+        "40": "Oklahoma", "41": "Oregon", "42": "Pennsylvania", "44": "Rhode Island",
+        "45": "South Carolina", "46": "South Dakota", "47": "Tennessee", "48": "Texas",
+        "49": "Utah", "50": "Vermont", "51": "Virginia", "53": "Washington",
+        "54": "West Virginia", "55": "Wisconsin", "56": "Wyoming",
+    }
+
+    smoke_var = "smoke_pm25_mean_30d"
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+
+    # Get state FIPS from county FIPS
+    fips_vals = df.index.get_level_values("fips").astype(str)
+    state_fips_series = fips_vals.str[:2]
+    unique_states = sorted(state_fips_series.unique())
+
+    # Run regressions for each outcome
+    outcomes = [
+        ("turnout_rate", "Turnout Rate"),
+        ("log_total_votes", "Log Total Votes"),
+    ]
+
+    all_results = {}
+    for dep_var, dep_label in outcomes:
+        print(f"\n--- {dep_label} ---")
+        state_results = []
+
+        for st in unique_states:
+            state_name = STATE_NAMES.get(st, f"State {st}")
+            # Subset to this state
+            mask = state_fips_series == st
+            df_state = df.loc[mask]
+            n_counties = df_state.index.get_level_values("fips").nunique()
+
+            if n_counties < 10:
+                print(f"  SKIP {state_name} ({st}): only {n_counties} counties")
+                continue
+
+            # Filter controls to those with variation in this state
+            state_controls = []
+            for c in available:
+                if c in df_state.columns and df_state[c].notna().sum() > 10:
+                    if df_state[c].std() > 1e-10:
+                        state_controls.append(c)
+
+            try:
+                res = run_twfe(df_state, dep_var, smoke_var, controls=state_controls,
+                               label=f"{state_name}: {dep_var}")
+                if res is None:
+                    continue
+
+                coef = res.params.get(smoke_var, np.nan)
+                se = res.std_errors.get(smoke_var, np.nan)
+                pval = res.pvalues.get(smoke_var, np.nan)
+                n = int(res.nobs)
+                smoke_sd = df_state[smoke_var].std()
+
+                if np.isnan(coef) or np.isnan(se) or se <= 0:
+                    continue
+
+                stars = "***" if pval < 0.01 else "**" if pval < 0.05 else "*" if pval < 0.10 else ""
+                state_results.append({
+                    "state_fips": st, "state_name": state_name,
+                    "coef": coef, "se": se, "pval": pval, "stars": stars,
+                    "n": n, "n_counties": n_counties, "smoke_sd": smoke_sd,
+                })
+                print(f"  {state_name:20s} ({n_counties:3d} counties, N={n:5d}): "
+                      f"coef={coef:+.5f}{stars:3s} (SE={se:.5f})")
+
+            except Exception as e:
+                print(f"  ERROR {state_name}: {e}")
+                continue
+
+        if not state_results:
+            print(f"  No valid state results for {dep_label}")
+            continue
+
+        res_df = pd.DataFrame(state_results)
+        all_results[dep_var] = res_df
+
+        # --- Summary statistics ---
+        n_states = len(res_df)
+        n_positive = (res_df["coef"] > 0).sum()
+        n_negative = (res_df["coef"] <= 0).sum()
+
+        # Binomial sign test (H0: 50% positive)
+        sign_test = sp_stats.binomtest(n_positive, n_states, 0.5, alternative="greater")
+        sign_pval = sign_test.pvalue
+
+        # Inverse-variance weighted meta-analytic mean
+        weights = 1.0 / (res_df["se"] ** 2)
+        meta_coef = (res_df["coef"] * weights).sum() / weights.sum()
+        meta_se = np.sqrt(1.0 / weights.sum())
+        meta_z = meta_coef / meta_se
+        meta_pval = 2 * (1 - sp_stats.norm.cdf(abs(meta_z)))
+
+        median_coef = res_df["coef"].median()
+
+        # Cochran's Q test for heterogeneity
+        q_stat = (weights * (res_df["coef"] - meta_coef) ** 2).sum()
+        q_df = n_states - 1
+        q_pval = 1 - sp_stats.chi2.cdf(q_stat, q_df)
+        # I-squared
+        i_squared = max(0, (q_stat - q_df) / q_stat) * 100 if q_stat > 0 else 0
+
+        print(f"\n  SUMMARY ({dep_label}):")
+        print(f"    States estimated: {n_states}")
+        print(f"    Positive coefficients: {n_positive}/{n_states} ({100*n_positive/n_states:.0f}%)")
+        print(f"    Sign test p-value (H0: 50% positive): {sign_pval:.4f}")
+        print(f"    Median coefficient: {median_coef:.5f}")
+        print(f"    Meta-analytic mean: {meta_coef:.5f} (SE={meta_se:.5f}, p={meta_pval:.4f})")
+        meta_stars = "***" if meta_pval < 0.01 else "**" if meta_pval < 0.05 else "*" if meta_pval < 0.10 else ""
+        print(f"    Meta-analytic significance: {meta_stars}")
+        print(f"    Cochran's Q: {q_stat:.1f} (p={q_pval:.4f}), I²={i_squared:.0f}%")
+
+        # --- Pooled TWFE+controls for comparison ---
+        pooled_res = run_twfe(df, dep_var, smoke_var, controls=available,
+                              label=f"Pooled: {dep_var}")
+        pooled_coef = pooled_res.params.get(smoke_var, np.nan) if pooled_res else np.nan
+        pooled_se = pooled_res.std_errors.get(smoke_var, np.nan) if pooled_res else np.nan
+        if pooled_res:
+            print(f"    Pooled TWFE+controls: {pooled_coef:.5f} (SE={pooled_se:.5f})")
+
+    # --- Generate plots ---
+    for dep_var, dep_label in outcomes:
+        if dep_var not in all_results:
+            continue
+        res_df = all_results[dep_var]
+
+        weights = 1.0 / (res_df["se"] ** 2)
+        meta_coef = (res_df["coef"] * weights).sum() / weights.sum()
+        meta_se = np.sqrt(1.0 / weights.sum())
+
+        n_positive = (res_df["coef"] > 0).sum()
+        n_states = len(res_df)
+        sign_test = sp_stats.binomtest(n_positive, n_states, 0.5, alternative="greater")
+        sign_pval = sign_test.pvalue
+
+        # Get pooled estimate
+        pooled_res = run_twfe(df, dep_var, smoke_var, controls=available,
+                              label=f"Pooled: {dep_var}")
+        pooled_coef = pooled_res.params.get(smoke_var, np.nan) if pooled_res else np.nan
+        pooled_se = pooled_res.std_errors.get(smoke_var, np.nan) if pooled_res else np.nan
+
+        suffix = "turnout" if dep_var == "turnout_rate" else "logvotes"
+
+        # ============================================================
+        # 1. Forest plot
+        # ============================================================
+        plot_df = res_df.sort_values("se")  # most precise at top
+        fig, ax = plt.subplots(figsize=(8, max(8, len(plot_df) * 0.35)))
+
+        y_positions = np.arange(len(plot_df))
+        colors = ["#2166ac" if p < 0.05 else "#67a9cf" if p < 0.10 else "#d1e5f0"
+                  for p in plot_df["pval"]]
+
+        ax.errorbar(plot_df["coef"], y_positions, xerr=1.96 * plot_df["se"],
+                    fmt="none", ecolor="gray", elinewidth=0.8, capsize=2, zorder=1)
+        ax.scatter(plot_df["coef"], y_positions, c=colors, s=40, zorder=2, edgecolors="black", linewidths=0.5)
+
+        ax.axvline(0, color="black", linewidth=0.8, linestyle="-")
+        ax.axvline(meta_coef, color="red", linewidth=1.2, linestyle="--", label=f"Meta mean = {meta_coef:.4f}")
+        if not np.isnan(pooled_coef):
+            ax.axvline(pooled_coef, color="green", linewidth=1.2, linestyle=":",
+                       label=f"Pooled TWFE = {pooled_coef:.4f}")
+
+        labels = [f"{row['state_name']} (n={row['n_counties']})" for _, row in plot_df.iterrows()]
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels(labels, fontsize=7)
+        ax.set_xlabel(f"Coefficient on Smoke PM2.5 (30d) → {dep_label}")
+        ax.set_title(f"State-by-State TWFE+Controls: {dep_label}\n"
+                     f"{n_positive}/{n_states} positive ({100*n_positive/n_states:.0f}%), "
+                     f"sign test p={sign_pval:.3f}")
+        ax.legend(fontsize=8, loc="lower right")
+        ax.invert_yaxis()
+
+        # Add significance legend
+        from matplotlib.lines import Line2D
+        legend_elements = [
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='#2166ac',
+                   markeredgecolor='black', markersize=7, label='p < 0.05'),
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='#67a9cf',
+                   markeredgecolor='black', markersize=7, label='p < 0.10'),
+            Line2D([0], [0], marker='o', color='w', markerfacecolor='#d1e5f0',
+                   markeredgecolor='black', markersize=7, label='p ≥ 0.10'),
+        ]
+        ax2 = ax.twinx()
+        ax2.set_yticks([])
+        ax2.legend(handles=legend_elements, loc="upper right", fontsize=7, title="Significance")
+
+        plt.tight_layout()
+        plt.savefig(os.path.join(FIG_DIR, f"state_forest_{suffix}.png"), dpi=200)
+        plt.close()
+        print(f"  Saved state_forest_{suffix}.png")
+
+        # ============================================================
+        # 2. Histogram
+        # ============================================================
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.hist(res_df["coef"], bins=20, color="#67a9cf", edgecolor="black", alpha=0.8)
+        ax.axvline(0, color="black", linewidth=1, linestyle="-")
+        ax.axvline(meta_coef, color="red", linewidth=1.5, linestyle="--",
+                   label=f"Meta mean = {meta_coef:.4f}")
+        ax.axvline(res_df["coef"].median(), color="orange", linewidth=1.5, linestyle=":",
+                   label=f"Median = {res_df['coef'].median():.4f}")
+
+        ax.set_xlabel(f"Coefficient on Smoke PM2.5 (30d) → {dep_label}")
+        ax.set_ylabel("Number of States")
+        ax.set_title(f"Distribution of State-Level Coefficients: {dep_label}\n"
+                     f"{n_positive}/{n_states} positive, "
+                     f"sign test p={sign_pval:.3f}")
+        ax.legend(fontsize=9)
+        plt.tight_layout()
+        plt.savefig(os.path.join(FIG_DIR, f"state_histogram_{suffix}.png"), dpi=200)
+        plt.close()
+        print(f"  Saved state_histogram_{suffix}.png")
+
+        # ============================================================
+        # 3. Funnel plot (only for turnout_rate)
+        # ============================================================
+        if dep_var == "turnout_rate":
+            fig, ax = plt.subplots(figsize=(7, 5))
+            precision = 1.0 / res_df["se"]
+            ax.scatter(res_df["coef"], precision, c="#2166ac", s=30, alpha=0.7,
+                       edgecolors="black", linewidths=0.5)
+            ax.axvline(meta_coef, color="red", linewidth=1.2, linestyle="--",
+                       label=f"Meta mean = {meta_coef:.4f}")
+            ax.axvline(0, color="black", linewidth=0.8)
+
+            # Draw funnel boundaries (pseudo 95% CI)
+            y_range = np.linspace(precision.min() * 0.8, precision.max() * 1.1, 100)
+            se_range = 1.0 / y_range
+            ax.plot(meta_coef - 1.96 * se_range, y_range, "gray", linestyle="--", linewidth=0.8)
+            ax.plot(meta_coef + 1.96 * se_range, y_range, "gray", linestyle="--", linewidth=0.8)
+
+            ax.set_xlabel(f"Coefficient on Smoke PM2.5 (30d) → {dep_label}")
+            ax.set_ylabel("Precision (1/SE)")
+            ax.set_title(f"Funnel Plot: State-by-State {dep_label}")
+            ax.legend(fontsize=9)
+            plt.tight_layout()
+            plt.savefig(os.path.join(FIG_DIR, f"state_funnel_{suffix}.png"), dpi=200)
+            plt.close()
+            print(f"  Saved state_funnel_{suffix}.png")
+
+    return all_results
+
+
 def main():
     print("=" * 70)
     print("Phase 4: Wildfire Smoke and Voting Behavior — Analysis")
@@ -1703,6 +1973,9 @@ def main():
     # Binscatter
     print("\n--- Binscatter ---")
     plot_binscatter(df)
+
+    # State-by-state analysis
+    state_by_state_analysis(df)
 
     print("\n" + "=" * 70)
     print("Phase 4 complete. Figures saved to:", FIG_DIR)

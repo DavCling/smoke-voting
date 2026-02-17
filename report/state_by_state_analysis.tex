@@ -1,0 +1,88 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{setspace}
+\onehalfspacing
+
+\title{State-by-State Turnout Analysis:\\A Nonparametric Robustness Check}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Motivation}
+
+The pooled TWFE regression with state$\times$year fixed effects absorbs approximately 41\% of identifying variation in smoke exposure, rendering most coefficient estimates insignificant. This raises a legitimate concern: does the turnout effect survive only because of between-state$\times$year variation that might be confounded?
+
+We address this by running TWFE+controls regressions \emph{within each state separately} and examining the distribution of coefficients across states. The logic is straightforward: if smoke genuinely increases turnout, we should observe systematically positive coefficients across states---even if many individual estimates are imprecise due to small within-state samples. Because each state has idiosyncratic politics, demographics, and economic conditions, a consistent positive pattern across diverse states would be difficult to attribute to any single confound. This is a nonparametric argument: we ask not whether the pooled effect is significant, but whether the \emph{sign pattern} is systematic.
+
+\section{Method}
+
+For each CONUS state with at least 10 counties ($S$ states total), we estimate:
+\begin{equation}
+y_{ct} = \beta_s \cdot \text{SmokePM2.5}_{ct}^{30d} + \mathbf{X}_{ct}\boldsymbol{\gamma}_s + \alpha_c + \delta_t + \varepsilon_{ct}
+\end{equation}
+where $y_{ct}$ is voter turnout rate (total votes / voting-age population), $\alpha_c$ and $\delta_t$ are county and year fixed effects, and $\mathbf{X}_{ct}$ includes unemployment rate, log median income, log population, October temperature, and October precipitation. Standard errors are clustered by county. States where the regression fails due to collinearity are excluded.
+
+We then aggregate the state-level $\hat\beta_s$ estimates using:
+\begin{itemize}
+    \item \textbf{Sign test}: Fraction of states with $\hat\beta_s > 0$, tested against $H_0$: 50\% positive via exact binomial test.
+    \item \textbf{Inverse-variance weighted meta-analytic mean}: $\bar\beta = \sum_s w_s \hat\beta_s / \sum_s w_s$ where $w_s = 1/\text{SE}_s^2$.
+    \item \textbf{Cochran's $Q$} and $I^2$ for heterogeneity assessment.
+    \item \textbf{Funnel plot} to diagnose potential publication-style bias (asymmetry would indicate that imprecise estimates are systematically different from precise ones).
+\end{itemize}
+
+\section{Results}
+
+\subsection{Turnout Rate}
+
+Figure~\ref{fig:forest} presents a forest plot of state-level coefficients ordered by precision. The meta-analytic mean and pooled TWFE+controls estimate are shown as reference lines. Figure~\ref{fig:histogram} shows the distribution of coefficients with sign test results. Figure~\ref{fig:funnel} presents the funnel plot.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{../output/figures/state_forest_turnout.png}
+    \caption{Forest plot of state-by-state TWFE+controls estimates for turnout rate on smoke PM2.5 (30-day mean). States ordered by precision (most precise at top). Colors indicate statistical significance.}
+    \label{fig:forest}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../output/figures/state_histogram_turnout.png}
+    \caption{Distribution of state-level coefficients for turnout rate. Vertical lines mark zero, the meta-analytic mean, and the median.}
+    \label{fig:histogram}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{../output/figures/state_funnel_turnout.png}
+    \caption{Funnel plot: precision (1/SE) vs.\ coefficient estimate. Dashed lines show pseudo-95\% confidence bounds around the meta-analytic mean. Approximate symmetry suggests no systematic bias.}
+    \label{fig:funnel}
+\end{figure}
+
+\subsection{Log Total Votes (Corroboration)}
+
+Figure~\ref{fig:forest_logvotes} shows the forest plot for log total votes, which serves as a corroboration of the turnout rate results using the simpler outcome measure that does not depend on VAP denominators.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{../output/figures/state_forest_logvotes.png}
+    \caption{Forest plot of state-by-state TWFE+controls estimates for log total votes on smoke PM2.5 (30-day mean).}
+    \label{fig:forest_logvotes}
+\end{figure}
+
+\section{Interpretation}
+
+The state-by-state analysis provides a fundamentally different identification argument from the pooled regression. Rather than relying on a single coefficient that could be driven by a few influential states or a common macro shock, we ask: \emph{across the diversity of American states, is smoke exposure systematically associated with higher turnout?}
+
+A strong majority of positive coefficients---especially if the sign test rejects 50\%---constitutes a nonparametric argument that is robust to any state-level confound. Each state serves as an independent quasi-experiment with its own political environment, economic conditions, and demographic composition. The meta-analytic framework then asks whether these independent estimates converge on a common direction.
+
+The funnel plot provides a complementary diagnostic. If the positive pooled effect were driven by a few outlier states, we would expect funnel asymmetry---imprecise estimates (at the bottom) skewing in a particular direction. A symmetric funnel, by contrast, suggests that the positive tendency holds regardless of estimation precision.
+
+This analysis does not replace the state$\times$year FE specification but offers an alternative lens: instead of demanding that all identifying variation come from within-state$\times$year (which absorbs 41\% of variation), we allow each state to contribute its own estimate and then ask whether the pattern across states is consistent with a real effect.
+
+\end{document}

@@ -196,7 +196,7 @@ Figure~\ref{fig:resid_map} provides visual context for these null results. After
 
 How should these null results be interpreted? Two views are possible. Under the first, state-by-year fixed effects are overly demanding: they absorb 41\% of the identifying variation in smoke exposure, including legitimate exogenous variation driven by atmospheric dispersion patterns that differ across states. Because smoke plumes are wind-driven, between-state differences in smoke conditional on year may be genuinely exogenous, and removing this variation discards real signal. Under the second view, between-state smoke variation is correlated with state-level shocks---such as drought, economic conditions, or political campaigns---and the baseline estimates are partly confounded by these omitted factors.
 
-I cannot definitively adjudicate between these interpretations with four presidential elections. Several considerations favor the first view: the atmospheric dispersion mechanism that generates smoke exposure is physically independent of local political and economic conditions; the smoke data from \citet{childs2022daily} isolates wildfire-specific PM\textsubscript{2.5} from other pollution sources; and \citet{borgschulte2022air} show that controlling for wind direction does not change their smoke-based labor market estimates, suggesting smoke variation is genuinely exogenous. A related finding from \citet{hilbig2024floods} is instructive: the 2021 German floods had little \textit{local} electoral effect but produced a brief \textit{national} increase in Green Party support, suggesting that environmental shocks may operate through diffuse awareness channels rather than geographically concentrated exposure. If smoke similarly affects voters through broad media coverage and regional salience rather than county-specific dosage, within-state variation may be the wrong margin to isolate the effect. However, I cannot rule out the second view, and the state-by-year null should be taken seriously as a limitation. Additional election cycles would provide the statistical power needed to resolve this ambiguity.
+I cannot definitively adjudicate between these interpretations with four presidential elections. Several considerations favor the first view: the atmospheric dispersion mechanism that generates smoke exposure is physically independent of local political and economic conditions; the smoke data from \citet{childs2022daily} isolates wildfire-specific PM\textsubscript{2.5} from other pollution sources; and \citet{borgschulte2022air} show that controlling for wind direction does not change their smoke-based labor market estimates, suggesting smoke variation is genuinely exogenous. A related finding from \citet{hilbig2024floods} is instructive: the 2021 German floods had little \textit{local} electoral effect but produced a brief \textit{national} increase in Green Party support, suggesting that environmental shocks may operate through diffuse awareness channels rather than geographically concentrated exposure. If smoke similarly affects voters through broad media coverage and regional salience rather than county-specific dosage, within-state variation may be the wrong margin to isolate the effect. However, I cannot rule out the second view, and the state-by-year null should be taken seriously as a limitation. Appendix~\ref{sec:statebystate} presents a complementary diagnostic: TWFE+controls regressions estimated separately within each state. Only 15 of 36 states yield positive turnout coefficients, and the meta-analytic mean is near zero, consistent with the between-state variation driving the pooled result---though severe power limitations (four elections per state) complicate interpretation. Additional election cycles would provide the statistical power needed to resolve this ambiguity.
 
 \subsection{Temporal Dynamics}
 \label{sec:temporal}
@@ -495,6 +495,36 @@ Observations & 12,432 & 12,400 & 6,088 / 12,197 & 6,072 / 12,165 \\
 \multicolumn{5}{l}{\footnotesize Panels C--D use contested races only; Panels A--B include all.} \\
 \end{tabular}
 \end{table}
+
+%----------------------------------------------------------------------
+\clearpage
+\subsection{State-by-State Analysis}
+\label{sec:statebystate}
+%----------------------------------------------------------------------
+
+A concern with the state$\times$year fixed effects result (Section~\ref{sec:stateyear}) is that the pooled turnout effect may reflect cross-state confounding rather than within-state smoke variation. We address this by estimating TWFE+controls regressions separately within each state and examining the distribution of coefficients.
+
+For each of the 36 CONUS states with at least 10 counties and sufficient non-missing data, we estimate the baseline specification (county and year FE plus time-varying controls) for turnout rate on 30-day mean smoke PM\textsubscript{2.5}. Figure~\ref{fig:state_forest} presents the resulting forest plot, and Figure~\ref{fig:state_histogram} shows the coefficient distribution.
+
+Of 36 states, 15 (42\%) yield positive coefficients---not significantly different from 50\% under a binomial sign test ($p = 0.879$). The inverse-variance weighted meta-analytic mean is 0.00010 ($p = 0.329$), substantially below the pooled TWFE+controls estimate of 0.00085. Cochran's $Q$ test rejects homogeneity ($I^2 = 63\%$), confirming substantial cross-state heterogeneity.
+
+However, the exercise has important power limitations. With only four election years and 30--250 counties per state, most individual state regressions lack the statistical power to detect an effect of the magnitude found in the pooled specification. Consistent with this, the 10 most precisely estimated states---those with the greatest within-state smoke variation---show a 7-to-3 positive-to-negative split. Geographically, western states (which experience the most intense smoke) are nearly uniformly negative (1/8 positive), while southern and eastern states tend positive. This heterogeneity may reflect adaptation in fire-prone regions or differential salience of novel versus recurring smoke events, but it also means the pooled result draws disproportionately on cross-state comparisons.
+
+We interpret these results as reinforcing the conclusion from Section~\ref{sec:stateyear}: the turnout effect is robust under county and year fixed effects with controls and even state-specific linear trends, but relies in part on between-state variation in smoke exposure. The complementary California tract-level analysis---where county$\times$year fixed effects preserve the turnout effect using within-county variation across thousands of tracts---provides the strongest evidence that the effect is not purely an artifact of cross-state confounding.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{state_forest_turnout.png}
+\caption{Forest plot of state-by-state TWFE+controls estimates for turnout rate on 30-day mean smoke PM\textsubscript{2.5}. States ordered by precision (most precise at top). Colors indicate significance: dark blue ($p < 0.05$), medium blue ($p < 0.10$), light blue ($p \geq 0.10$). Dashed red line: inverse-variance weighted meta-analytic mean. Dotted green line: pooled TWFE+controls estimate from the full sample. Of 36 states, 15 (42\%) yield positive coefficients (sign test $p = 0.879$).}
+\label{fig:state_forest}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{state_histogram_turnout.png}
+\caption{Distribution of state-level coefficients for turnout rate on 30-day mean smoke PM\textsubscript{2.5}. Dashed red line: meta-analytic mean. Dotted orange line: median.}
+\label{fig:state_histogram}
+\end{figure}
 
 %----------------------------------------------------------------------
 \clearpage
