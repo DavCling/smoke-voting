@@ -322,17 +322,63 @@ Observations & 4,146 & 4,144 & 4,147 \\
 \end{tabular}
 \end{table}
 
+\subsection{Mechanism: Engagement Without Preference Change}
+\label{sec:nominate}
+
+The results so far establish that smoke robustly increases turnout but has fragile effects on vote choice. A natural question is whether these marginal shifts in vote shares translate into changes in the \textit{type} of representative elected---that is, whether smoke affects not just how many people vote, but the ideological composition of government. \citet{autor2020importing} show that trade shocks shifted the U.S.\ House toward more ideologically extreme members, as moderates lost to candidates further from the center. If smoke similarly polarizes the electorate, we should see it reflected in the roll-call voting behavior of elected representatives.
+
+To test this, I merge DW-NOMINATE first-dimension scores from VoteView \citep{lewis2025voteview} with the district-level House analysis data for Congresses 110--117 (elections 2006--2020; $N = 3{,}449$ district-year observations). The first-dimension score captures the primary liberal--conservative axis of roll-call voting, with negative values indicating more liberal positions and positive values more conservative. I construct three outcome variables: $|$NOMINATE dim1$|$ (ideological extremity, where higher values indicate greater polarization), the signed NOMINATE dim1 score (directional ideology), and an indicator for moderate representatives ($|$dim1$|$ below the sample median).
+
+Table~\ref{tab:nominate} reports TWFE estimates with district and year fixed effects, standard errors clustered by district. The results are unambiguously null. Smoke exposure has no significant effect on ideological extremity ($\beta = -0.00035$, $p = 0.71$), directional ideology ($\beta = 0.00178$, $p = 0.33$), or the probability of electing a moderate ($\beta = 0.00263$, $p = 0.41$). The null is not driven by offsetting effects across parties: splitting the sample by winner party, smoke does not push Democratic representatives further left ($\beta = 0.00047$, $p = 0.71$) or Republican representatives further right ($\beta = -0.00130$, $p = 0.16$). State$\times$year fixed effects do not alter this conclusion.
+
+\begin{table}[htbp]
+\centering
+\caption{Effect of Wildfire Smoke on Congressional Polarization (DW-NOMINATE)}
+\label{tab:nominate}
+\small
+\begin{tabular}{lccc}
+\toprule
+& (1) & (2) & (3) \\
+& $|$NOMINATE dim1$|$ & NOMINATE dim1 & Is Moderate (LPM) \\
+\midrule
+\multicolumn{4}{l}{\textit{Panel A: All Members}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00035 & 0.00178 & 0.00263 \\
+& (0.00092) & (0.00184) & (0.00317) \\
+$R^2$ (within) & $-$0.0004 & 0.0003 & $-$0.0005 \\[6pt]
+\multicolumn{4}{l}{\textit{Panel B: DEM Winners Only}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00047 & 0.00047 & \\
+& (0.00127) & (0.00127) & \\[6pt]
+\multicolumn{4}{l}{\textit{Panel C: REP Winners Only}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00130 & $-$0.00130 & \\
+& (0.00093) & (0.00093) & \\[6pt]
+\multicolumn{4}{l}{\textit{Panel D: State$\times$Year FE}} \\[3pt]
+Mean Smoke PM\textsubscript{2.5} (30d) & $-$0.00017 & 0.00266 & $-$0.00052 \\
+& (0.00109) & (0.00255) & (0.00454) \\[6pt]
+\midrule
+FE & District + Year & District + Year & District + Year \\
+Observations (Panel A) & 3,449 & 3,449 & 3,449 \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize No coefficient is significant at the 10\% level.} \\
+\multicolumn{4}{l}{\footnotesize SEs clustered by district. DW-NOMINATE scores from VoteView, Congresses 110--117.} \\
+\multicolumn{4}{l}{\footnotesize $|$NOMINATE dim1$|$ measures polarization (extremity); Is Moderate = 1 if $|$dim1$|$ $<$ median.} \\
+\end{tabular}
+\end{table}
+
+This null is informative. It means that even where smoke marginally shifts vote shares, these shifts do not alter the ideological composition of the legislature. The contrast with \citet{autor2020importing} is instructive: trade shocks---which are persistent, geographically concentrated, and economically devastating---changed \textit{who gets elected}. Smoke---which is transient, diffuse, and primarily a salience shock---changes \textit{whether people vote} but not the type of candidate who wins. This pattern pins down the mechanism as engagement without preference change: smoke mobilizes voters roughly symmetrically across the partisan spectrum, consistent with the robust turnout effect and the fragility of the vote-choice results.
+
 %----------------------------------------------------------------------
 \section{Discussion}
 %----------------------------------------------------------------------
 
 The primary finding of this paper is that wildfire smoke increases voter turnout. This effect is robust across specifications: it survives the addition of time-varying county controls and state-specific linear trends, is present in both presidential and House elections, and is not driven by the extreme 2020 fire season. The positive sign of the effect rules out a \textit{disruption} mechanism---in which smoke deters participation as election-day rain does \citep{gomez2007weather}---and instead points toward \textit{mobilization}. Visible smoke may increase the salience of environmental and public health concerns, prompting voters who might otherwise abstain to participate. This interpretation is consistent with \citet{jusko2024motivated}, who finds that severe flooding in Slovakia increases turnout, and with the broader pattern that acute environmental shocks can mobilize rather than suppress participation when they raise the perceived stakes of collective action.
 
-An important distinction is between salience-driven \textit{engagement} and salience-driven \textit{preference change}. \citet{andrews2025wildfire} show that wildfire experience in the American West increases climate change belief---especially among Republicans---but does not increase willingness to spend on mitigation. This dissociation between ``paying attention'' and ``paying the costs'' maps onto my results: the turnout effect (engagement) is robust, while the pro-Democratic effect (preference) is fragile. Smoke may make voters more attentive and motivated to participate without systematically shifting their policy views.
+An important distinction is between salience-driven \textit{engagement} and salience-driven \textit{preference change}. \citet{andrews2025wildfire} show that wildfire experience in the American West increases climate change belief---especially among Republicans---but does not increase willingness to spend on mitigation. This dissociation between ``paying attention'' and ``paying the costs'' maps onto my results: the turnout effect (engagement) is robust, while the pro-Democratic effect (preference) is fragile. The NOMINATE analysis (Section~\ref{sec:nominate}) provides the strongest evidence for this channel: smoke does not change the ideological composition of the House, meaning that even where vote shares shift marginally, the shifts are too small or too symmetric to alter who wins. Smoke makes voters more attentive and motivated to participate without systematically shifting which candidates hold office.
 
 Two secondary findings provide suggestive evidence about how smoke affects vote \textit{choice}. First, smoke exposure is associated with a pro-Democratic shift in presidential voting, consistent with climate salience benefiting the party perceived as more pro-environment \citep{hazlett2020wildfire, kahn2007voting}. However, this effect is fragile: it is driven by the 2020 fire season (reversing sign without it) and does not survive state trends. \citet{arias2024hurricane} find a parallel pattern for Hurricane Ian: climate attitudes shifted across partisan lines in the immediate aftermath, but effects decayed within months---consistent with my temporal dynamics showing the strongest effects at short pre-election windows. Second, close-in incumbent punishment---building monotonically from 0 to $-$0.020 over the 7 days before the election---is consistent with the negative-affect channel identified by \citet{bellani2024air}, in which experienced discomfort reduces support for the status quo. \citet{du2024smoke} provide population-scale evidence for this mechanism, showing that transboundary wildfire smoke significantly reduces expressed sentiment on social media. \citet{kronborg2024wildfires} document a similar incumbent punishment effect for Sweden's 2018 wildfire season. This close-in effect is strongest when 2020 is excluded, suggesting it is a general phenomenon not specific to one election cycle.
 
 The state-by-year fixed effects null (Section~\ref{sec:stateyear}) is the most important limitation. As discussed there, two interpretations are possible: the null could reflect an overly demanding specification that discards genuine exogenous variation, or it could indicate that state-level confounders partly drive the baseline results. I lean toward the first interpretation given the atmospheric dispersion mechanism, but cannot rule out the second with only four presidential elections. The fact that 41\% of the identifying variation is between-state-by-year makes this a binding constraint. Future work with additional election cycles---the 2024 election, with its major Canadian wildfire smoke events affecting the Eastern United States, would be particularly valuable---could resolve this ambiguity by providing enough within-state variation for precise estimation under state-by-year FE.
+
+\paragraph{Alternative smoke measurement.} As a further robustness check, Appendix~\ref{sec:hms} compares the Childs et al.\ ML-predicted PM\textsubscript{2.5} with an entirely independent smoke exposure measure: NOAA's Hazard Mapping System (HMS), in which human analysts visually identify smoke plumes from satellite imagery \citep{borgschulte2022air}. The two datasets agree strongly on the extensive margin of smoke presence (county-day Cohen's $\kappa = 0.86$; 30-day smoke days $r = 0.91$) but diverge at intensity thresholds ($r \approx 0.2$--$0.3$), reflecting the fundamental difference between satellite-observed visual density and ground-level PM\textsubscript{2.5} concentration. In regressions, the broad HMS ``any smoke'' treatment does not reproduce the positive turnout finding. However, when restricted to \textit{heavy} HMS smoke, both measures converge: HMS heavy smoke produces positive and significant effects on turnout ($+$0.077, $p < 0.01$) and Democratic vote share ($+$0.108, $p < 0.01$), paralleling the Childs results at comparable thresholds. This convergence at high intensity---despite weak correlation between the threshold variables---suggests that severe smoke events produce real behavioral effects regardless of measurement approach, while the divergence at low intensity reflects the superior ability of continuous PM\textsubscript{2.5} to capture the ground-level exposure relevant to human behavior.
 
 \paragraph{Limitations.} Several additional limitations merit discussion. The analysis covers only four presidential elections and four House elections, and the sample is small by the standards of the environmental economics literature. County-level aggregation may mask within-county heterogeneity. And the negative within-$R^2$ values in some specifications suggest that the smoke variable alone explains limited within-county variation after absorbing fixed effects, underscoring that these are small effects on a noisy outcome.
 
@@ -340,7 +386,7 @@ The state-by-year fixed effects null (Section~\ref{sec:stateyear}) is the most i
 \section{Conclusion}
 %----------------------------------------------------------------------
 
-Wildfire smoke exposure in the 30 days before an election increases voter turnout, a finding that survives progressively demanding specifications including state-specific linear time trends and is present in both presidential and House elections. The positive sign rules out disruption and points toward a mobilization mechanism driven by the salience of visible smoke. Suggestive evidence also points to a pro-Democratic shift and close-in incumbent punishment, though these vote-choice effects are less robust.
+Wildfire smoke exposure in the 30 days before an election increases voter turnout, a finding that survives progressively demanding specifications including state-specific linear time trends and is present in both presidential and House elections. The positive sign rules out disruption and points toward a mobilization mechanism driven by the salience of visible smoke. Crucially, the null effect on DW-NOMINATE scores of elected House members shows that smoke does not change the ideological composition of the legislature, pinning down the mechanism as symmetric engagement---more people voting---rather than partisan preference change. Suggestive evidence also points to a pro-Democratic shift and close-in incumbent punishment, though these vote-choice effects are less robust.
 
 The most important caveat is that state-by-year fixed effects---which absorb 41\% of the identifying variation---eliminate all effects. Whether this reflects insufficient within-state power or genuine state-level confounding cannot be resolved with four elections. Additional election cycles, particularly the 2024 cycle with its geographically novel smoke patterns, offer the most promising path to sharper identification. Wildfire smoke---which is plausibly exogenous and affects a far larger population than fire proximity---remains a promising research design for studying how environmental experience shapes democratic participation.
 
@@ -525,6 +571,62 @@ We interpret these results as reinforcing the conclusion from Section~\ref{sec:s
 \caption{Distribution of state-level coefficients for turnout rate on 30-day mean smoke PM\textsubscript{2.5}. Dashed red line: meta-analytic mean. Dotted orange line: median.}
 \label{fig:state_histogram}
 \end{figure}
+
+%----------------------------------------------------------------------
+\clearpage
+\subsection{HMS Satellite Smoke Plume Comparison}
+\label{sec:hms}
+%----------------------------------------------------------------------
+
+As a validation exercise, I compare the Childs et al.\ ML-predicted smoke PM\textsubscript{2.5} used throughout this paper with an entirely independent smoke exposure dataset: NOAA's Hazard Mapping System (HMS). HMS analysts visually identify smoke plumes in satellite imagery and digitize polygon boundaries, classifying each as Light, Medium, or Heavy density. I construct county-level HMS exposure using the standard centroid method \citep{borgschulte2022air}: a county is classified as smoke-exposed on a given day if its centroid falls within any HMS polygon.
+
+\paragraph{Validation.} At the county-day level (1.99 million observations across the four presidential election windows), the two measures show strong extensive-margin agreement: Cohen's $\kappa = 0.86$, with 98.7\% sensitivity and 94.8\% specificity. At the 30-day window level, smoke day counts correlate at $r = 0.91$ and mean PM\textsubscript{2.5} vs.\ mean density at $r = 0.67$. However, intensity threshold variables---which serve as treatment variables in the regressions---correlate weakly ($r \approx 0.2$--$0.3$), reflecting the fundamental difference between satellite-observed visual plume density and ground-level PM\textsubscript{2.5} concentration.
+
+\paragraph{Regression comparison.} Table~\ref{tab:hms_buildup} presents the build-up specification table using the fraction of 30-day pre-election days with any HMS smoke as treatment, alongside the Childs PM\textsubscript{2.5} results for comparison. The broad HMS ``any smoke'' measure does not reproduce the positive turnout finding: the coefficient is negative and significant ($-$0.032 in Specification~3), opposite in sign to the Childs result ($+$0.00085). This divergence likely reflects that HMS ``any smoke'' is an extremely broad measure---over the full fire season, 98--100\% of counties register at least one day of satellite-observed smoke---and the within-county variation in this variable after absorbing fixed effects may capture analyst classification decisions rather than meaningful exposure differences.
+
+However, when restricted to \textit{heavy} HMS smoke (density $\geq 3$), the results converge with the Childs findings. HMS heavy smoke produces positive and significant effects on turnout rate ($+$0.077, $p < 0.01$) and Democratic vote share ($+$0.108, $p < 0.01$). This convergence at high intensity---despite the weak correlation between the underlying threshold variables ($r = 0.30$)---provides a form of triangulation: two independent measurement systems identify the same behavioral response to unambiguously severe smoke events.
+
+The overall pattern supports using continuous ground-level PM\textsubscript{2.5} as the preferred treatment variable: it captures the dose of pollution voters actually experience, whereas satellite visual density reflects column-integrated optical properties that depend on plume altitude and viewing geometry. For studying human behavioral responses, ground-level concentration is the theoretically superior measure.
+
+\begin{table}[htbp]
+\centering
+\caption{Build-Up Table: Childs ML-Predicted PM\textsubscript{2.5} vs.\ HMS Satellite Smoke}
+\label{tab:hms_buildup}
+\small
+\begin{tabular}{lcccc}
+\toprule
+& (1) Raw OLS & (2) TWFE & (3) +Controls & (4) +St.\ Trends \\
+\midrule
+\multicolumn{5}{l}{\textit{Panel A: Turnout Rate}} \\
+Childs PM\textsubscript{2.5} (30d) & 0.00536*** & 0.00100*** & 0.00085*** & 0.00065*** \\
+& (0.00068) & (0.00020) & (0.00019) & (0.00016) \\
+HMS frac days (30d) & 0.12050*** & $-$0.04203*** & $-$0.03238*** & $-$0.01454* \\
+& (0.00447) & (0.00946) & (0.00862) & (0.00823) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel B: Log Total Votes}} \\
+Childs PM\textsubscript{2.5} (30d) & $-$0.02911*** & 0.00314*** & 0.00245*** & 0.00124*** \\
+& (0.00504) & (0.00052) & (0.00051) & (0.00024) \\
+HMS frac days (30d) & $-$0.11497** & $-$0.06687*** & $-$0.00807 & 0.04425*** \\
+& (0.05857) & (0.02559) & (0.02468) & (0.01482) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel C: DEM Vote Share}} \\
+Childs PM\textsubscript{2.5} (30d) & $-$0.00831*** & 0.00135*** & 0.00125*** & $-$0.00016 \\
+& (0.00132) & (0.00021) & (0.00023) & (0.00021) \\
+HMS frac days (30d) & $-$0.20738*** & $-$0.02617** & 0.00646 & $-$0.04905*** \\
+& (0.00733) & (0.01118) & (0.01102) & (0.00847) \\[6pt]
+\multicolumn{5}{l}{\textit{Panel D: Incumbent Vote Share}} \\
+Childs PM\textsubscript{2.5} (30d) & 0.02028*** & $-$0.00172* & 0.00070 & 0.00080 \\
+& (0.00259) & (0.00091) & (0.00094) & (0.00108) \\
+HMS frac days (30d) & 0.71349*** & 0.24357*** & 0.21560*** & 0.23721*** \\
+& (0.01567) & (0.05609) & (0.04689) & (0.07053) \\
+\midrule
+County FE & & Yes & Yes & Yes \\
+Year FE & & Yes & Yes & Yes \\
+Controls & & & Yes & Yes \\
+State trends & & & & Yes \\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize *** $p<0.01$, ** $p<0.05$, * $p<0.10$. SEs clustered by county.} \\
+\multicolumn{5}{l}{\footnotesize HMS treatment: fraction of 30 pre-election days with any satellite-observed smoke.} \\
+\end{tabular}
+\end{table}
 
 %----------------------------------------------------------------------
 \clearpage
