@@ -980,6 +980,172 @@ def temporal_dynamics_controls(df):
         print(f"\n  Saved overlaid cumulative figure: {fig_path}")
 
 
+def temporal_closein_controls(df):
+    """Daily-resolution cumulative windows for days 1-7 before election."""
+    print("\n" + "=" * 70)
+    print("CLOSE-IN TEMPORAL DYNAMICS: Daily Windows (1-7 days)")
+    print("  Cumulative windows at 1-day resolution, Spec 3 (TWFE + controls)")
+    print("=" * 70)
+
+    HAZE_THRESHOLD = 20.0
+    n_days = 7
+
+    control_vars = ["unemployment_rate", "log_median_income", "log_population",
+                    "october_tmean", "october_ppt"]
+    available = [v for v in control_vars if v in df.columns and df[v].notna().any()]
+
+    # Load raw daily smoke data
+    print("  Loading raw daily smoke data...")
+    with open(SMOKE_FILE) as f:
+        sep = "\t" if "\t" in f.readline() else ","
+    smoke_raw = pd.read_csv(SMOKE_FILE, sep=sep, dtype={"GEOID": str})
+    smoke_raw = smoke_raw.rename(columns={"GEOID": "fips", "smokePM_pred": "smoke_pm25"})
+    smoke_raw["fips"] = smoke_raw["fips"].str.zfill(5)
+    smoke_raw["date"] = pd.to_datetime(smoke_raw["date"], format="%Y%m%d")
+
+    # Compute 7 single-day bins
+    bin_vars = []
+    for yr, edate_str in ELECTION_DATES.items():
+        edate = pd.Timestamp(edate_str)
+        earliest = edate - timedelta(days=n_days)
+        yr_smoke = smoke_raw[(smoke_raw["date"] > earliest) & (smoke_raw["date"] <= edate)].copy()
+
+        yr_bins = None
+        for d in range(n_days):
+            day_start = edate - timedelta(days=d + 1)
+            day_end = edate - timedelta(days=d)
+            w = yr_smoke[(yr_smoke["date"] > day_start) & (yr_smoke["date"] <= day_end)]
+
+            bin_mean = w.groupby("fips")["smoke_pm25"].mean().rename(f"mean_day_{d}")
+            bin_frac = w.groupby("fips")["smoke_pm25"].apply(
+                lambda x: (x > HAZE_THRESHOLD).mean()
+            ).rename(f"frac_day_{d}")
+
+            if yr_bins is None:
+                yr_bins = pd.concat([bin_mean, bin_frac], axis=1)
+            else:
+                yr_bins = yr_bins.join(bin_mean, how="outer").join(bin_frac, how="outer")
+
+        yr_bins["year"] = yr
+        yr_bins = yr_bins.reset_index()
+        bin_vars.append(yr_bins)
+
+    bins_df = pd.concat(bin_vars, ignore_index=True).fillna(0)
+    bins_df = bins_df.set_index(["fips", "year"])
+    df_merged = df.join(bins_df, how="inner")
+    print(f"  Merged panel: {len(df_merged):,} obs")
+
+    outcomes = [
+        ("dem_vote_share", "DEM Vote Share"),
+        ("incumbent_vote_share", "Incumbent Vote Share"),
+        ("log_total_votes", "Log Total Votes"),
+        ("turnout_rate", "Turnout Rate"),
+    ]
+
+    treatments = [
+        ("mean_day", "Mean Smoke PM$_{2.5}$", "Mean Smoke PM2.5"),
+        ("frac_day", "Frac. Days > 20 µg/m$^3$ (Haze)", "Frac. Days Haze"),
+    ]
+
+    from scipy import stats as sp_stats
+
+    all_treat_results = {}
+    for prefix, fig_label, print_label in treatments:
+        print(f"\n  === Treatment: {print_label} ===")
+        day_cols = [f"{prefix}_{d}" for d in range(n_days)]
+
+        all_results = {}
+        for dep_var, dep_label in outcomes:
+            print(f"\n    --- {dep_label} ---")
+
+            cols_needed = [dep_var] + day_cols + available
+            subset = df_merged[cols_needed].dropna().copy()
+            if len(subset) < 100:
+                print(f"      SKIP: only {len(subset)} obs")
+                continue
+
+            # Cumulative: expanding daily windows
+            cumul_coefs, cumul_ses = [], []
+            for k in range(n_days):
+                cum_cols_k = day_cols[:k + 1]
+                cum_var = f"{prefix}_cumul_{k}"
+                subset[cum_var] = subset[cum_cols_k].mean(axis=1)
+                y_k = subset[dep_var]
+                x_k = sm.add_constant(subset[[cum_var] + available])
+
+                try:
+                    mod_k = PanelOLS(y_k, x_k, entity_effects=True, time_effects=True,
+                                     check_rank=False, drop_absorbed=True)
+                    res_k = mod_k.fit(cov_type="clustered", cluster_entity=True)
+                    cumul_coefs.append(res_k.params.get(cum_var, np.nan))
+                    cumul_ses.append(res_k.std_errors.get(cum_var, np.nan))
+                except Exception:
+                    cumul_coefs.append(np.nan)
+                    cumul_ses.append(np.nan)
+
+            print(f"      Cumulative:")
+            for k in range(n_days):
+                pval_k = np.nan
+                if not np.isnan(cumul_coefs[k]) and cumul_ses[k] > 0:
+                    t_stat = cumul_coefs[k] / cumul_ses[k]
+                    pval_k = 2 * (1 - sp_stats.t.cdf(abs(t_stat), df=100))
+                stars = "***" if pval_k < 0.01 else "**" if pval_k < 0.05 else "*" if pval_k < 0.10 else ""
+                print(f"        0-{k+1}d: β={cumul_coefs[k]:.6f} {stars} (SE={cumul_ses[k]:.6f})")
+
+            all_results[dep_var] = {
+                "label": dep_label,
+                "cumul_coefs": cumul_coefs, "cumul_ses": cumul_ses,
+            }
+
+        all_treat_results[prefix] = all_results
+
+    # Combined figure: len(outcomes) rows × 2 cols (mean PM2.5, frac haze)
+    treat_configs = [
+        ("mean_day", "Mean Smoke PM$_{2.5}$", "#2166ac"),
+        ("frac_day", "Frac. Days > 20 µg/m$^3$ (Haze)", "#b2182b"),
+    ]
+    x_pos = np.arange(n_days)
+    x_labels = [str(k + 1) for k in range(n_days)]
+
+    if all(t[0] in all_treat_results for t in treat_configs):
+        os.makedirs(FIG_DIR, exist_ok=True)
+        n_rows = len(outcomes)
+        fig, axes = plt.subplots(n_rows, 2, figsize=(11, 3.3 * n_rows))
+
+        for col_idx, (prefix, col_title, color) in enumerate(treat_configs):
+            results = all_treat_results[prefix]
+            for row_idx, (dep_var, dep_label) in enumerate(outcomes):
+                ax = axes[row_idx, col_idx]
+                if dep_var not in results:
+                    ax.set_visible(False)
+                    continue
+                r = results[dep_var]
+                coefs = r["cumul_coefs"]
+                ses = r["cumul_ses"]
+
+                ax.fill_between(x_pos,
+                                [c - 1.96 * s for c, s in zip(coefs, ses)],
+                                [c + 1.96 * s for c, s in zip(coefs, ses)],
+                                alpha=0.2, color=color)
+                ax.plot(x_pos, coefs, "o-", color=color, linewidth=2, markersize=6)
+                ax.axhline(0, color="gray", linestyle="-", alpha=0.4, linewidth=0.8)
+                ax.set_xticks(x_pos)
+                ax.set_xticklabels(x_labels, fontsize=9)
+                ax.tick_params(axis="y", labelsize=9)
+                if col_idx == 0:
+                    ax.set_ylabel(dep_label, fontsize=10)
+                if row_idx == 0:
+                    ax.set_title(col_title, fontsize=12, fontweight="bold")
+                if row_idx == n_rows - 1:
+                    ax.set_xlabel("Cumulative window (days)", fontsize=10)
+
+        plt.tight_layout()
+        fig_path = os.path.join(FIG_DIR, "temporal_closein_daily.png")
+        fig.savefig(fig_path, dpi=150, bbox_inches="tight")
+        plt.close()
+        print(f"\n  Saved close-in figure: {fig_path}")
+
+
 def temporal_drop2020(df):
     """Cumulative temporal dynamics: full sample vs. excluding 2020."""
     print("\n" + "=" * 70)
@@ -1515,6 +1681,9 @@ def main():
 
     # 7-day temporal dynamics with controls (Spec 3)
     temporal_dynamics_controls(df)
+
+    # Close-in daily temporal dynamics (1-7 days)
+    temporal_closein_controls(df)
 
     # Temporal dynamics: full sample vs. drop 2020
     temporal_drop2020(df)
