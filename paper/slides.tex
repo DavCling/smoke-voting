@@ -4,75 +4,146 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{appendixnumberbeamer}
+\usepackage{tikz}
 
 \graphicspath{{../output/figures/}}
 \bibliographystyle{apalike}
 
-\title{Wildfire Smoke and Voting Behavior\\in the United States}
-\subtitle{Preliminary Results}
+% Smaller footnote citations
+\renewcommand{\footnotesize}{\scriptsize}
+
+\title{Wildfire Smoke and Voter Turnout\\in the United States}
 \author{David Clingingsmith\\\small Case Western Reserve University}
-\date{February 14, 2026}
+\date{February 2026}
 
 \begin{document}
 
 \maketitle
 
+%======================================================================
+% PART 1: INTRODUCTION & MOTIVATION
+%======================================================================
+
 %----------------------------------------------------------------------
 \begin{frame}{Motivation}
 
 \begin{itemize}
-  \item Wildfire smoke is a very widespread \textit{experiential} consequence of climate change in the U.S.
+  \item Wildfire smoke is the most \textit{widespread experiential} consequence of climate change in the U.S.
   \begin{itemize}
-    \item Unlike ambient air pollution, smoke events are visible, sudden, and directly attributable to wildfires --- making them potentially more \textit{salient} as climate signals
-    \item Tens of millions of Americans experience unhealthy air from wildfire smoke each year; awareness is high and rising
+    \item Tens of millions of Americans experience unhealthy air from wildfire smoke each year
+    \item Unlike ambient air pollution: episodic, \textbf{visible}, and directly attributable
+    \item Hazy skies, orange sunsets, the smell of burning --- sensory channels that make smoke \textbf{salient}
   \end{itemize}
-  \item Does smoke exposure change whether and how people vote?
+  \vspace{0.3cm}
+  \item Does pre-election smoke exposure affect \textbf{voter turnout}? Vote choice?
+  \vspace{0.3cm}
+  \item Key advantage: smoke plume direction is determined by \textbf{wind}, not by local politics or demographics $\Rightarrow$ plausibly exogenous
 \end{itemize}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Prior Work}
-
-\begin{itemize}
-  \item \textbf{Fire proximity} $\rightarrow$ pro-environment voting in CA, but only among Democrats \citep[2006--2012 CA elections]{hazlett2020wildfire}
-  \item \textbf{Overall air pollution (PM\textsubscript{10})} $\rightarrow$ anti-incumbent voting in Germany \citep{bellani2024air}
-  \item \textbf{Rain on election day} $\rightarrow$ lower turnout \citep{gomez2007weather}
-\end{itemize}
-
-\vspace{0.4cm}
-\textbf{Gap:} No study has linked wildfire-specific smoke PM\textsubscript{2.5} to U.S.\ election outcomes
-
-\vspace{0.2cm}
-\begin{itemize}
-  \item Smoke differs from generic air pollution: episodic, visible, attributable to a specific cause
-  \item Smoke differs from fire proximity: affects far more people, plausibly exogenous (wind-driven), isolates the experiential channel from property destruction
-\end{itemize}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\begin{frame}{Data}
+\begin{frame}{Preview of Findings}
 
 \begin{enumerate}
-  \item \textbf{Wildfire smoke PM\textsubscript{2.5}} --- \citet{childs2022daily}
+  \item[\textbf{1.}] \textbf{Turnout increases} with smoke exposure
   \begin{itemize}
-    \item Daily, county-level, 2006--2023
-    \item Uses NOAA HMS satellite smoke plume classifications combined with machine learning to isolate wildfire-attributed PM\textsubscript{2.5} from background pollution
+    \item Survives TWFE $\rightarrow$ controls $\rightarrow$ state trends
+    \item Present in both presidential and House elections
+    \item Not driven by 2020
   \end{itemize}
-  \vspace{0.3cm}
-  \item \textbf{Election returns} --- MIT Election Data Lab \citep{medsl2024county}
+  \vspace{0.2cm}
+  \item[\textbf{2.}] \textbf{Vote choice effects are suggestive but fragile}
   \begin{itemize}
-    \item Presidential: county-level (2008, 2012, 2016, 2020)
-    \item House: precinct-level returns aggregated to county (2016, 2018, 2020, 2022)
+    \item Pro-Democratic shift: driven by 2020 fire season
+    \item Incumbent punishment: significant only at close-in (1--7 day) windows
   \end{itemize}
-  \vspace{0.3cm}
-  \item \textbf{Analysis samples:}
+  \vspace{0.2cm}
+  \item[\textbf{3.}] \textbf{State$\times$year FE eliminate all effects}
   \begin{itemize}
-    \item Presidential: 12,428 county $\times$ election obs (4 cycles)
-    \item House: 12,206 county $\times$ election obs (4 cycles)
+    \item Absorb 41\% of identifying variation
+    \item The key limitation --- discussed honestly in the paper
   \end{itemize}
 \end{enumerate}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Contribution}
+
+\begin{itemize}
+  \item \textbf{Relative to \citet{hazlett2020wildfire}:}
+  \begin{itemize}
+    \item Smoke exposure (not fire proximity) $\Rightarrow$ plausibly exogenous
+    \item National scope (not California only)
+    \item \textit{Turnout}, not just vote choice on environmental ballot measures
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Relative to \citet{bellani2024air}:}
+  \begin{itemize}
+    \item Visible smoke (not imperceptible PM\textsubscript{10})
+    \item They find \textit{no} turnout effect from election-day pollution
+    \item I find a \textit{positive} turnout effect from pre-election smoke exposure
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Relative to \citet{gomez2007weather}:}
+  \begin{itemize}
+    \item Rain on election day \textit{suppresses} turnout (cost of voting)
+    \item Pre-election smoke \textit{increases} turnout (salience/mobilization)
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{First paper} linking wildfire-specific smoke to U.S.\ electoral outcomes
+\end{itemize}
+
+\end{frame}
+
+%======================================================================
+% PART 2: DATA
+%======================================================================
+
+%----------------------------------------------------------------------
+\begin{frame}{Data: Wildfire Smoke PM\textsubscript{2.5}}
+
+\textbf{Source:} \citet{childs2022daily} --- daily county-level estimates, 2006--2023
+
+\vspace{0.3cm}
+\begin{itemize}
+  \item NOAA Hazard Mapping System satellite smoke plume classifications + machine learning
+  \item Isolates \textit{wildfire-attributed} PM\textsubscript{2.5} from background pollution
+  \item Treatment: \textbf{mean smoke PM\textsubscript{2.5} in the 30 days before election}
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Second treatment variable:}
+\begin{itemize}
+  \item Fraction of days with smoke PM\textsubscript{2.5} $>$ 20 $\mu$g/m$^3$ (onset of visible haze)
+  \item Captures the extensive margin of \textit{perceptible} smoke episodes
+  \item 1.9\% of county-elections have $\geq$1 haze day (236 of 12,432)
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Data: Elections and Turnout Rate}
+
+\textbf{Election returns:} MIT Election Data + Science Lab \citep{medsl2024county}
+\begin{itemize}
+  \item Presidential: county-level, 2008, 2012, 2016, 2020
+  \item House: precinct-level $\rightarrow$ aggregated to county, 2016--2022
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Voting age population (VAP):} ACS 5-year estimates (B01001 table)
+\begin{itemize}
+  \item \textbf{Turnout rate} = total votes / VAP; drop if $>$ 1.5 (allocation artifacts)
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Analysis samples:}
+\begin{itemize}
+  \item Presidential: 12,432 county $\times$ election obs (4 cycles, 3,108 counties)
+  \item House: 12,206 county $\times$ election obs (4 cycles); VAP for 2016, 2020 only
+\end{itemize}
 
 \end{frame}
 
@@ -81,10 +152,29 @@
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth,trim=0 0 0 0,clip]{smoke_exposure_map_panel.png}
+\includegraphics[width=\textwidth]{smoke_exposure_map_panel.png}
 \end{figure}
 
 \end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Key Variation: 2020 Was Exceptional}
+
+\begin{itemize}
+  \item 2016: Minimal pre-election smoke nationwide
+  \item 2020: Historic August--September fire season $\Rightarrow$ extreme Western exposure
+  \item This matters: the pro-Democratic effect is \textit{driven} by 2020
+  \item The turnout effect is \textit{not} driven by 2020 (actually strengthens without it)
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Implication:} Need to carefully assess which results are robust to excluding 2020
+
+\end{frame}
+
+%======================================================================
+% PART 3: EMPIRICAL STRATEGY
+%======================================================================
 
 %----------------------------------------------------------------------
 \begin{frame}{Empirical Strategy}
@@ -95,131 +185,704 @@ Y_{ct} = \alpha_c + \gamma_t + \beta \cdot \text{SmokePM}_{ct} + \varepsilon_{ct
 \end{equation*}
 
 \begin{itemize}
-  \item $\alpha_c$: County FE --- absorb all time-invariant confounders
+  \item $\alpha_c$: County FE --- absorb all time-invariant county characteristics
   \item $\gamma_t$: Election year FE --- absorb national swings
   \item SEs clustered by county
   \item Treatment: mean smoke PM\textsubscript{2.5} in the 30 days before election
 \end{itemize}
 
 \vspace{0.3cm}
-\textbf{Identifying assumption:} Conditional on county and year FE, variation in smoke exposure is uncorrelated with unobserved determinants of voting. This is plausible because smoke plume direction is determined by wind, not by county politics or demographics.
+\textbf{Outcomes:}
+\begin{enumerate}
+  \item \textbf{Turnout rate} (total votes / VAP) --- \textit{primary}
+  \item Log total votes --- corroboration (no denominator needed)
+  \item DEM two-party vote share --- \textit{secondary}
+  \item Incumbent party vote share --- \textit{secondary}
+\end{enumerate}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Identification: Threats}
+\begin{frame}{Identifying Assumption and Threats}
 
+\textbf{Identifying assumption:} Conditional on county and year FE, variation in smoke is uncorrelated with unobserved determinants of voting
+
+\vspace{0.3cm}
+\textbf{Why plausible:} Smoke plume direction and dispersion are determined by atmospheric conditions (wind), not by county politics or demographics
+
+\vspace{0.5cm}
 \textbf{Potential threats:}
 \begin{itemize}
-  \item Spatially correlated shocks (e.g., drought affects both fires and local economy)
+  \item \textbf{Spatially correlated shocks} (drought $\rightarrow$ fires + local economy)
   \begin{itemize}
     \item Mitigated: smoke travels hundreds of miles from fire origin
   \end{itemize}
-  \item Secular trends in fire-prone vs.\ non-fire-prone regions
+  \item \textbf{Region-specific trends} (fire-prone vs.\ non-fire-prone states)
   \begin{itemize}
-    \item Mitigated: county FE absorb levels; year FE absorb national trends
+    \item Addressed in build-up: state linear trends (Spec 4) and state$\times$year FE
+  \end{itemize}
+  \item \textbf{TWFE with continuous treatment} \citep{callaway2024continuous}
+  \begin{itemize}
+    \item Treatment is atmospherically assigned $\Rightarrow$ limits selection into dose levels
+    \item Results robust to dichotomization and dose quintiles
   \end{itemize}
 \end{itemize}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{TWFE with Continuous Treatment}
+\begin{frame}{Build-Up Strategy}
 
-\citet*{callaway2024continuous} show TWFE with a continuous treatment can produce coefficients with ambiguous causal interpretation due to heterogeneous dose--response weighting.
+Progressively more demanding specifications:
 
-\vspace{0.2cm}
-\textbf{Why this is less concerning here:}
-\begin{itemize}
-  \item Treatment is atmospherically assigned --- limiting selection into dose levels
-  \item Linear slope corresponds to the ACRT decomposition (non-negative weights)
-  \item Results qualitatively similar when treatment is dichotomized or discretized into dose bins
-  \item The \texttt{contdid} estimator does not yet support time-varying continuous treatments (our setting)
-\end{itemize}
+\vspace{0.3cm}
+\begin{enumerate}
+  \item \textbf{Raw OLS} --- cross-sectional correlation (benchmark)
+  \item \textbf{TWFE} --- county + year FE (baseline)
+  \item \textbf{+ Controls} --- unemployment, income, population, October weather
+  \item \textbf{+ State trends} --- state-specific linear time trends
+\end{enumerate}
+
+\vspace{0.5cm}
+\textbf{Logic:} If the effect survives progressively demanding controls, it is less likely to reflect confounding
+
+\vspace{0.3cm}
+\textbf{Key question:} Which outcomes survive all four specifications?
 
 \end{frame}
 
+%======================================================================
+% PART 4: MAIN RESULTS - TURNOUT
+%======================================================================
+
 %----------------------------------------------------------------------
-\begin{frame}{Main Results: Presidential and House Elections}
+\begin{frame}{Build-Up Table: All Four Outcomes}
 
 \begin{table}
 \centering
-\small
-\begin{tabular}{lccc}
+\scriptsize
+\begin{tabular}{lcccc}
 \toprule
-& (1) & (2) & (3) \\
-& DEM Vote Share & Incumbent Share & Log Turnout \\
+& (1) Raw OLS & (2) TWFE & (3) +Controls & (4) +St.\ Trends \\
 \midrule
-\multicolumn{4}{l}{\textit{Panel A: Presidential (2008--2020)}} \\[3pt]
-Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & $-$0.00172* & 0.00314*** \\
-& (0.00021) & (0.00091) & (0.00052) \\
-$N$ & 12,428 & 12,428 & 12,428 \\[6pt]
-\multicolumn{4}{l}{\textit{Panel B: County-Level House (2016--2022)}} \\[3pt]
-Smoke PM\textsubscript{2.5} (30d) & $-$0.00033 & 0.00303* & 0.00356*** \\
-& (0.00029) & (0.00178) & (0.00119) \\
-$N$ & 11,155 & 11,155 & 12,197 \\[3pt]
-\bottomrule
-\multicolumn{4}{l}{\footnotesize County and year FE. SEs clustered by county. *** $p<0.01$, ** $p<0.05$, * $p<0.10$.}
+\multicolumn{5}{l}{\textit{Panel A: Turnout Rate}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00536*** & 0.00100*** & 0.00085*** & \alert{0.00065***} \\
+& (0.00068) & (0.00020) & (0.00019) & (0.00016) \\[4pt]
+\multicolumn{5}{l}{\textit{Panel B: Log Total Votes}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.02911*** & 0.00314*** & 0.00245*** & \alert{0.00124***} \\
+& (0.00504) & (0.00052) & (0.00051) & (0.00024) \\[4pt]
+\multicolumn{5}{l}{\textit{Panel C: DEM Vote Share}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00831*** & 0.00135*** & 0.00125*** & $-$0.00016 \\
+& (0.00132) & (0.00021) & (0.00023) & (0.00021) \\[4pt]
+\multicolumn{5}{l}{\textit{Panel D: Incumbent Vote Share}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.02028*** & $-$0.00172* & 0.00070 & 0.00080 \\
+& (0.00259) & (0.00091) & (0.00094) & (0.00108) \\
+\midrule
+\multicolumn{5}{l}{\footnotesize $N \approx 12{,}400$. County + year FE. SEs clustered by county. Controls: unemployment, income, pop., weather.}
 \end{tabular}
 \end{table}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Interpreting the Main Results}
+\begin{frame}{Turnout is the Primary Finding}
 
 \begin{itemize}
-  \item \textbf{+10 $\mu$g/m$^3$ smoke $\rightarrow$ +1.3 pp DEM vote share} (presidential)
-  \item Anti-incumbent effect also significant ($-$0.17 pp per $\mu$g/m$^3$)
-  \item No evidence of turnout suppression
-  \item House DEM vote share effect is not significant at 30-day window; incumbent punishment is marginal --- consistent with the more candidate-driven nature of House races
+  \item \textbf{Turnout rate:} positive and significant across \textit{all four specifications}
+  \begin{itemize}
+    \item TWFE: 0.00100*** $\rightarrow$ +Controls: 0.00085*** $\rightarrow$ +State trends: 0.00065***
+    \item Raw OLS is also positive --- the sign doesn't flip when adding FE
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Log total votes} corroborates (no VAP denominator needed)
+  \begin{itemize}
+    \item State trends estimate (0.00124***) is $\sim$1/3 of TWFE baseline
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{DEM vote share:} killed by state trends
+  \item \textbf{Incumbent:} killed by controls
+  \vspace{0.3cm}
+  \item[$\Rightarrow$] \textbf{Turnout is the only outcome that survives all specifications}
 \end{itemize}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Effect Across the Partisan Spectrum}
+\begin{frame}{Magnitude}
+
+Under the preferred specification (TWFE + controls):
+
+\vspace{0.3cm}
+\begin{itemize}
+  \item A \textbf{1 $\mu$g/m$^3$} increase in 30-day mean smoke PM\textsubscript{2.5}:\\[3pt]
+  $\Rightarrow$ +0.085 percentage point increase in turnout rate
+  \vspace{0.3cm}
+  \item A \textbf{10 $\mu$g/m$^3$} increase (roughly a major smoke event):\\[3pt]
+  $\Rightarrow$ +0.85 percentage point increase in turnout rate
+  \vspace{0.3cm}
+  \item For context: U.S.\ presidential turnout rate $\approx$ 55--65\%\\[3pt]
+  $\Rightarrow$ 0.85 pp is about a 1.3--1.5\% relative increase
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{The positive sign rules out a suppression/disruption mechanism}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Temporal Dynamics: Cumulative Windows}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_cumulative_controls.png}
+\end{figure}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Interpreting Temporal Dynamics}
+
+\begin{itemize}
+  \item \textbf{Turnout rate} (top row): positive and significant at \textit{all} window lengths
+  \begin{itemize}
+    \item Stable from shortest windows through full fire season
+    \item Consistent with persistent mobilization effect
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{DEM vote share:} builds over 14--35 days, stabilizes at 30d
+  \begin{itemize}
+    \item Recent smoke drives the effect $\Rightarrow$ salience/recency
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Incumbent:} concentrated in first 14 days, then washes out
+  \begin{itemize}
+    \item Suggests short-lived negative-affect mechanism
+  \end{itemize}
+  \vspace{0.3cm}
+  \item[$\Rightarrow$] Motivates the 30-day window: short enough for recency signal, long enough to smooth noise
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Close-In Daily Dynamics (1--7 Days)}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_closein_daily.png}
+\end{figure}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Close-In: Mechanistic Evidence}
+
+\begin{itemize}
+  \item \textbf{Incumbent punishment builds monotonically:} 0 at 1 day $\rightarrow$ $-$0.020*** at 7 days
+  \begin{itemize}
+    \item Most mechanistically compelling result in the paper
+    \item Consistent with recency-driven blame attribution
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Turnout rate} positive and marginally significant from day 1
+  \begin{itemize}
+    \item Grows steadily to 0.118 ($p < 0.10$) at 7 days
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Log total votes} significant from day 1 ($p < 0.01$), strengthens monotonically
+  \vspace{0.2cm}
+  \item[$\Rightarrow$] Different mechanisms at different time horizons
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{House Elections: Turnout is Robust Across Race Types}
+
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+& County House & Presidential \\
+& (2016--2022) & (2008--2020) \\
+\midrule
+\multicolumn{3}{l}{\textit{Panel A: Turnout Rate}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & \alert{0.00173**} & \alert{0.00100***} \\
+& (0.00076) & (0.00020) \\[4pt]
+\multicolumn{3}{l}{\textit{Panel B: Log Total Votes}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00356*** & 0.00314*** \\
+& (0.00119) & (0.00052) \\[4pt]
+\multicolumn{3}{l}{\textit{Panel C: DEM Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00033 & 0.00135*** \\
+& (0.00029) & (0.00021) \\[4pt]
+\multicolumn{3}{l}{\textit{Panel D: Incumbent Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00304* & $-$0.00172* \\
+& (0.00178) & (0.00091) \\
+\midrule
+\multicolumn{3}{l}{\footnotesize County + year FE. SEs clustered by county. House VAP: 2016, 2020 only ($N=6{,}088$).}
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Robustness: Excluding 2020}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_drop2020.png}
+\end{figure}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Drop-2020: What We Learn}
+
+\begin{itemize}
+  \item \textbf{Turnout:} positive and significant in \textit{both} samples
+  \begin{itemize}
+    \item Actually \textit{stronger} without 2020 (0.0040*** vs.\ 0.0011**)
+    \item Not driven by the extreme fire season
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{DEM vote share:} \textit{reverses sign} without 2020
+  \begin{itemize}
+    \item Full sample: +0.0023*** $\rightarrow$ Excl.\ 2020: $-$0.0034***
+    \item The pro-Democratic result is leveraged by the 2020 Western fire season
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Incumbent punishment:} dramatically \textit{stronger} without 2020
+  \begin{itemize}
+    \item Full sample: $\approx$0 $\rightarrow$ Excl.\ 2020: $-$0.033***
+    \item 2020 \textit{masked} a strong underlying punishment effect
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Summary So Far}
 
 \begin{table}
 \centering
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-& \multicolumn{3}{c}{\textit{DEM Vote Share}} \\
-\cmidrule(lr){2-4}
-& R-Leaning & Swing & D-Leaning \\
+& TWFE & +Controls & +Trends & Excl.\ 2020 \\
 \midrule
-Smoke PM\textsubscript{2.5} (30d) & 0.00155*** & 0.00007 & 0.00126*** \\
-& (0.00033) & (0.00055) & (0.00040) \\[6pt]
-$N$ & 4,143 & 4,140 & 4,144 \\
+Turnout rate & \alert{\checkmark ***} & \alert{\checkmark ***} & \alert{\checkmark ***} & \alert{\checkmark ***} \\
+Log total votes & \checkmark *** & \checkmark *** & \checkmark *** & \checkmark *** \\
+DEM vote share & \checkmark *** & \checkmark *** & $\times$ & reverses \\
+Incumbent & \checkmark * & $\times$ & $\times$ & \checkmark *** \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \vspace{0.3cm}
 \begin{itemize}
-  \item Effect is \textbf{present in R-leaning and D-leaning} counties
-  \item Similar magnitude across the partisan spectrum
-  \item Contrast with \citet[2006--2012 CA]{hazlett2020wildfire}: fire proximity affects \textit{only} Democratic areas
-  \item Smoke is a broader, less politically sorted treatment
+  \item \textbf{Turnout is the only outcome that passes every test}
+  \item DEM vote share is fragile; incumbent only close-in or excl.\ 2020
+  \item But: none of this addresses state$\times$year FE\ldots
+\end{itemize}
+
+\end{frame}
+
+%======================================================================
+% PART 5: STATE×YEAR FE
+%======================================================================
+
+%----------------------------------------------------------------------
+\begin{frame}{The Key Limitation: State-by-Year Fixed Effects}
+
+\textbf{The concern:} State-level time-varying shocks (campaigns, ballot measures, economic conditions) could be correlated with smoke exposure
+
+\vspace{0.3cm}
+\textbf{The test:} Replace year FE with state$\times$year FE
+\begin{itemize}
+  \item All identification from \textit{within-state} variation across counties in the same election
+  \item Substantially more demanding than state trends
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{The result:} \alert{Everything goes to zero}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{State$\times$Year FE: The Numbers}
+
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+& Presidential & County House \\
+\midrule
+\multicolumn{3}{l}{\textit{Turnout Rate}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00005 & 0.00060 \\
+& (0.00018) & (0.00092) \\[4pt]
+\multicolumn{3}{l}{\textit{Log Total Votes}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00023 & 0.00161 \\
+& (0.00030) & (0.00135) \\[4pt]
+\multicolumn{3}{l}{\textit{DEM Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00001 & 0.00011 \\
+& (0.00025) & (0.00025) \\[4pt]
+\multicolumn{3}{l}{\textit{Incumbent Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00079 & 0.00214 \\
+& (0.00086) & (0.00140) \\
+\midrule
+\multicolumn{3}{l}{\footnotesize \textbf{No coefficient is significant at the 10\% level.}}
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Where Does the Identifying Variation Go?}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.72\textheight,keepaspectratio]{smoke_exposure_map_residualized.png}
+\end{figure}
+
+{\small After removing state$\times$year means, within-state variation is concentrated in a few Western states in high-fire years}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Temporal Overlay: Spec 3 vs.\ State$\times$Year FE}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_cumulative_stateyear.png}
+\end{figure}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Two Interpretations}
+
+\textbf{Interpretation (a): State$\times$year FE are too demanding}
+\begin{itemize}
+  \item They absorb \textbf{41\%} of the identifying variation
+  \item Between-state smoke variation is wind-driven $\Rightarrow$ genuinely exogenous
+  \item \citet{hilbig2024floods}: German floods had no \textit{local} effect but a \textit{national} Green shift --- environmental shocks may operate through diffuse channels
+  \item With only 4 elections, remaining within-state variation may be too thin
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{Interpretation (b): Between-state variation is confounded}
+\begin{itemize}
+  \item State-level shocks (drought, campaigns) correlate with smoke
+  \item Baseline estimates may be partly driven by omitted state$\times$year factors
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{I lean toward (a)} but \textbf{cannot rule out (b)} with 4 elections
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Evidence Favoring Exogeneity}
+
+\begin{itemize}
+  \item Atmospheric dispersion is physically independent of local political/economic conditions
+  \vspace{0.2cm}
+  \item \citet{childs2022daily} isolates wildfire-specific PM\textsubscript{2.5} from other sources
+  \vspace{0.2cm}
+  \item \citet{borgschulte2022air}: controlling for wind direction does not change smoke-based labor market estimates
+  \vspace{0.2cm}
+  \item Turnout effect survives state \textit{linear} trends (which absorb differential secular trends)
+  \vspace{0.2cm}
+  \item The 2024 election --- with Canadian wildfire smoke affecting the \textit{Eastern} U.S.\ --- would provide geographically novel variation and substantially more within-state power
+\end{itemize}
+
+\end{frame}
+
+%======================================================================
+% PART 6: SECONDARY RESULTS
+%======================================================================
+
+%----------------------------------------------------------------------
+\begin{frame}{Threshold Comparison: Dose-Response}
+
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lccc}
+\toprule
+& Haze ($>$20) & USG ($>$35.5) & Unhealthy ($>$55.5) \\
+\midrule
+\multicolumn{4}{l}{\textit{Turnout Rate}} \\[2pt]
+Frac.\ days above & 0.04497*** & $-$0.00065 & 0.04909** \\
+& (0.01427) & (0.03037) & (0.02279) \\[3pt]
+\multicolumn{4}{l}{\textit{DEM Vote Share}} \\[2pt]
+Frac.\ days above & 0.06162*** & 0.09929** & 0.15047*** \\
+& (0.01611) & (0.04410) & (0.03746) \\[3pt]
+\multicolumn{4}{l}{\textit{Incumbent Vote Share}} \\[2pt]
+Frac.\ days above & 0.16253** & $-$0.16716 & $-$0.24933*** \\
+& (0.06755) & (0.10465) & (0.07825) \\
+\midrule
+Nonzero obs & 236 (1.9\%) & 47 (0.4\%) & 19 (0.2\%) \\
+\bottomrule
+\multicolumn{4}{l}{\footnotesize TWFE + controls. SEs clustered by county.}
+\end{tabular}
+\end{table}
+
+\vspace{0.2cm}
+\begin{itemize}
+  \item DEM: dose-response pattern (larger effects at higher thresholds)
+  \item Incumbent: \textbf{sign reversal} --- moderate smoke benefits, severe smoke punishes
 \end{itemize}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Temporal Dynamics}
+\begin{frame}{Heterogeneity: Effects Cross the Partisan Spectrum}
+
+\begin{table}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+& R-Leaning & Swing & D-Leaning \\
+\midrule
+\multicolumn{4}{l}{\textit{DEM Vote Share (TWFE)}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00155*** & 0.00007 & 0.00126*** \\
+& (0.00033) & (0.00055) & (0.00040) \\[4pt]
+$N$ & 4,146 & 4,144 & 4,147 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.3cm}
+\begin{itemize}
+  \item Pro-DEM shift in \textit{both} R-leaning and D-leaning counties
+  \item Absent in swing counties
+  \item \textbf{Contrast with \citet{hazlett2020wildfire}:} fire proximity $\rightarrow$ effects \textit{only} in Democratic areas
+  \item Smoke is a broader, less politically sorted treatment
+\end{itemize}
+
+\end{frame}
+
+%======================================================================
+% PART 7: MECHANISMS & DISCUSSION
+%======================================================================
+
+%----------------------------------------------------------------------
+\begin{frame}{Mechanism: Mobilization, Not Suppression}
+
+\begin{itemize}
+  \item \textbf{The positive turnout sign is informative:}
+  \begin{itemize}
+    \item Rules out \textit{disruption} (smoke makes it harder to vote)
+    \item Rules out \textit{differential suppression} (smoke discourages one party)
+    \item Points toward \textit{mobilization} through salience
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Consistent with:}
+  \begin{itemize}
+    \item \citet{jusko2024motivated}: severe flooding \textit{increases} turnout in Slovakia
+    \item \citet{burke2021exposures}: smoke events increase air quality searches, behavioral responses --- people are \textit{paying attention}
+  \end{itemize}
+  \vspace{0.3cm}
+  \item \textbf{Contrasts with:}
+  \begin{itemize}
+    \item \citet{gomez2007weather}: rain \textit{suppresses} turnout (cost of voting channel)
+    \item \citet{bellani2024air}: PM\textsubscript{10} has \textit{no} turnout effect (subconscious mood only)
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Salience $\neq$ Preference Change}
+
+\textbf{Key insight from \citet{andrews2025wildfire}:}
+\begin{itemize}
+  \item Wildfire experience increases climate change \textit{belief} (even among Republicans)
+  \item But does \textit{not} increase willingness to \textit{spend} on mitigation
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{This maps onto my results:}
+\begin{itemize}
+  \item \textbf{Turnout} (engagement/attention): \alert{robust}
+  \item \textbf{DEM vote share} (preference): fragile, driven by 2020
+  \item Smoke makes voters more \textit{attentive and motivated} without systematically shifting policy views
+\end{itemize}
+
+\vspace{0.2cm}
+\textbf{Temporal decay:} \citet{arias2024hurricane} find hurricane-driven attitude shifts last $\sim$1 month --- consistent with effects at 7--30 day windows
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{The Incumbent Puzzle}
+
+\begin{itemize}
+  \item \textbf{At 30 days:} No significant effect (washes out with controls)
+  \item \textbf{At 1--7 days:} Strong monotonic anti-incumbent effect
+  \item \textbf{Without 2020:} Large anti-incumbent effect at all windows
+  \vspace{0.2cm}
+  \item \textbf{Interpretation:}
+  \begin{itemize}
+    \item Close-in punishment $\Rightarrow$ short-lived negative-affect channel \citep{bellani2024air,du2024smoke}
+    \item Cross-national replication: \citet{kronborg2024wildfires} find incumbent punishment from Sweden's 2018 wildfires
+    \item 2020 masked the effect: smoke-exposed Western counties favored incumbent
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Threshold nuance:} moderate smoke $\rightarrow$ pro-incumbent; severe $\rightarrow$ anti-incumbent
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Limitations}
+
+\begin{itemize}
+  \item \textbf{State$\times$year FE kill everything} --- the most important caveat
+  \begin{itemize}
+    \item Cannot determine if this is overly demanding or reveals confounding
+    \item 41\% of variation is between-state$\times$year
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Small sample:} 4 presidential elections, 4 House elections
+  \vspace{0.2cm}
+  \item \textbf{Pro-DEM effect driven by 2020} fire season
+  \vspace{0.2cm}
+  \item \textbf{County-level aggregation} may mask within-county heterogeneity
+  \vspace{0.2cm}
+  \item \textbf{Small within-$R^2$:} smoke explains limited variation after absorbing FE
+  \vspace{0.2cm}
+  \item \textbf{Mechanism:} I observe turnout increases but cannot directly test the salience channel (no survey data, no search data matched to counties)
+\end{itemize}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Summary}
+
+\begin{enumerate}
+  \item Wildfire smoke \textbf{increases voter turnout} --- the most robust finding
+  \begin{itemize}
+    \item Survives controls, state trends, excluding 2020
+    \item Present in presidential and House elections
+    \item Positive sign $\Rightarrow$ mobilization, not suppression
+  \end{itemize}
+  \vspace{0.2cm}
+  \item \textbf{Vote choice effects are suggestive:} pro-DEM (driven by 2020), close-in incumbent punishment (recency mechanism), dose-response across thresholds
+  \vspace{0.2cm}
+  \item \textbf{State$\times$year FE produce null results} --- the key limitation
+  \begin{itemize}
+    \item Absorbs 41\% of variation; cannot resolve with 4 elections
+    \item More election cycles (especially 2024) would help
+  \end{itemize}
+  \vspace{0.2cm}
+  \item Wildfire smoke is a \textbf{promising research design}: plausibly exogenous, broadly experienced, and captures the salience channel that ambient pollution cannot
+\end{enumerate}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}[standout]
+
+Thank you
+
+\vspace{0.5cm}
+{\normalsize \texttt{d.clingingsmith@case.edu}}
+
+\end{frame}
+
+%======================================================================
+% APPENDIX
+%======================================================================
+
+\appendix
+
+%----------------------------------------------------------------------
+\begin{frame}{Appendix Slides}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Controls Robustness}
+
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Presidential} & \multicolumn{2}{c}{County House} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+& Baseline & + Controls & Baseline & + Controls \\
+\midrule
+\multicolumn{5}{l}{\textit{Turnout Rate}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00100*** & 0.00085*** & 0.00173** & 0.00126* \\
+& (0.00020) & (0.00019) & (0.00076) & (0.00072) \\[3pt]
+\multicolumn{5}{l}{\textit{Log Total Votes}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00314*** & 0.00245*** & 0.00356*** & 0.00323*** \\
+& (0.00052) & (0.00051) & (0.00119) & (0.00114) \\[3pt]
+\multicolumn{5}{l}{\textit{DEM Vote Share}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & 0.00125*** & $-$0.00033 & $-$0.00043 \\
+& (0.00021) & (0.00023) & (0.00029) & (0.00028) \\[3pt]
+\multicolumn{5}{l}{\textit{Incumbent Vote Share}} \\[2pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00172* & 0.00070 & 0.00304* & 0.00375** \\
+& (0.00091) & (0.00094) & (0.00178) & (0.00151) \\
+\midrule
+\multicolumn{5}{l}{\footnotesize Controls: unemployment rate, log median income, log population, Oct.\ temperature, Oct.\ precipitation.}
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Exclusive 7-Day Windows: Mean Smoke PM\textsubscript{2.5}}
 
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{event_study_7day_windows.png}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_7day_mean_controls.png}
 \end{figure}
 
-\vspace{-0.2cm}
-\begin{itemize}
-  \item Effect significant across most 7-day bins in the month before the election
-  \item Cumulative effect peaks at $\sim$35 days --- consistent with 30-day base spec
-  \item Not just election-day disruption; recency / salience mechanism
-\end{itemize}
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{Exclusive 7-Day Windows: Fraction Haze Days}
+
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{temporal_7day_frac_controls.png}
+\end{figure}
+
+\end{frame}
+
+%----------------------------------------------------------------------
+\begin{frame}{District-Level House Estimates}
+
+\begin{table}
+\centering
+\scriptsize
+\begin{tabular}{lcc}
+\toprule
+& District House & County House \\
+\midrule
+\multicolumn{3}{l}{\textit{DEM Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00081 & $-$0.00033 \\
+& (0.00086) & (0.00029) \\[4pt]
+\multicolumn{3}{l}{\textit{Incumbent Vote Share}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.00162 & 0.00304* \\
+& (0.00162) & (0.00178) \\[4pt]
+\multicolumn{3}{l}{\textit{Log Total Votes}} \\[3pt]
+Smoke PM\textsubscript{2.5} (30d) & $-$0.01022* & 0.00356*** \\
+& (0.00565) & (0.00119) \\
+\midrule
+Unit & District & County \\
+FE & District + Year & County + Year \\
+$N$ & 3,406 / 3,879 & 11,155 / 12,197 \\
+\bottomrule
+\multicolumn{3}{l}{\footnotesize District-level uses Census crosswalk. SEs clustered by unit.}
+\end{tabular}
+\end{table}
 
 \end{frame}
 
@@ -231,89 +894,11 @@ $N$ & 4,143 & 4,140 & 4,144 \\
 \includegraphics[width=0.65\textwidth]{binscatter_smoke_dem_share.png}
 \end{figure}
 
-\vspace{-0.2cm}
-{\small County and year FE residualized. 50 equal-sized bins of smoke exposure.}
+{\small County and year FE residualized. 50 equal-sized bins.}
 
 \end{frame}
 
 %----------------------------------------------------------------------
-\begin{frame}{Robustness: Excluding 2020}
-
-\begin{table}
-\centering
-\small
-\begin{tabular}{lcccc}
-\toprule
-& \multicolumn{2}{c}{Presidential} & \multicolumn{2}{c}{County House} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-& Full & Excl.\ 2020 & Full & Excl.\ 2020 \\
-\midrule
-\multicolumn{5}{l}{\textit{Panel A: DEM Vote Share}} \\[3pt]
-Smoke PM\textsubscript{2.5} (30d) & 0.00135*** & $-$0.00112*** & $-$0.00033 & $-$0.00201*** \\
-& (0.00021) & (0.00039) & (0.00029) & (0.00074) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel B: Incumbent Vote Share}} \\[3pt]
-Smoke PM\textsubscript{2.5} (30d) & $-$0.00172* & $-$0.01268*** & 0.00303* & $-$0.00254 \\
-& (0.00091) & (0.00145) & (0.00178) & (0.00165) \\[6pt]
-\multicolumn{5}{l}{\textit{Panel C: Log Total Votes}} \\[3pt]
-Smoke PM\textsubscript{2.5} (30d) & 0.00314*** & 0.00228*** & 0.00356*** & 0.00705*** \\
-& (0.00052) & (0.00035) & (0.00119) & (0.00253) \\[3pt]
-\midrule
-$N$ & 12,428 & 9,320 & 11,155 & 8,262 \\
-\bottomrule
-\multicolumn{5}{l}{\footnotesize County and year FE. SEs clustered by county. *** $p<0.01$, ** $p<0.05$, * $p<0.10$.}
-\end{tabular}
-\end{table}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\begin{frame}{Interpreting the 2020 Sensitivity}
-
-\begin{itemize}
-  \item The presidential pro-DEM effect \textbf{flips sign} without 2020 --- the extreme Western fire season provides much of the identifying variation
-  \item The \textbf{presidential anti-incumbent effect is robust and strengthens} without 2020 ($-$0.013 vs.\ $-$0.002), suggesting it is not an artifact of that single year
-  \item The House results are generally not robust to excluding 2020
-  \item Incumbent punishment in presidential races is the most robust finding across specifications
-\end{itemize}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\begin{frame}{Limitations and Next Steps}
-
-\textbf{Current limitations:}
-\begin{itemize}
-  \item Only 4 presidential elections; 4 House elections (smoke data: 2006--2023; elections through 2022)
-  \item Pro-DEM shift is leveraged by the 2020 fire season
-  \item County-level aggregation; no individual-level variation
-  \item Turnout measure is crude (log total votes without population denominator)
-\end{itemize}
-
-\vspace{0.3cm}
-\textbf{Planned extensions:}
-\begin{itemize}
-  \item Add 2024 elections as precinct data become available
-  \item State legislative elections
-  \item Wind direction as instrument for smoke exposure
-  \item Conley spatial SEs for inference robust to spatial correlation
-\end{itemize}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\begin{frame}{Summary}
-
-\begin{enumerate}
-  \item Wildfire smoke \textbf{punishes incumbents} --- the most robust finding
-  \item Smoke also \textbf{shifts votes toward Democrats}, but this is driven by the 2020 fire season
-  \item Effects are \textbf{nationally representative} and \textbf{cross the partisan spectrum}
-  \item Smoke is \textbf{plausibly exogenous} (wind-driven) and affects \textbf{far more people} than fire proximity
-\end{enumerate}
-
-\end{frame}
-
-%----------------------------------------------------------------------
-\appendix
 \begin{frame}[allowframebreaks]{References}
 \small
 \bibliography{references}
